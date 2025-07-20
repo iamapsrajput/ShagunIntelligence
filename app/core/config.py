@@ -22,7 +22,7 @@ class Settings(BaseSettings):
     OPENAI_MODEL: str = "gpt-4"
     
     # Database Configuration
-    DATABASE_URL: str = "postgresql://user:password@localhost/aitrading"
+    DATABASE_URL: str = "postgresql://user:password@localhost/algohive"
     REDIS_URL: str = "redis://localhost:6379"
     
     # Security

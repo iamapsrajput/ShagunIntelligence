@@ -7,7 +7,7 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://aitrading:aitrading123@postgres:5432/aitrading
+      - DATABASE_URL=postgresql://algohive:algohive123@postgres:5432/algohive
       - REDIS_URL=redis://redis:6379/0
     env_file:
       - .env
@@ -19,15 +19,15 @@ services:
       - ./data:/app/data
     restart: unless-stopped
     networks:
-      - aitrading-network
+      - algohive-network
 
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_DB: aitrading
-      POSTGRES_USER: aitrading
-      POSTGRES_PASSWORD: aitrading123
+      POSTGRES_DB: algohive
+      POSTGRES_USER: algohive
+      POSTGRES_PASSWORD: algohive123
     ports:
       - "5432:5432"
     volumes:
@@ -35,7 +35,7 @@ services:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
     networks:
-      - aitrading-network
+      - algohive-network
 
   # Redis for caching and session storage
   redis:
@@ -46,13 +46,13 @@ services:
       - redis_data:/data
     restart: unless-stopped
     networks:
-      - aitrading-network
+      - algohive-network
 
   # pgAdmin for database management (optional)
   pgadmin:
     image: dpage/pgadmin4:latest
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@aitrading.com
+      PGADMIN_DEFAULT_EMAIL: admin@algohive.com
       PGADMIN_DEFAULT_PASSWORD: admin123
     ports:
       - "5050:80"
@@ -62,7 +62,7 @@ services:
       - pgadmin_data:/var/lib/pgadmin
     restart: unless-stopped
     networks:
-      - aitrading-network
+      - algohive-network
 
 volumes:
   postgres_data:
@@ -70,5 +70,5 @@ volumes:
   pgadmin_data:
 
 networks:
-  aitrading-network:
+  algohive-network:
     driver: bridge

@@ -19,7 +19,7 @@ An AI-powered intraday trading platform built with CrewAI and Zerodha Kite API. 
 ## Project Structure
 
 ```
-aiTrading/
+AlgoHive/
 ├── app/                    # FastAPI application
 │   ├── api/               # API routes
 │   ├── core/              # Core configuration
@@ -54,7 +54,7 @@ aiTrading/
 
 ```bash
 git clone <repository-url>
-cd aiTrading
+cd AlgoHive
 ```
 
 ### 2. Environment Setup
@@ -155,7 +155,7 @@ DEFAULT_POSITION_SIZE=10000    # Default position size in INR
 ### PostgreSQL (Production)
 ```bash
 # Access database
-docker exec -it aitrading_postgres_1 psql -U aitrading -d aitrading
+docker exec -it algohive-postgres-1 psql -U algohive -d algohive
 
 # View tables
 \dt
@@ -208,7 +208,7 @@ pytest tests/test_trading.py
 
 ```bash
 DEBUG=False
-DATABASE_URL=postgresql://user:password@localhost:5432/aitrading_prod
+DATABASE_URL=postgresql://user:password@localhost:5432/algohive_prod
 SECRET_KEY=your-production-secret-key
 ```
 
