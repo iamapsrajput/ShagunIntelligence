@@ -1,13 +1,14 @@
 # AlgoHive - AI-Powered Algorithmic Trading Platform
 
 <div align="center">
-  <img src="docs/assets/algohive-logo.png" alt="AlgoHive Logo" width="200"/>
-  
-  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
-  [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
-  [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
-  [![CI/CD](https://img.shields.io/github/workflow/status/algohive/algohive/CI%20Pipeline/main)](https://github.com/algohive/algohive/actions)
-  [![Coverage](https://img.shields.io/codecov/c/github/algohive/algohive)](https://codecov.io/gh/algohive/algohive)
+  <img src="assets/shagunintelligence-logo.png" alt="ShagunIntelligance Logo" width="200"/>
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
+[![CI/CD](https://img.shields.io/github/workflow/status/algohive/algohive/CI%20Pipeline/main)](https://github.com/algohive/algohive/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/algohive/algohive)](https://codecov.io/gh/algohive/algohive)
+
 </div>
 
 ## 🚀 Overview
@@ -42,36 +43,36 @@ AlgoHive is a sophisticated AI-powered algorithmic trading platform that leverag
 AlgoHive uses a microservices architecture with AI agents at its core:
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌────────────────────────────────────────────────────────────┐
 │                        AlgoHive Platform                        │
-├─────────────────────────────────────────────────────────────────┤
+├────────────────────────────────────────────────────────────┤
 │                                                                 │
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐           │
-│  │   React.js  │  │   FastAPI   │  │  WebSocket  │           │
-│  │  Dashboard  │◄─┤   Backend   │◄─┤   Server    │           │
-│  └─────────────┘  └──────┬──────┘  └─────────────┘           │
-│                          │                                      │
-│  ┌───────────────────────┴────────────────────────┐           │
-│  │              CrewAI Agent System                │           │
-│  ├─────────────────────────────────────────────────┤           │
-│  │ ┌─────────┐ ┌──────────┐ ┌──────────┐         │           │
-│  │ │ Market  │ │Technical │ │Sentiment │         │           │
-│  │ │ Analyst │ │Indicator │ │ Analyst  │         │           │
-│  │ └─────────┘ └──────────┘ └──────────┘         │           │
-│  │ ┌─────────┐ ┌──────────┐ ┌──────────┐         │           │
-│  │ │  Risk   │ │  Trade   │ │  Data    │         │           │
-│  │ │ Manager │ │ Executor │ │Processor │         │           │
-│  │ └─────────┘ └──────────┘ └──────────┘         │           │
-│  │         ┌──────────────────┐                   │           │
-│  │         │   Coordinator    │                   │           │
-│  │         └──────────────────┘                   │           │
-│  └─────────────────────────────────────────────────┘           │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
+│  │   React.js   │  │   FastAPI    │  │  WebSocket   │          │
+│  │  Dashboard   │◄─┤   Backend    │◄─┤   Server     │          │
+│  └─────────────┘  └──────┬──────┘  └─────────────┘          │
+│                            │                                    │
+│  ┌───────────────────────┴────────────────────────┐         │
+│  │              CrewAI Agent System                   │         │
+│  ├────────────────────────────────────────────────┤        │
+│  │ ┌─────────┐ ┌──────────┐ ┌──────────┐           │         │
+│  │ │ Market   │ │Technical  │ │Sentiment │           │          │
+│  │ │ Analyst  │ │Indicator  │ │ Analyst  │           │          │
+│  │ └─────────┘ └──────────┘ └──────────┘          │           │
+│  │ ┌─────────┐ ┌──────────┐ ┌──────────┐          │           │
+│  │ │  Risk    │ │  Trade   │  │  Data    │           │           │
+│  │ │ Manager  │ │ Executor │  │Processor │           │           │
+│  │ └─────────┘ └──────────┘ └──────────┘          │           │
+│  │         ┌──────────────────┐                    │           │
+│  │         │   Coordinator      │                    │           │
+│  │         └──────────────────┘                    │           │
+│  └───────────────────────────────────────────────┘           │
 │                                                                 │
 │  ┌──────────┐  ┌──────────┐  ┌──────────┐  ┌──────────┐     │
-│  │PostgreSQL│  │  Redis   │  │ Zerodha  │  │    AI    │     │
-│  │    DB    │  │  Cache   │  │   Kite   │  │ Services │     │
+│  │PostgreSQL│  │  Redis    │  │ Zerodha   │  │    AI     │     │
+│  │    DB    │  │  Cache    │  │   Kite    │  │ Services  │     │
 │  └──────────┘  └──────────┘  └──────────┘  └──────────┘     │
-└─────────────────────────────────────────────────────────────────┘
+└────────────────────────────────────────────────────────────┘
 ```
 
 ### AI Agents
@@ -124,18 +125,21 @@ docker-compose up -d
 ### Manual Installation
 
 1. **Clone the repository**
+
 ```bash
 git clone https://github.com/algohive/algohive.git
 cd algohive
 ```
 
 2. **Create virtual environment**
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
 3. **Install dependencies**
+
 ```bash
 # Install TA-Lib (required for technical analysis)
 # On Ubuntu/Debian:
@@ -154,6 +158,7 @@ pip install -r requirements.txt
 ```
 
 4. **Set up database**
+
 ```bash
 # Create PostgreSQL database
 createdb algohive
@@ -163,12 +168,14 @@ alembic upgrade head
 ```
 
 5. **Configure environment**
+
 ```bash
 cp .env.example .env
 # Edit .env with your configuration
 ```
 
 6. **Start the application**
+
 ```bash
 # Start FastAPI server
 uvicorn app.main:app --reload
@@ -221,14 +228,14 @@ agents:
   market_analyst:
     enabled: true
     confidence_threshold: 0.7
-    
+
   technical_indicator:
     enabled: true
     indicators:
       - rsi
       - macd
       - bollinger_bands
-      
+
   risk_manager:
     enabled: true
     max_portfolio_risk: 0.2
@@ -240,6 +247,7 @@ agents:
 ### Starting Trading
 
 1. **Login to Zerodha**
+
 ```python
 from services.kite import KiteService
 
@@ -250,6 +258,7 @@ access_token = kite.generate_session(request_token)
 ```
 
 2. **Start the trading system**
+
 ```bash
 # Using CLI
 python -m algohive start --mode live
@@ -259,7 +268,8 @@ curl -X POST http://localhost:8000/api/v1/trading/start
 ```
 
 3. **Monitor through dashboard**
-- Open http://localhost:3000
+
+- Open <http://localhost:3000>
 - View real-time market data
 - Monitor agent decisions
 - Track portfolio performance
@@ -344,7 +354,7 @@ POST /api/v1/agents/analyze
 }
 ```
 
-For complete API documentation, visit http://localhost:8000/docs
+For complete API documentation, visit <http://localhost:8000/docs>
 
 ## 🧪 Testing
 
@@ -367,6 +377,7 @@ pytest tests/simulation/test_paper_trading.py -v
 ### Test Coverage
 
 Current test coverage:
+
 - Unit Tests: 92%
 - Integration Tests: 85%
 - End-to-End Tests: 78%
@@ -440,7 +451,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Documentation: [docs.algohive.com](https://docs.algohive.com)
 - Issues: [GitHub Issues](https://github.com/algohive/algohive/issues)
-- Email: support@algohive.com
+- Email: <support@algohive.com>
 - Discord: [Join our community](https://discord.gg/algohive)
 
 ## 🙏 Acknowledgments

@@ -12,21 +12,27 @@ from .social_media_monitor import SocialMediaMonitor
 from .sentiment_scorer import SentimentScorer
 from .alert_manager import AlertManager
 from .report_generator import ReportGenerator
+from ..base_quality_aware_agent import BaseQualityAwareAgent, DataQualityLevel, TradingMode
+from backend.data_sources.integration import get_data_source_integration
 
 
-class SentimentAnalystAgent(Agent):
-    """Agent responsible for analyzing market sentiment from various sources."""
+class SentimentAnalystAgent(BaseQualityAwareAgent, Agent):
+    """Agent responsible for analyzing market sentiment from various sources with quality awareness."""
 
     def __init__(self, openai_api_key: Optional[str] = None):
         """Initialize the Sentiment Analyst Agent."""
-        super().__init__(
-            role="Market Sentiment Analyst",
-            goal="Monitor and analyze market sentiment from news and social media to provide trading insights",
-            backstory="""You are an expert in market sentiment analysis with deep understanding of how news 
-            and social media affect stock prices. You monitor multiple news sources, analyze social media trends,
-            and use advanced NLP to gauge market sentiment. You can identify significant sentiment shifts,
-            detect market-moving news early, and provide actionable insights based on collective market mood.
-            Your analysis helps traders understand the psychological factors driving market movements.""",
+        BaseQualityAwareAgent.__init__(self)
+        Agent.__init__(self,
+            role="Multi-Source Sentiment Analyst",
+            goal="Aggregate and analyze sentiment from multiple sources with quality-weighted confidence scoring",
+            backstory="""You are an expert in multi-source sentiment analysis with the ability to aggregate
+            sentiment from news, social media, and specialized AI sources (Twitter, Grok). You understand that
+            sentiment data quality varies by source and time. You weight sentiment signals based on:
+            - Source reliability and data quality
+            - Recency and relevance of information
+            - Volume and engagement metrics
+            - Agreement between multiple sources
+            Your analysis adapts based on data quality to provide reliable sentiment insights.""",
             verbose=True,
             allow_delegation=False
         )
@@ -41,7 +47,17 @@ class SentimentAnalystAgent(Agent):
         self.sentiment_cache: Dict[str, Dict[str, Any]] = defaultdict(dict)
         self.cache_duration = timedelta(minutes=5)
         
-        logger.info("Sentiment Analyst Agent initialized")
+        # Multi-source sentiment integration
+        self.data_integration = get_data_source_integration()
+        
+        # Sentiment-specific quality thresholds
+        self.quality_thresholds = {
+            DataQualityLevel.HIGH: 0.75,    # Lower threshold for sentiment
+            DataQualityLevel.MEDIUM: 0.55,
+            DataQualityLevel.LOW: 0.35
+        }
+        
+        logger.info("Multi-Source Sentiment Analyst Agent initialized")
 
     async def analyze_symbol_sentiment(
         self, 
@@ -50,7 +66,7 @@ class SentimentAnalystAgent(Agent):
         lookback_hours: int = 24
     ) -> Dict[str, Any]:
         """
-        Analyze sentiment for a specific symbol.
+        Analyze sentiment for a specific symbol using multiple sources with quality awareness.
         
         Args:
             symbol: Stock symbol to analyze
@@ -58,7 +74,7 @@ class SentimentAnalystAgent(Agent):
             lookback_hours: Hours of historical data to analyze
             
         Returns:
-            Comprehensive sentiment analysis
+            Comprehensive multi-source sentiment analysis
         """
         try:
             # Check cache first
@@ -68,6 +84,9 @@ class SentimentAnalystAgent(Agent):
                 if datetime.now() - cached['timestamp'] < self.cache_duration:
                     logger.debug(f"Using cached sentiment for {symbol}")
                     return cached['data']
+            
+            # Get multi-source sentiment from integration layer
+            multi_source_sentiment = await self._get_multi_source_sentiment(symbol)
             
             # Gather news articles
             news_articles = await self.news_scraper.scrape_symbol_news(
@@ -104,9 +123,11 @@ class SentimentAnalystAgent(Agent):
                     'sentiment': sentiment
                 })
             
-            # Calculate aggregate scores
-            aggregate_scores = self._calculate_aggregate_sentiment(
-                news_sentiments, social_sentiments
+            # Calculate aggregate scores with multi-source data
+            aggregate_scores = self._calculate_multi_source_aggregate(
+                news_sentiments, 
+                social_sentiments,
+                multi_source_sentiment
             )
             
             # Check for significant changes
@@ -123,7 +144,7 @@ class SentimentAnalystAgent(Agent):
                     top_stories=news_sentiments[:3]
                 )
             
-            # Compile results
+            # Compile results with quality awareness
             analysis = {
                 'symbol': symbol,
                 'timestamp': datetime.now().isoformat(),
@@ -140,8 +161,13 @@ class SentimentAnalystAgent(Agent):
                     'posts': social_sentiments[:10],  # Top 10 posts
                     'average_sentiment': aggregate_scores['social_score']
                 } if include_social else None,
-                'market_impact': self._assess_market_impact(aggregate_scores),
-                'recommendation': self._generate_recommendation(aggregate_scores, sentiment_change)
+                'multi_source_data': multi_source_sentiment,
+                'data_quality': aggregate_scores.get('data_quality', 1.0),
+                'quality_level': aggregate_scores.get('quality_level', DataQualityLevel.HIGH.value),
+                'market_impact': self._assess_quality_adjusted_impact(aggregate_scores),
+                'recommendation': self._generate_quality_aware_recommendation(
+                    aggregate_scores, sentiment_change
+                )
             }
             
             # Cache the results
@@ -334,12 +360,120 @@ class SentimentAnalystAgent(Agent):
                 logger.error(f"Error in real-time monitoring: {str(e)}")
                 await asyncio.sleep(interval_seconds)
 
-    def _calculate_aggregate_sentiment(
+    async def _get_multi_source_sentiment(self, symbol: str) -> Dict[str, Any]:
+        """Get sentiment from multiple integrated sources."""
+        try:
+            # Get sentiment from integration layer (includes Twitter, Grok, etc.)
+            integrated_sentiment = await self.data_integration.get_sentiment_score(symbol)
+            
+            # Get Grok analysis if available
+            grok_analysis = None
+            try:
+                grok_analysis = await self.data_integration.get_grok_analysis(symbol)
+            except:
+                logger.debug(f"Grok analysis not available for {symbol}")
+            
+            # Get sentiment trends
+            sentiment_trends = await self.data_integration.get_sentiment_trends(symbol, hours=24)
+            
+            return {
+                'integrated_sentiment': integrated_sentiment,
+                'grok_analysis': grok_analysis,
+                'sentiment_trends': sentiment_trends,
+                'source_count': integrated_sentiment.get('source_count', 0)
+            }
+        except Exception as e:
+            logger.error(f"Error getting multi-source sentiment: {e}")
+            return {}
+    
+    def _calculate_multi_source_aggregate(
+        self,
+        news_sentiments: List[Dict],
+        social_sentiments: List[Dict],
+        multi_source_data: Dict[str, Any]
+    ) -> Dict[str, float]:
+        """Calculate aggregate sentiment scores from all sources with quality weighting."""
+        # Traditional sentiment calculation
+        traditional_scores = self._calculate_traditional_sentiment(news_sentiments, social_sentiments)
+        
+        # Multi-source sentiment data
+        integrated_sentiment = multi_source_data.get('integrated_sentiment', {})
+        grok_analysis = multi_source_data.get('grok_analysis', {})
+        
+        # Extract scores and quality metrics
+        integrated_score = integrated_sentiment.get('sentiment', 0.0)
+        integrated_confidence = integrated_sentiment.get('confidence', 0.0)
+        agreement_score = integrated_sentiment.get('agreement_score', 0.5)
+        
+        # Grok sentiment (if available)
+        grok_score = None
+        if grok_analysis and not grok_analysis.get('error'):
+            grok_score = grok_analysis.get('sentiment_score', 0.0)
+        
+        # Calculate data quality based on source availability and agreement
+        data_quality = self._calculate_sentiment_data_quality(
+            traditional_scores['confidence'],
+            integrated_confidence,
+            agreement_score,
+            multi_source_data.get('source_count', 0)
+        )
+        
+        # Determine quality level
+        quality_level = self._determine_quality_level(data_quality)
+        
+        # Weight scores based on quality and availability
+        weights = self._calculate_source_weights(
+            has_news=len(news_sentiments) > 0,
+            has_social=len(social_sentiments) > 0,
+            has_integrated=integrated_confidence > 0,
+            has_grok=grok_score is not None,
+            quality_level=quality_level
+        )
+        
+        # Calculate weighted average
+        weighted_sum = 0
+        total_weight = 0
+        
+        if weights['news'] > 0:
+            weighted_sum += traditional_scores['news_score'] * weights['news']
+            total_weight += weights['news']
+        
+        if weights['social'] > 0:
+            weighted_sum += traditional_scores['social_score'] * weights['social']
+            total_weight += weights['social']
+        
+        if weights['integrated'] > 0:
+            weighted_sum += integrated_score * weights['integrated']
+            total_weight += weights['integrated']
+        
+        if weights['grok'] > 0 and grok_score is not None:
+            weighted_sum += grok_score * weights['grok']
+            total_weight += weights['grok']
+        
+        overall_score = weighted_sum / total_weight if total_weight > 0 else 0.0
+        
+        # Adjust confidence based on data quality
+        adjusted_confidence = traditional_scores['confidence'] * data_quality
+        
+        return {
+            'overall_score': overall_score,
+            'news_score': traditional_scores['news_score'],
+            'social_score': traditional_scores['social_score'],
+            'integrated_score': integrated_score,
+            'grok_score': grok_score,
+            'confidence': adjusted_confidence,
+            'data_quality': data_quality,
+            'quality_level': quality_level.value,
+            'source_weights': weights,
+            'agreement_score': agreement_score
+        }
+    
+    def _calculate_traditional_sentiment(
         self,
         news_sentiments: List[Dict],
         social_sentiments: List[Dict]
     ) -> Dict[str, float]:
-        """Calculate aggregate sentiment scores."""
+        """Calculate traditional sentiment scores from news and social."""
         # News sentiment (higher weight for more recent and reliable sources)
         news_scores = []
         for item in news_sentiments:
@@ -381,6 +515,69 @@ class SentimentAnalystAgent(Agent):
             'social_score': social_avg,
             'confidence': self._calculate_confidence(len(news_scores), len(social_scores))
         }
+    
+    def _calculate_sentiment_data_quality(
+        self,
+        traditional_confidence: float,
+        integrated_confidence: float,
+        agreement_score: float,
+        source_count: int
+    ) -> float:
+        """Calculate overall sentiment data quality."""
+        # Base quality on confidence scores
+        avg_confidence = (traditional_confidence + integrated_confidence) / 2
+        
+        # Bonus for multiple sources
+        source_bonus = min(0.2, source_count * 0.05)
+        
+        # Factor in agreement between sources
+        agreement_factor = 0.5 + (agreement_score * 0.5)
+        
+        # Calculate final quality
+        quality = (avg_confidence * agreement_factor) + source_bonus
+        
+        return min(1.0, quality)
+    
+    def _calculate_source_weights(
+        self,
+        has_news: bool,
+        has_social: bool,
+        has_integrated: bool,
+        has_grok: bool,
+        quality_level: DataQualityLevel
+    ) -> Dict[str, float]:
+        """Calculate weights for each sentiment source based on availability and quality."""
+        if quality_level == DataQualityLevel.HIGH:
+            # High quality: Use all sources with balanced weights
+            weights = {
+                'news': 0.35 if has_news else 0.0,
+                'social': 0.15 if has_social else 0.0,
+                'integrated': 0.30 if has_integrated else 0.0,
+                'grok': 0.20 if has_grok else 0.0
+            }
+        elif quality_level == DataQualityLevel.MEDIUM:
+            # Medium quality: Prefer more reliable sources
+            weights = {
+                'news': 0.40 if has_news else 0.0,
+                'social': 0.10 if has_social else 0.0,
+                'integrated': 0.35 if has_integrated else 0.0,
+                'grok': 0.15 if has_grok else 0.0
+            }
+        else:
+            # Low quality: Heavy weight on most reliable sources
+            weights = {
+                'news': 0.50 if has_news else 0.0,
+                'social': 0.05 if has_social else 0.0,
+                'integrated': 0.30 if has_integrated else 0.0,
+                'grok': 0.15 if has_grok else 0.0
+            }
+        
+        # Normalize weights
+        total = sum(weights.values())
+        if total > 0:
+            weights = {k: v/total for k, v in weights.items()}
+        
+        return weights
 
     async def _detect_sentiment_change(
         self,
@@ -400,56 +597,115 @@ class SentimentAnalystAgent(Agent):
         
         return current_score - previous_score
 
-    def _assess_market_impact(self, scores: Dict[str, float]) -> str:
-        """Assess potential market impact based on sentiment."""
+    def _assess_quality_adjusted_impact(self, scores: Dict[str, float]) -> str:
+        """Assess market impact with data quality adjustment."""
         overall = scores['overall_score']
         confidence = scores['confidence']
+        data_quality = scores.get('data_quality', 1.0)
         
-        if abs(overall) < 0.2:
+        # Adjust thresholds based on data quality
+        quality_multiplier = 1.0 if data_quality > 0.7 else 1.5
+        
+        if abs(overall) < 0.2 * quality_multiplier:
             return "minimal"
-        elif abs(overall) < 0.5:
+        elif abs(overall) < 0.5 * quality_multiplier:
             return "moderate"
-        elif abs(overall) < 0.7:
-            return "significant" if confidence > 0.7 else "moderate"
+        elif abs(overall) < 0.7 * quality_multiplier:
+            return "significant" if confidence > 0.6 else "moderate"
         else:
-            return "high" if confidence > 0.7 else "significant"
+            return "high" if confidence > 0.6 else "significant"
 
-    def _generate_recommendation(
+    def _generate_quality_aware_recommendation(
         self,
         scores: Dict[str, float],
         sentiment_change: float
     ) -> Dict[str, Any]:
-        """Generate trading recommendation based on sentiment."""
+        """Generate trading recommendation with data quality awareness."""
         overall = scores['overall_score']
         confidence = scores['confidence']
+        data_quality = scores.get('data_quality', 1.0)
+        quality_level = DataQualityLevel(scores.get('quality_level', DataQualityLevel.HIGH.value))
         
-        # Strong positive sentiment
-        if overall > 0.6 and confidence > 0.7:
-            action = "consider_long"
-            reasoning = "Strong positive sentiment with high confidence"
-        # Strong negative sentiment
-        elif overall < -0.6 and confidence > 0.7:
-            action = "consider_short"
-            reasoning = "Strong negative sentiment with high confidence"
-        # Rapid positive change
-        elif sentiment_change > 0.4:
-            action = "monitor_for_entry"
-            reasoning = "Rapid improvement in sentiment"
-        # Rapid negative change
-        elif sentiment_change < -0.4:
-            action = "monitor_for_exit"
-            reasoning = "Rapid deterioration in sentiment"
-        # Neutral
-        else:
-            action = "hold"
-            reasoning = "Neutral or mixed sentiment signals"
+        # Get trading mode based on quality
+        trading_mode = self.get_trading_mode(quality_level)
+        
+        if trading_mode == TradingMode.NORMAL:
+            # High quality data - normal recommendations
+            if overall > 0.6 and confidence > 0.7:
+                action = "consider_long"
+                reasoning = "Strong positive sentiment with high confidence and quality data"
+            elif overall < -0.6 and confidence > 0.7:
+                action = "consider_short"
+                reasoning = "Strong negative sentiment with high confidence and quality data"
+            elif sentiment_change > 0.4:
+                action = "monitor_for_entry"
+                reasoning = "Rapid improvement in sentiment"
+            elif sentiment_change < -0.4:
+                action = "monitor_for_exit"
+                reasoning = "Rapid deterioration in sentiment"
+            else:
+                action = "hold"
+                reasoning = "Neutral or mixed sentiment signals"
+        
+        elif trading_mode == TradingMode.CONSERVATIVE:
+            # Medium quality - conservative recommendations
+            if overall > 0.7 and confidence > 0.75:
+                action = "consider_small_long"
+                reasoning = f"Positive sentiment but medium data quality ({data_quality:.1%})"
+            elif overall < -0.7 and confidence > 0.75:
+                action = "consider_small_short"
+                reasoning = f"Negative sentiment but medium data quality ({data_quality:.1%})"
+            else:
+                action = "hold"
+                reasoning = "Conservative mode due to medium data quality"
+        
+        else:  # DEFENSIVE or EMERGENCY
+            # Low quality - defensive only
+            action = "hold_defensive"
+            reasoning = f"Low data quality ({data_quality:.1%}) - defensive mode only"
+        
+        # Add position sizing based on quality
+        position_multiplier = self.quality_position_multipliers.get(quality_level, 0.0)
         
         return {
             'action': action,
             'confidence': confidence,
             'reasoning': reasoning,
-            'risk_level': self._assess_risk_level(overall, confidence, sentiment_change)
+            'data_quality': data_quality,
+            'quality_level': quality_level.value,
+            'trading_mode': trading_mode.value,
+            'position_size_multiplier': position_multiplier,
+            'risk_level': self._assess_quality_adjusted_risk(
+                overall, confidence, sentiment_change, data_quality
+            )
         }
+    
+    def _assess_quality_adjusted_risk(
+        self,
+        score: float,
+        confidence: float,
+        change: float,
+        quality: float
+    ) -> str:
+        """Assess risk level with quality adjustment."""
+        # Base risk assessment
+        base_risk = self._assess_risk_level(score, confidence, change)
+        
+        # Increase risk level if data quality is low
+        if quality < 0.5:
+            risk_map = {
+                'low': 'medium',
+                'medium': 'medium_high',
+                'medium_high': 'high',
+                'high': 'extreme'
+            }
+            return risk_map.get(base_risk, 'high')
+        elif quality < 0.7:
+            if base_risk == 'low':
+                return 'medium'
+            return base_risk
+        else:
+            return base_risk
 
     def _calculate_confidence(self, news_count: int, social_count: int) -> float:
         """Calculate confidence based on data availability."""

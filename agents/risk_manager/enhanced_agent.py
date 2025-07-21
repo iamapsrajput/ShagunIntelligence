@@ -1,4 +1,4 @@
-"""Enhanced Risk Management Agent with comprehensive risk controls."""
+"""Enhanced Risk Management Agent with comprehensive risk controls and data quality awareness."""
 
 from crewai import Agent
 from langchain.llms.base import BaseLLM
@@ -13,10 +13,11 @@ from .stop_loss_manager import StopLossManager
 from .portfolio_analyzer import PortfolioAnalyzer
 from .circuit_breaker import CircuitBreaker
 from .risk_metrics import RiskMetricsCalculator
+from ..base_quality_aware_agent import BaseQualityAwareAgent, DataQualityLevel, TradingMode
 
 
-class EnhancedRiskManagerAgent(Agent):
-    """Enhanced agent for comprehensive risk management in trading."""
+class EnhancedRiskManagerAgent(BaseQualityAwareAgent, Agent):
+    """Enhanced agent for comprehensive risk management with data quality as a risk factor."""
     
     def __init__(
         self,
@@ -27,7 +28,7 @@ class EnhancedRiskManagerAgent(Agent):
         max_correlation: float = 0.7
     ):
         """
-        Initialize the Enhanced Risk Manager Agent.
+        Initialize the Enhanced Risk Manager Agent with data quality awareness.
         
         Args:
             llm: Language model for agent
@@ -36,11 +37,21 @@ class EnhancedRiskManagerAgent(Agent):
             max_portfolio_risk: Maximum portfolio risk (6% default)
             max_correlation: Maximum allowed correlation between positions
         """
+        BaseQualityAwareAgent.__init__(self)
+        
         self.llm = llm
         self.capital = capital
         self.max_risk_per_trade = max_risk_per_trade
         self.max_portfolio_risk = max_portfolio_risk
         self.max_correlation = max_correlation
+        
+        # Data quality risk adjustments
+        self.quality_risk_multipliers = {
+            DataQualityLevel.HIGH: 1.0,      # Normal risk limits
+            DataQualityLevel.MEDIUM: 0.5,    # 50% of normal risk
+            DataQualityLevel.LOW: 0.25,      # 25% of normal risk
+            DataQualityLevel.CRITICAL: 0.0   # No risk allowed
+        }
         
         # Initialize components
         self.position_sizer = PositionSizer(capital, max_risk_per_trade)
@@ -55,15 +66,17 @@ class EnhancedRiskManagerAgent(Agent):
         self.blocked_trades = []
         
         # Call parent constructor
-        super().__init__(
-            role='Enhanced Risk Manager',
-            goal='Comprehensively assess and manage trading risks with advanced position sizing, dynamic stops, and portfolio monitoring',
-            backstory="""You are an elite risk management specialist with decades of experience 
-            in quantitative finance and portfolio management. You utilize advanced mathematical 
-            models including Value at Risk (VaR), volatility-based position sizing, and correlation 
-            analysis to protect capital while optimizing returns. You implement strict risk controls 
-            including circuit breakers and dynamic stop-loss management. Your expertise spans 
-            market microstructure, extreme event modeling, and systematic risk management.""",
+        Agent.__init__(self,
+            role='Data Quality-Aware Risk Manager',
+            goal='Assess trading risks with data quality as a primary risk factor, adjusting exposure based on data reliability',
+            backstory="""You are an elite risk management specialist who understands that data quality 
+            is a critical risk factor. You adjust risk limits based on data reliability:
+            - High quality data (>80%): Normal risk parameters and full analysis
+            - Medium quality (60-80%): Reduce risk limits by 50%, wider stops
+            - Low quality (40-60%): Minimal risk (25%), defensive positioning only
+            - Critical quality (<40%): No new risk, exit existing positions
+            You combine traditional risk metrics (VaR, volatility, correlation) with data quality 
+            assessment to provide comprehensive risk management.""",
             verbose=True,
             allow_delegation=False,
             llm=llm
@@ -80,7 +93,7 @@ class EnhancedRiskManagerAgent(Agent):
         confidence: float = 0.7
     ) -> Dict[str, Any]:
         """
-        Evaluate risk for a potential trade.
+        Evaluate risk for a potential trade with data quality consideration.
         
         Args:
             symbol: Trading symbol
@@ -90,9 +103,33 @@ class EnhancedRiskManagerAgent(Agent):
             confidence: Trade confidence level
             
         Returns:
-            Comprehensive risk evaluation
+            Comprehensive risk evaluation with data quality impact
         """
         try:
+            # Get data quality assessment
+            quote_data, data_quality_score, quality_level = await self.get_quality_weighted_data(
+                symbol, "quote"
+            )
+            
+            # Determine trading mode based on data quality
+            trading_mode = self.get_trading_mode(quality_level)
+            
+            # Adjust risk parameters based on data quality
+            quality_multiplier = self.quality_risk_multipliers[quality_level]
+            adjusted_max_risk = self.max_risk_per_trade * quality_multiplier
+            
+            # If data quality is critical, reject trade
+            if quality_level == DataQualityLevel.CRITICAL:
+                return {
+                    'symbol': symbol,
+                    'risk_score': 1.0,  # Maximum risk
+                    'recommendation': 'REJECT',
+                    'reason': 'Critical data quality - no new trades allowed',
+                    'data_quality_score': data_quality_score,
+                    'quality_level': quality_level.value,
+                    'trading_mode': trading_mode.value
+                }
+            
             # Calculate ATR for volatility
             atr = self.stop_loss_manager.calculate_atr(market_data)
             
@@ -137,6 +174,11 @@ class EnhancedRiskManagerAgent(Agent):
                 risk_reward_ratio, confidence, portfolio_impact, circuit_status
             )
             
+            # Adjust risk score based on data quality
+            quality_adjusted_risk_score = self._adjust_risk_score_for_quality(
+                risk_score, data_quality_score, quality_level
+            )
+            
             evaluation = {
                 'symbol': symbol,
                 'entry_price': entry_price,
@@ -152,7 +194,13 @@ class EnhancedRiskManagerAgent(Agent):
                 'portfolio_impact': portfolio_impact,
                 'circuit_breaker_status': circuit_status,
                 'risk_score': risk_score,
-                'recommendation': self._generate_recommendation(risk_score, risk_reward_ratio),
+                'quality_adjusted_risk_score': quality_adjusted_risk_score,
+                'data_quality_score': data_quality_score,
+                'quality_level': quality_level.value,
+                'trading_mode': trading_mode.value,
+                'recommendation': self._generate_quality_aware_recommendation(
+                    quality_adjusted_risk_score, risk_reward_ratio, quality_level
+                ),
                 'timestamp': datetime.now().isoformat()
             }
             
@@ -420,6 +468,49 @@ class EnhancedRiskManagerAgent(Agent):
         except Exception as e:
             logger.error(f"Error checking trade block: {str(e)}")
             return True, f"Error in risk check: {str(e)}"
+    
+    async def should_block_trade_quality_aware(
+        self,
+        symbol: str,
+        proposed_size: int,
+        entry_price: float,
+        current_portfolio: List[Dict[str, Any]]
+    ) -> Tuple[bool, str]:
+        """
+        Quality-aware trade blocking that considers data quality as primary risk factor.
+        """
+        try:
+            # Get data quality assessment
+            quote_data, data_quality_score, quality_level = await self.get_quality_weighted_data(
+                symbol, "quote"
+            )
+            
+            # Block trades if data quality is too low
+            if quality_level == DataQualityLevel.CRITICAL:
+                return True, f"Critical data quality ({data_quality_score:.1%}) - no trades allowed"
+            elif quality_level == DataQualityLevel.LOW:
+                return True, f"Low data quality ({data_quality_score:.1%}) - defensive mode only"
+            
+            # Standard risk checks
+            standard_block, standard_reason = await self.should_block_trade(
+                symbol, proposed_size, entry_price, current_portfolio
+            )
+            
+            if standard_block:
+                return True, standard_reason
+            
+            # Additional quality-based restrictions
+            if quality_level == DataQualityLevel.MEDIUM:
+                # Stricter limits for medium quality
+                position_value = proposed_size * entry_price
+                if position_value > self.capital * 0.05:  # Max 5% instead of 10%
+                    return True, f"Position size exceeds 5% limit due to medium data quality"
+            
+            return False, f"Trade approved with {quality_level.value} data quality"
+            
+        except Exception as e:
+            logger.error(f"Error in quality-aware trade blocking: {e}")
+            return True, f"Error in quality check: {str(e)}"
 
     def _calculate_risk_score(
         self,
@@ -566,6 +657,121 @@ class EnhancedRiskManagerAgent(Agent):
         # Would check recent trade history
         return 0.0
 
+    def _adjust_risk_score_for_quality(
+        self,
+        base_risk_score: float,
+        data_quality_score: float,
+        quality_level: DataQualityLevel
+    ) -> float:
+        """Adjust risk score based on data quality."""
+        # Poor data quality increases risk
+        quality_penalty = {
+            DataQualityLevel.HIGH: 0.0,      # No penalty
+            DataQualityLevel.MEDIUM: 0.15,   # +15% risk
+            DataQualityLevel.LOW: 0.30,      # +30% risk
+            DataQualityLevel.CRITICAL: 0.50  # +50% risk
+        }
+        
+        penalty = quality_penalty.get(quality_level, 0.5)
+        adjusted_score = base_risk_score + penalty
+        
+        # Also factor in the continuous quality score
+        quality_factor = 1.0 - data_quality_score  # Lower quality = higher factor
+        adjusted_score += quality_factor * 0.2  # Up to 20% additional risk
+        
+        return min(1.0, adjusted_score)  # Cap at 1.0
+    
+    def _generate_quality_aware_recommendation(
+        self,
+        risk_score: float,
+        risk_reward_ratio: float,
+        quality_level: DataQualityLevel
+    ) -> str:
+        """Generate recommendation considering data quality."""
+        if quality_level == DataQualityLevel.CRITICAL:
+            return "REJECT - Critical data quality"
+        elif quality_level == DataQualityLevel.LOW:
+            return "HOLD - Low data quality, defensive only"
+        
+        # For medium and high quality, use risk score
+        if risk_score > 0.7:
+            return "REJECT - Risk too high"
+        elif risk_score > 0.5:
+            if quality_level == DataQualityLevel.MEDIUM:
+                return "CAUTION - Moderate risk with medium data quality"
+            else:
+                return "CAUTION - Moderate risk"
+        elif risk_reward_ratio >= 2:
+            if quality_level == DataQualityLevel.HIGH:
+                return "ACCEPT - Good risk/reward with high quality data"
+            else:
+                return "ACCEPT_REDUCED - Good risk/reward but reduce size"
+        else:
+            return "REVIEW - Marginal opportunity"
+    
+    async def calculate_quality_adjusted_position_size(
+        self,
+        symbol: str,
+        entry_price: float,
+        stop_loss: float,
+        base_confidence: float = 0.7
+    ) -> Dict[str, Any]:
+        """Calculate position size with data quality adjustment."""
+        try:
+            # Get data quality
+            quote_data, data_quality_score, quality_level = await self.get_quality_weighted_data(
+                symbol, "quote"
+            )
+            
+            # Adjust confidence based on data quality
+            quality_confidence_multiplier = {
+                DataQualityLevel.HIGH: 1.0,
+                DataQualityLevel.MEDIUM: 0.7,
+                DataQualityLevel.LOW: 0.3,
+                DataQualityLevel.CRITICAL: 0.0
+            }
+            
+            adjusted_confidence = base_confidence * quality_confidence_multiplier[quality_level]
+            
+            # Get base position size
+            position = self.position_sizer.calculate_position_size(
+                entry_price=entry_price,
+                stop_loss=stop_loss,
+                volatility=0.02,  # Default if not available
+                confidence=adjusted_confidence
+            )
+            
+            # Apply quality multiplier
+            quality_multiplier = self.quality_risk_multipliers[quality_level]
+            
+            adjusted_position = {
+                'shares': int(position['shares'] * quality_multiplier),
+                'position_value': position['position_value'] * quality_multiplier,
+                'risk_amount': position['risk_amount'] * quality_multiplier,
+                'risk_percentage': position['risk_percentage'] * quality_multiplier,
+                'data_quality_score': data_quality_score,
+                'quality_level': quality_level.value,
+                'quality_multiplier': quality_multiplier,
+                'original_shares': position['shares'],
+                'adjustment_reason': self._get_quality_adjustment_reason(quality_level)
+            }
+            
+            return adjusted_position
+            
+        except Exception as e:
+            logger.error(f"Error calculating quality-adjusted position size: {e}")
+            raise
+    
+    def _get_quality_adjustment_reason(self, quality_level: DataQualityLevel) -> str:
+        """Get explanation for position size adjustment."""
+        reasons = {
+            DataQualityLevel.HIGH: "No adjustment - high quality data",
+            DataQualityLevel.MEDIUM: "50% reduction due to medium data quality",
+            DataQualityLevel.LOW: "75% reduction due to low data quality",
+            DataQualityLevel.CRITICAL: "Position blocked - critical data quality"
+        }
+        return reasons.get(quality_level, "Unknown quality level")
+    
     def get_status(self) -> Dict[str, Any]:
         """Get current status of risk manager."""
         return {
@@ -575,5 +781,8 @@ class EnhancedRiskManagerAgent(Agent):
             'max_risk_per_trade': self.max_risk_per_trade,
             'max_portfolio_risk': self.max_portfolio_risk,
             'circuit_breaker': self.circuit_breaker.get_status(),
-            'blocked_trades': len(self.blocked_trades)
+            'blocked_trades': len(self.blocked_trades),
+            'quality_risk_multipliers': {
+                k.value: v for k, v in self.quality_risk_multipliers.items()
+            }
         }

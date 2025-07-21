@@ -6,7 +6,7 @@ import uvicorn
 from loguru import logger
 from datetime import datetime
 
-from app.api.routes import health, trading, market_data, agents, portfolio, system
+from app.api.routes import health, trading, market_data, agents, portfolio, system, data_sources, data_quality, sentiment, news
 from app.api.websocket import websocket_router
 from app.core.config import get_settings
 from app.core.auth import auth_router
@@ -16,6 +16,7 @@ from app.core.scheduler import trading_scheduler
 from services.kite.client import KiteClient
 from agents.crew_manager import CrewManager
 from app.services.websocket_manager import websocket_manager
+from backend.data_sources.integration import get_data_source_integration
 
 settings = get_settings()
 
@@ -28,7 +29,13 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
-    # Initialize Kite client
+    # Initialize multi-source data manager
+    data_integration = get_data_source_integration()
+    await data_integration.initialize()
+    app.state.data_integration = data_integration
+    logger.info("Multi-source data manager initialized")
+    
+    # Initialize Kite client (kept for backward compatibility)
     app.state.kite_client = KiteClient()
     
     # Initialize CrewAI manager
@@ -48,6 +55,9 @@ async def lifespan(app: FastAPI):
     
     # Stop scheduler
     trading_scheduler.shutdown()
+    
+    # Shutdown data integration
+    await data_integration.shutdown()
     
     # Close WebSocket connections
     await websocket_manager.disconnect_all()
@@ -89,6 +99,10 @@ app.include_router(market_data.router, prefix="/api/v1/market", tags=["market"])
 app.include_router(agents.router, prefix="/api/v1/agents", tags=["agents"])
 app.include_router(portfolio.router, prefix="/api/v1/portfolio", tags=["portfolio"])
 app.include_router(system.router, prefix="/api/v1/system", tags=["system"])
+app.include_router(data_sources.router)
+app.include_router(data_quality.router)
+app.include_router(sentiment.router)
+app.include_router(news.router)
 app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 
 @app.get("/")

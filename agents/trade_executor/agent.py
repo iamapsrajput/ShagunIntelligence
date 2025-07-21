@@ -1,14 +1,17 @@
 from crewai import Agent
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
 from datetime import datetime, time
 import logging
 from dataclasses import dataclass
+from loguru import logger as loguru_logger
 
 from .order_manager import OrderManager
 from .position_monitor import PositionMonitor
 from .paper_trading_manager import PaperTradingManager
 from .trade_logger import TradeLogger
 from .order_timing_optimizer import OrderTimingOptimizer
+from ..base_quality_aware_agent import BaseQualityAwareAgent, DataQualityLevel, TradingMode
+from backend.data_sources.integration import get_data_source_integration
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -16,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class TradeSignal:
-    """Trade signal with all necessary information"""
+    """Trade signal with all necessary information including data quality"""
     symbol: str
     action: str  # BUY or SELL
     quantity: int
@@ -28,19 +31,28 @@ class TradeSignal:
     confidence: float = 0.0
     strategy_name: str = ""
     metadata: Dict[str, Any] = None
+    data_quality_score: float = 1.0  # Data quality at signal generation
+    quality_level: str = "high"  # Quality level
 
 
-class TradeExecutorAgent(Agent):
-    """Agent responsible for executing trades with optimal timing and handling"""
+class TradeExecutorAgent(BaseQualityAwareAgent, Agent):
+    """Quality-aware agent for executing trades with pre-execution data quality checks"""
     
     def __init__(self, kite_client=None, paper_trading=False):
-        super().__init__(
-            name="Trade Executor",
-            role="Execute trades efficiently with proper risk management",
-            goal="Execute trades at optimal prices while managing orders and positions",
-            backstory="""You are an expert trade execution specialist with deep knowledge
-            of order types, market microstructure, and execution algorithms. You ensure
-            trades are executed efficiently while minimizing slippage and managing risk.""",
+        BaseQualityAwareAgent.__init__(self)
+        Agent.__init__(self,
+            name="Quality-Aware Trade Executor",
+            role="Execute trades with pre-execution data quality validation",
+            goal="Execute trades only when data quality meets minimum thresholds",
+            backstory="""You are an expert trade execution specialist who understands that
+            execution quality depends on data reliability. You perform pre-execution checks:
+            - Verify current quote quality before placing orders
+            - Validate price levels against multiple sources
+            - Adjust order types based on data confidence
+            - Block trades when data quality is below threshold
+            High quality (>85%): Execute all order types normally
+            Medium quality (65-85%): Limit orders only, no market orders
+            Low quality (<65%): Block all new trades, manage existing only""",
             verbose=True,
             allow_delegation=False
         )
@@ -60,8 +72,16 @@ class TradeExecutorAgent(Agent):
         self.market_close = time(15, 30)
         self.intraday_square_off = time(15, 15)  # Square off 15 mins before close
         
-    def execute_trade(self, signal: TradeSignal) -> Dict[str, Any]:
-        """Execute a trade based on the provided signal"""
+        # Quality thresholds for execution
+        self.execution_quality_thresholds = {
+            'market_order': 0.85,  # High quality required for market orders
+            'limit_order': 0.65,   # Medium quality acceptable for limit orders
+            'stop_loss': 0.50,     # Lower threshold for protective orders
+            'any_order': 0.40      # Minimum for any execution
+        }
+        
+    async def execute_trade_with_quality_check(self, signal: TradeSignal) -> Dict[str, Any]:
+        """Execute trade with pre-execution data quality validation"""
         try:
             # Log the incoming signal
             self.trade_logger.log_signal(signal)
@@ -71,33 +91,64 @@ class TradeExecutorAgent(Agent):
                 logger.warning(f"Market is closed. Cannot execute trade for {signal.symbol}")
                 return {"status": "rejected", "reason": "market_closed"}
             
+            # Pre-execution quality check
+            quality_check = await self._pre_execution_quality_check(signal)
+            
+            if not quality_check['approved']:
+                logger.warning(
+                    f"Trade blocked for {signal.symbol}: {quality_check['reason']}"
+                )
+                return {
+                    "status": "rejected",
+                    "reason": quality_check['reason'],
+                    "data_quality": quality_check['data_quality'],
+                    "quality_level": quality_check['quality_level']
+                }
+            
+            # Adjust order based on quality
+            adjusted_signal = self._adjust_signal_for_quality(
+                signal, quality_check['quality_level']
+            )
+            
             # Check paper trading mode
             if self.paper_trading:
-                result = self.paper_trading_manager.execute_trade(signal)
+                result = self.paper_trading_manager.execute_trade(adjusted_signal)
+                result['data_quality'] = quality_check['data_quality']
                 self.trade_logger.log_trade(result)
                 return result
             
+            # Validate prices against current market
+            price_validation = await self._validate_prices(adjusted_signal)
+            if not price_validation['valid']:
+                return {
+                    "status": "rejected",
+                    "reason": price_validation['reason']
+                }
+            
             # Optimize order timing
             timing_params = self.timing_optimizer.get_optimal_timing(
-                signal.symbol,
-                signal.action,
-                signal.quantity
+                adjusted_signal.symbol,
+                adjusted_signal.action,
+                adjusted_signal.quantity
             )
             
             # Execute based on order type
-            if signal.order_type == "BRACKET":
-                result = self._execute_bracket_order(signal, timing_params)
-            elif signal.order_type == "LIMIT":
-                result = self._execute_limit_order(signal, timing_params)
+            if adjusted_signal.order_type == "BRACKET":
+                result = self._execute_bracket_order(adjusted_signal, timing_params)
+            elif adjusted_signal.order_type == "LIMIT":
+                result = self._execute_limit_order(adjusted_signal, timing_params)
             else:  # MARKET
-                result = self._execute_market_order(signal, timing_params)
+                result = self._execute_market_order(adjusted_signal, timing_params)
+            
+            # Add quality metadata
+            result['execution_quality'] = quality_check
             
             # Log the execution result
             self.trade_logger.log_trade(result)
             
             # Start monitoring the position if order was successful
             if result.get("status") == "success":
-                self.position_monitor.add_position(result["order_id"], signal)
+                self.position_monitor.add_position(result["order_id"], adjusted_signal)
             
             return result
             
@@ -244,6 +295,198 @@ class TradeExecutorAgent(Agent):
         except Exception as e:
             logger.error(f"Error calculating limit price: {str(e)}")
             return 0.0
+    
+    async def _pre_execution_quality_check(self, signal: TradeSignal) -> Dict[str, Any]:
+        """Perform pre-execution data quality validation."""
+        try:
+            # Get current quote with quality assessment
+            quote_data, data_quality, quality_level = await self.get_quality_weighted_data(
+                signal.symbol, "quote"
+            )
+            
+            if not quote_data:
+                return {
+                    'approved': False,
+                    'reason': 'Unable to fetch current market data',
+                    'data_quality': 0.0,
+                    'quality_level': DataQualityLevel.CRITICAL.value
+                }
+            
+            # Check minimum quality threshold
+            min_threshold = self.execution_quality_thresholds.get(
+                signal.order_type.lower(), 
+                self.execution_quality_thresholds['any_order']
+            )
+            
+            if data_quality < min_threshold:
+                return {
+                    'approved': False,
+                    'reason': f'Data quality {data_quality:.1%} below threshold {min_threshold:.1%}',
+                    'data_quality': data_quality,
+                    'quality_level': quality_level.value,
+                    'required_quality': min_threshold
+                }
+            
+            # Additional check for market orders
+            if signal.order_type == "MARKET" and quality_level != DataQualityLevel.HIGH:
+                return {
+                    'approved': False,
+                    'reason': 'Market orders require high data quality',
+                    'data_quality': data_quality,
+                    'quality_level': quality_level.value,
+                    'suggested_order_type': 'LIMIT'
+                }
+            
+            # Get multi-source validation for large orders
+            if signal.quantity * quote_data.get('current_price', 0) > 100000:  # Large order
+                consensus_data, consensus_confidence = await self.get_multi_source_consensus(
+                    signal.symbol
+                )
+                
+                if consensus_confidence < 0.7:
+                    return {
+                        'approved': False,
+                        'reason': 'Large order requires high consensus confidence',
+                        'data_quality': data_quality,
+                        'quality_level': quality_level.value,
+                        'consensus_confidence': consensus_confidence
+                    }
+            
+            return {
+                'approved': True,
+                'data_quality': data_quality,
+                'quality_level': quality_level,
+                'current_price': quote_data.get('current_price'),
+                'bid': quote_data.get('bid'),
+                'ask': quote_data.get('ask'),
+                'data_source': quote_data.get('data_source')
+            }
+            
+        except Exception as e:
+            loguru_logger.error(f"Error in pre-execution quality check: {e}")
+            return {
+                'approved': False,
+                'reason': f'Quality check error: {str(e)}',
+                'data_quality': 0.0,
+                'quality_level': DataQualityLevel.CRITICAL.value
+            }
+    
+    def _adjust_signal_for_quality(
+        self, 
+        signal: TradeSignal, 
+        quality_level: DataQualityLevel
+    ) -> TradeSignal:
+        """Adjust trade signal based on data quality."""
+        adjusted_signal = TradeSignal(
+            symbol=signal.symbol,
+            action=signal.action,
+            quantity=signal.quantity,
+            order_type=signal.order_type,
+            price=signal.price,
+            trigger_price=signal.trigger_price,
+            stop_loss=signal.stop_loss,
+            target=signal.target,
+            confidence=signal.confidence,
+            strategy_name=signal.strategy_name,
+            metadata=signal.metadata,
+            data_quality_score=signal.data_quality_score,
+            quality_level=quality_level.value
+        )
+        
+        # Adjust based on quality
+        if quality_level == DataQualityLevel.MEDIUM:
+            # Convert market orders to limit orders
+            if adjusted_signal.order_type == "MARKET":
+                adjusted_signal.order_type = "LIMIT"
+                # Price will be set during validation
+            
+            # Reduce quantity for medium quality
+            adjusted_signal.quantity = int(adjusted_signal.quantity * 0.7)
+            
+            # Widen stop loss for uncertainty
+            if adjusted_signal.stop_loss:
+                if adjusted_signal.action == "BUY":
+                    adjusted_signal.stop_loss *= 0.98  # 2% wider stop
+                else:
+                    adjusted_signal.stop_loss *= 1.02
+        
+        elif quality_level == DataQualityLevel.LOW:
+            # Very conservative adjustments
+            adjusted_signal.order_type = "LIMIT"
+            adjusted_signal.quantity = int(adjusted_signal.quantity * 0.3)
+            
+            # Very wide stop loss
+            if adjusted_signal.stop_loss:
+                if adjusted_signal.action == "BUY":
+                    adjusted_signal.stop_loss *= 0.95  # 5% wider stop
+                else:
+                    adjusted_signal.stop_loss *= 1.05
+        
+        return adjusted_signal
+    
+    async def _validate_prices(self, signal: TradeSignal) -> Dict[str, Any]:
+        """Validate signal prices against current market."""
+        try:
+            # Get current quote
+            quote_data, _, _ = await self.get_quality_weighted_data(signal.symbol, "quote")
+            
+            if not quote_data:
+                return {'valid': False, 'reason': 'Unable to fetch current prices'}
+            
+            current_price = quote_data.get('current_price', 0)
+            bid = quote_data.get('bid', current_price)
+            ask = quote_data.get('ask', current_price)
+            
+            # Set limit price if not provided
+            if signal.order_type == "LIMIT" and not signal.price:
+                if signal.action == "BUY":
+                    signal.price = bid + 0.05  # Slightly above bid
+                else:
+                    signal.price = ask - 0.05  # Slightly below ask
+            
+            # Validate limit price
+            if signal.order_type == "LIMIT":
+                if signal.action == "BUY" and signal.price > ask * 1.01:
+                    return {
+                        'valid': False, 
+                        'reason': f'Buy limit price {signal.price} too far from ask {ask}'
+                    }
+                elif signal.action == "SELL" and signal.price < bid * 0.99:
+                    return {
+                        'valid': False,
+                        'reason': f'Sell limit price {signal.price} too far from bid {bid}'
+                    }
+            
+            # Validate stop loss
+            if signal.stop_loss:
+                if signal.action == "BUY" and signal.stop_loss > current_price:
+                    return {
+                        'valid': False,
+                        'reason': 'Buy stop loss above current price'
+                    }
+                elif signal.action == "SELL" and signal.stop_loss < current_price:
+                    return {
+                        'valid': False,
+                        'reason': 'Sell stop loss below current price'
+                    }
+            
+            return {'valid': True, 'current_price': current_price, 'bid': bid, 'ask': ask}
+            
+        except Exception as e:
+            loguru_logger.error(f"Error validating prices: {e}")
+            return {'valid': False, 'reason': str(e)}
+    
+    def execute_trade(self, signal: TradeSignal) -> Dict[str, Any]:
+        """Legacy synchronous execute - wraps async version."""
+        import asyncio
+        try:
+            loop = asyncio.get_event_loop()
+            return loop.run_until_complete(self.execute_trade_with_quality_check(signal))
+        except RuntimeError:
+            # Create new event loop if none exists
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            return loop.run_until_complete(self.execute_trade_with_quality_check(signal))
     
     def _is_market_open(self) -> bool:
         """Check if market is currently open"""

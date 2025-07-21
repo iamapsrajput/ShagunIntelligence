@@ -8,7 +8,12 @@
       "Bash(grep:*)",
       "Bash(black:*)",
       "Bash(python3 -m black:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(docker:*)",
+      "Bash(docker-compose:*)",
+      "Bash(pip3:*)"
     ],
     "deny": []
   }
