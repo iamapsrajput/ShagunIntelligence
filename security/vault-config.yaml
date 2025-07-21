@@ -1,0 +1,168 @@
+# HashiCorp Vault configuration for AlgoHive
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-config
+  namespace: algohive
+data:
+  vault.hcl: |
+    ui = true
+    
+    listener "tcp" {
+      tls_disable = 0
+      address = "[::]:8200"
+      cluster_address = "[::]:8201"
+      tls_cert_file = "/vault/certs/tls.crt"
+      tls_key_file = "/vault/certs/tls.key"
+    }
+    
+    storage "consul" {
+      path = "vault"
+      address = "consul:8500"
+    }
+    
+    seal "awskms" {
+      region = "us-east-1"
+      kms_key_id = "alias/vault-unseal"
+    }
+    
+    telemetry {
+      prometheus_retention_time = "30s"
+      disable_hostname = true
+    }
+    
+    api_addr = "https://vault.algohive.com"
+    cluster_addr = "https://vault.algohive.com:8201"
+    
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vault-policies
+  namespace: algohive
+data:
+  algohive-app-policy.hcl: |
+    # Policy for AlgoHive application
+    path "secret/data/algohive/*" {
+      capabilities = ["read", "list"]
+    }
+    
+    path "database/creds/algohive-app" {
+      capabilities = ["read"]
+    }
+    
+    path "pki/issue/algohive-cert" {
+      capabilities = ["create", "update"]
+    }
+    
+    path "auth/token/renew-self" {
+      capabilities = ["update"]
+    }
+    
+  admin-policy.hcl: |
+    # Admin policy
+    path "*" {
+      capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+    }
+    
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: vault-init
+  namespace: algohive
+spec:
+  template:
+    spec:
+      serviceAccountName: vault
+      containers:
+        - name: vault-init
+          image: vault:1.13.0
+          command:
+            - /bin/sh
+            - -c
+            - |
+              # Wait for Vault to be ready
+              until vault status; do
+                echo "Waiting for Vault to be ready..."
+                sleep 5
+              done
+              
+              # Initialize Vault if not already initialized
+              if ! vault status | grep -q "Initialized.*true"; then
+                vault operator init \
+                  -key-shares=5 \
+                  -key-threshold=3 \
+                  -format=json > /tmp/vault-init.json
+                
+                # Store init keys in K8s secret (temporary, should use KMS)
+                kubectl create secret generic vault-init \
+                  --from-file=/tmp/vault-init.json \
+                  -n algohive
+              fi
+              
+              # Unseal Vault (in production, use auto-unseal with KMS)
+              # This is just for initial setup
+              
+              # Configure auth methods
+              vault auth enable kubernetes
+              vault write auth/kubernetes/config \
+                kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
+                kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
+                token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
+              
+              # Configure database secrets engine
+              vault secrets enable database
+              vault write database/config/postgresql \
+                plugin_name=postgresql-database-plugin \
+                allowed_roles="algohive-app" \
+                connection_url="postgresql://{{username}}:{{password}}@postgres-service:5432/algohive?sslmode=disable" \
+                username="vault" \
+                password="vault-password"
+              
+              vault write database/roles/algohive-app \
+                db_name=postgresql \
+                creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
+                                   GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
+                default_ttl="1h" \
+                max_ttl="24h"
+              
+              # Configure PKI secrets engine
+              vault secrets enable pki
+              vault secrets tune -max-lease-ttl=87600h pki
+              
+              vault write pki/root/generate/internal \
+                common_name="AlgoHive Root CA" \
+                ttl=87600h
+              
+              vault write pki/config/urls \
+                issuing_certificates="https://vault.algohive.com/v1/pki/ca" \
+                crl_distribution_points="https://vault.algohive.com/v1/pki/crl"
+              
+              vault write pki/roles/algohive-cert \
+                allowed_domains="algohive.com" \
+                allow_subdomains=true \
+                max_ttl="720h"
+              
+              # Apply policies
+              vault policy write algohive-app /vault/policies/algohive-app-policy.hcl
+              vault policy write admin /vault/policies/admin-policy.hcl
+              
+              # Configure Kubernetes auth roles
+              vault write auth/kubernetes/role/algohive-app \
+                bound_service_account_names=algohive-app \
+                bound_service_account_namespaces=algohive \
+                policies=algohive-app \
+                ttl=24h
+              
+          env:
+            - name: VAULT_ADDR
+              value: "http://vault:8200"
+          volumeMounts:
+            - name: policies
+              mountPath: /vault/policies
+      volumes:
+        - name: policies
+          configMap:
+            name: vault-policies
+      restartPolicy: OnFailure

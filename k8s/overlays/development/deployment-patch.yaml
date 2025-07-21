@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: algohive-app
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+        - name: algohive-app
+          resources:
+            requests:
+              cpu: 250m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 512Mi
+          env:
+            - name: DEVELOPMENT_MODE
+              value: "true"
+            - name: AUTO_RELOAD
+              value: "true"

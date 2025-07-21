@@ -1,0 +1,47 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: algohive
+
+bases:
+  - ../../base
+
+commonLabels:
+  environment: production
+  
+commonAnnotations:
+  environment: production
+  managed-by: kustomize
+
+configMapGenerator:
+  - name: algohive-config
+    behavior: merge
+    literals:
+      - APP_ENV=production
+      - LOG_LEVEL=WARNING
+      - WORKERS=4
+      - MAX_REQUESTS=1000
+      - MAX_REQUESTS_JITTER=100
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - hpa-patch.yaml
+  - pdb-patch.yaml
+  - ingress-patch.yaml
+
+replicas:
+  - name: algohive-app
+    count: 3
+  - name: nginx
+    count: 3
+
+images:
+  - name: algohive/app
+    newName: ${ECR_REGISTRY}/algohive
+    newTag: latest
+
+# Production-specific resources
+resources:
+  - external-secrets.yaml
+  - backup-cronjob.yaml
+  - monitoring-sidecar.yaml

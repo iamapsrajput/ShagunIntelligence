@@ -1,0 +1,48 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: algohive-dev
+
+bases:
+  - ../../base
+
+namePrefix: dev-
+
+commonLabels:
+  environment: development
+  
+commonAnnotations:
+  environment: development
+  managed-by: kustomize
+
+configMapGenerator:
+  - name: algohive-config
+    behavior: merge
+    literals:
+      - APP_ENV=development
+      - LOG_LEVEL=DEBUG
+      - WORKERS=2
+      - DB_HOST=postgres-service
+      - REDIS_HOST=redis-service
+
+secretGenerator:
+  - name: algohive-secrets
+    behavior: merge
+    literals:
+      - DB_PASSWORD=dev-password
+      - REDIS_PASSWORD=dev-password
+      - SECRET_KEY=dev-secret-key
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - service-patch.yaml
+
+replicas:
+  - name: algohive-app
+    count: 1
+  - name: nginx
+    count: 1
+
+images:
+  - name: algohive/app
+    newTag: develop

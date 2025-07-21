@@ -1,0 +1,155 @@
+groups:
+  - name: algohive_app_alerts
+    interval: 30s
+    rules:
+      # High error rate
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m])) by (service)
+            /
+            sum(rate(http_requests_total[5m])) by (service)
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+          team: backend
+        annotations:
+          summary: "High error rate on {{ $labels.service }}"
+          description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}"
+          runbook_url: "https://wiki.algohive.com/runbooks/high-error-rate"
+
+      # API latency
+      - alert: HighAPILatency
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, service)
+          ) > 1
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High API latency on {{ $labels.service }}"
+          description: "95th percentile latency is {{ $value }}s for service {{ $labels.service }}"
+
+      # Trading anomalies
+      - alert: TradingAnomalyDetected
+        expr: |
+          increase(trading_anomalies_total[5m]) > 5
+        for: 2m
+        labels:
+          severity: critical
+          team: trading
+        annotations:
+          summary: "Trading anomaly detected"
+          description: "{{ $value }} anomalies detected in the last 5 minutes"
+          action: "Check trading logs and consider halting automated trading"
+
+      # AI service failures
+      - alert: AIServiceFailure
+        expr: |
+          sum(rate(ai_service_errors_total[5m])) by (service) > 0.1
+        for: 5m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "AI service {{ $labels.service }} experiencing failures"
+          description: "Error rate: {{ $value }} errors per second"
+
+      # WebSocket connection issues
+      - alert: WebSocketConnectionDrop
+        expr: |
+          (
+            websocket_connections_active / websocket_connections_total
+          ) < 0.8
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "WebSocket connection drop detected"
+          description: "Only {{ $value | humanizePercentage }} of WebSocket connections are active"
+
+      # Agent performance degradation
+      - alert: AgentPerformanceDegradation
+        expr: |
+          agent_task_duration_seconds{quantile="0.95"} > 10
+        for: 10m
+        labels:
+          severity: warning
+          team: ml
+        annotations:
+          summary: "Agent {{ $labels.agent }} performance degraded"
+          description: "95th percentile task duration is {{ $value }}s"
+
+      # Memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            container_memory_usage_bytes{pod=~"algohive-app-.*"}
+            / container_spec_memory_limit_bytes{pod=~"algohive-app-.*"}
+          ) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High memory usage on {{ $labels.pod }}"
+          description: "Memory usage is {{ $value | humanizePercentage }}"
+
+      # CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          (
+            rate(container_cpu_usage_seconds_total{pod=~"algohive-app-.*"}[5m])
+            / container_spec_cpu_quota{pod=~"algohive-app-.*"}
+          ) > 0.8
+        for: 10m
+        labels:
+          severity: warning
+          team: backend
+        annotations:
+          summary: "High CPU usage on {{ $labels.pod }}"
+          description: "CPU usage is {{ $value | humanizePercentage }}"
+
+      # Pod restart
+      - alert: PodRestartingTooOften
+        expr: |
+          increase(kube_pod_container_status_restarts_total{namespace="algohive"}[1h]) > 5
+        for: 5m
+        labels:
+          severity: warning
+          team: devops
+        annotations:
+          summary: "Pod {{ $labels.pod }} restarting too often"
+          description: "Pod has restarted {{ $value }} times in the last hour"
+
+      # Trading volume spike
+      - alert: TradingVolumeSpike
+        expr: |
+          (
+            sum(rate(trades_executed_total[5m]))
+            / sum(rate(trades_executed_total[1h] offset 1h))
+          ) > 5
+        for: 5m
+        labels:
+          severity: info
+          team: trading
+        annotations:
+          summary: "Trading volume spike detected"
+          description: "Current trading volume is {{ $value }}x higher than hourly average"
+
+      # Risk limit breach
+      - alert: RiskLimitBreach
+        expr: |
+          risk_limit_breaches_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          team: risk
+        annotations:
+          summary: "Risk limit breach detected"
+          description: "Risk limit {{ $labels.limit_type }} breached {{ $value }} times"
+          action: "Review positions and consider reducing exposure"

@@ -1,0 +1,215 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-scripts
+  namespace: algohive
+data:
+  backup.sh: |
+    #!/bin/bash
+    set -e
+    
+    # Configuration
+    BACKUP_DIR="/backup"
+    S3_BUCKET="s3://algohive-backups"
+    TIMESTAMP=$(date +%Y%m%d-%H%M%S)
+    BACKUP_NAME="algohive-backup-${TIMESTAMP}"
+    
+    echo "Starting backup at ${TIMESTAMP}"
+    
+    # Create backup directory
+    mkdir -p ${BACKUP_DIR}/${BACKUP_NAME}
+    
+    # Backup PostgreSQL database
+    echo "Backing up PostgreSQL database..."
+    PGPASSWORD=${DB_PASSWORD} pg_dump \
+      -h ${DB_HOST} \
+      -U ${DB_USER} \
+      -d ${DB_NAME} \
+      -f ${BACKUP_DIR}/${BACKUP_NAME}/database.sql
+    
+    # Compress database backup
+    gzip ${BACKUP_DIR}/${BACKUP_NAME}/database.sql
+    
+    # Backup Redis data
+    echo "Backing up Redis data..."
+    redis-cli -h ${REDIS_HOST} -a ${REDIS_PASSWORD} --rdb ${BACKUP_DIR}/${BACKUP_NAME}/redis.rdb
+    
+    # Backup application data
+    echo "Backing up application data..."
+    tar -czf ${BACKUP_DIR}/${BACKUP_NAME}/app-data.tar.gz /app/data
+    
+    # Create backup manifest
+    cat > ${BACKUP_DIR}/${BACKUP_NAME}/manifest.json <<EOF
+    {
+      "timestamp": "${TIMESTAMP}",
+      "version": "${APP_VERSION}",
+      "components": {
+        "database": "database.sql.gz",
+        "redis": "redis.rdb",
+        "app_data": "app-data.tar.gz"
+      }
+    }
+    EOF
+    
+    # Upload to S3
+    echo "Uploading backup to S3..."
+    aws s3 cp ${BACKUP_DIR}/${BACKUP_NAME} ${S3_BUCKET}/${BACKUP_NAME} --recursive
+    
+    # Cleanup old local backups
+    find ${BACKUP_DIR} -type d -mtime +7 -exec rm -rf {} +
+    
+    # Verify backup
+    aws s3 ls ${S3_BUCKET}/${BACKUP_NAME}/
+    
+    echo "Backup completed successfully"
+    
+  restore.sh: |
+    #!/bin/bash
+    set -e
+    
+    # Configuration
+    BACKUP_DIR="/backup"
+    S3_BUCKET="s3://algohive-backups"
+    
+    if [ -z "$1" ]; then
+      echo "Usage: ./restore.sh <backup-name>"
+      exit 1
+    fi
+    
+    BACKUP_NAME=$1
+    echo "Starting restore from ${BACKUP_NAME}"
+    
+    # Download backup from S3
+    echo "Downloading backup from S3..."
+    mkdir -p ${BACKUP_DIR}/${BACKUP_NAME}
+    aws s3 cp ${S3_BUCKET}/${BACKUP_NAME} ${BACKUP_DIR}/${BACKUP_NAME} --recursive
+    
+    # Restore PostgreSQL database
+    echo "Restoring PostgreSQL database..."
+    gunzip -c ${BACKUP_DIR}/${BACKUP_NAME}/database.sql.gz | \
+      PGPASSWORD=${DB_PASSWORD} psql \
+        -h ${DB_HOST} \
+        -U ${DB_USER} \
+        -d ${DB_NAME}
+    
+    # Restore Redis data
+    echo "Restoring Redis data..."
+    redis-cli -h ${REDIS_HOST} -a ${REDIS_PASSWORD} --pipe < ${BACKUP_DIR}/${BACKUP_NAME}/redis.rdb
+    
+    # Restore application data
+    echo "Restoring application data..."
+    tar -xzf ${BACKUP_DIR}/${BACKUP_NAME}/app-data.tar.gz -C /
+    
+    echo "Restore completed successfully"
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: algohive-backup
+  namespace: algohive
+spec:
+  schedule: "0 2 * * *"  # Daily at 2 AM
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            job: backup
+        spec:
+          serviceAccountName: backup-sa
+          restartPolicy: OnFailure
+          containers:
+            - name: backup
+              image: algohive/backup-tools:latest
+              command: ["/bin/bash", "/scripts/backup.sh"]
+              env:
+                - name: DB_HOST
+                  value: postgres-service
+                - name: DB_USER
+                  valueFrom:
+                    secretKeyRef:
+                      name: algohive-secrets
+                      key: DB_USER
+                - name: DB_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: algohive-secrets
+                      key: DB_PASSWORD
+                - name: DB_NAME
+                  value: algohive
+                - name: REDIS_HOST
+                  value: redis-service
+                - name: REDIS_PASSWORD
+                  valueFrom:
+                    secretKeyRef:
+                      name: algohive-secrets
+                      key: REDIS_PASSWORD
+                - name: APP_VERSION
+                  value: "latest"
+                - name: AWS_DEFAULT_REGION
+                  value: us-east-1
+              volumeMounts:
+                - name: backup-scripts
+                  mountPath: /scripts
+                - name: backup-storage
+                  mountPath: /backup
+                - name: app-data
+                  mountPath: /app/data
+                  readOnly: true
+              resources:
+                requests:
+                  cpu: 500m
+                  memory: 512Mi
+                limits:
+                  cpu: 1000m
+                  memory: 1Gi
+          volumes:
+            - name: backup-scripts
+              configMap:
+                name: backup-scripts
+                defaultMode: 0755
+            - name: backup-storage
+              emptyDir: {}
+            - name: app-data
+              persistentVolumeClaim:
+                claimName: app-data-pvc
+
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: backup-sa
+  namespace: algohive
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: backup-role
+  namespace: algohive
+rules:
+  - apiGroups: [""]
+    resources: ["pods", "pods/exec"]
+    verbs: ["get", "list", "create"]
+  - apiGroups: [""]
+    resources: ["persistentvolumeclaims"]
+    verbs: ["get", "list"]
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: backup-rolebinding
+  namespace: algohive
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: backup-role
+subjects:
+  - kind: ServiceAccount
+    name: backup-sa
+    namespace: algohive

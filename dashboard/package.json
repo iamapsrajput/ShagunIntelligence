@@ -1,0 +1,62 @@
+{
+  "name": "algohive-dashboard",
+  "version": "1.0.0",
+  "description": "Real-time trading dashboard for AlgoHive",
+  "private": true,
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.20.0",
+    "plotly.js": "^2.27.0",
+    "react-plotly.js": "^2.6.0",
+    "socket.io-client": "^4.7.2",
+    "axios": "^1.6.2",
+    "date-fns": "^2.30.0",
+    "recharts": "^2.9.3",
+    "react-query": "^3.39.3",
+    "@tanstack/react-table": "^8.10.7",
+    "react-hook-form": "^7.47.0",
+    "react-hot-toast": "^2.4.1",
+    "lucide-react": "^0.292.0",
+    "clsx": "^2.0.0",
+    "tailwindcss": "^3.3.6",
+    "@headlessui/react": "^1.7.17",
+    "framer-motion": "^10.16.5"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.38",
+    "@types/react-dom": "^18.2.17",
+    "@types/plotly.js": "^2.12.29",
+    "@vitejs/plugin-react": "^4.2.0",
+    "typescript": "^5.3.2",
+    "vite": "^5.0.5",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32",
+    "eslint": "^8.54.0",
+    "eslint-plugin-react": "^7.33.2",
+    "eslint-plugin-react-hooks": "^4.6.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}

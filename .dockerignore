@@ -2,23 +2,33 @@
 .git
 .gitignore
 
-# Environment files
+# CI/CD
+.github/
+.gitlab-ci.yml
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
+
+# Kubernetes
+k8s/
+helm/
+
+# Development
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+*.log
+*.pid
+*.seed
+*.pid.lock
 
-# Virtual environments
-venv/
-env/
-ENV/
-
-# Python cache
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
-
-# Distribution / packaging
 .Python
 build/
 develop-eggs/
@@ -35,18 +45,18 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+MANIFEST
+venv/
+ENV/
 
-# PyInstaller
-*.manifest
-*.spec
-
-# Logs
-*.log
-logs/
-
-# Database
-*.db
-*.sqlite3
+# Testing
+.coverage
+.pytest_cache/
+htmlcov/
+.tox/
+.hypothesis/
+tests/
+test_reports/
 
 # IDE
 .vscode/
@@ -55,24 +65,50 @@ logs/
 *.swo
 *~
 
-# OS generated files
+# OS
 .DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
 Thumbs.db
-
-# Test coverage
-htmlcov/
-.coverage
-.pytest_cache/
 
 # Documentation
 docs/
 *.md
+!README.md
 
 # Temporary files
 tmp/
 temp/
+*.tmp
+*.temp
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Node (for dashboard)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build artifacts
+*.pyc
+*.pyo
+*.pyd
+.coverage
+coverage.xml
+*.cover
+
+# Monitoring
+monitoring/
+grafana-data/
+prometheus-data/
+
+# Scripts
+scripts/
+disaster-recovery/
+
+# Local data
+data/
+logs/
+backups/

@@ -1,0 +1,44 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: algohive-staging
+
+bases:
+  - ../../base
+
+namePrefix: staging-
+
+commonLabels:
+  environment: staging
+  
+commonAnnotations:
+  environment: staging
+  managed-by: kustomize
+
+configMapGenerator:
+  - name: algohive-config
+    behavior: merge
+    literals:
+      - APP_ENV=staging
+      - LOG_LEVEL=INFO
+      - WORKERS=3
+      - MAX_REQUESTS=500
+
+patchesStrategicMerge:
+  - deployment-patch.yaml
+  - ingress-patch.yaml
+
+replicas:
+  - name: algohive-app
+    count: 2
+  - name: nginx
+    count: 2
+
+images:
+  - name: algohive/app
+    newName: ${ECR_REGISTRY}/algohive
+    newTag: staging-latest
+
+# Use external secrets for staging
+resources:
+  - external-secrets.yaml

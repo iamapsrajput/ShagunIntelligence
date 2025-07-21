@@ -1,0 +1,145 @@
+# Velero configuration for Kubernetes cluster backup
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: velero-config
+  namespace: velero
+data:
+  config.yaml: |
+    # Velero server configuration
+    backupStorageLocations:
+    - name: default
+      provider: aws
+      bucket: algohive-velero-backups
+      config:
+        region: us-east-1
+        s3ForcePathStyle: "false"
+    
+    volumeSnapshotLocations:
+    - name: default
+      provider: aws
+      config:
+        region: us-east-1
+    
+    # Backup all namespaces except system ones
+    defaultBackupTTL: 720h  # 30 days
+    
+    # Plugins
+    plugins:
+    - name: velero-plugin-for-aws
+      image: velero/velero-plugin-for-aws:v1.7.0
+    - name: velero-plugin-for-csi
+      image: velero/velero-plugin-for-csi:v0.5.0
+
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: daily-backup
+  namespace: velero
+spec:
+  schedule: "0 3 * * *"  # Daily at 3 AM
+  template:
+    ttl: 720h  # 30 days retention
+    includedNamespaces:
+      - algohive
+      - algohive-staging
+    excludedResources:
+      - events
+      - events.events.k8s.io
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+    hooks:
+      resources:
+        - name: postgres-backup
+          includedNamespaces:
+            - algohive
+          labelSelector:
+            matchLabels:
+              app: postgres
+          pre:
+            - exec:
+                container: postgres
+                command:
+                  - /bin/bash
+                  - -c
+                  - |
+                    pg_dump -U algohive algohive > /backup/pre-velero-backup.sql
+                timeout: 10m
+
+---
+apiVersion: velero.io/v1
+kind: Schedule
+metadata:
+  name: weekly-full-backup
+  namespace: velero
+spec:
+  schedule: "0 4 * * 0"  # Weekly on Sunday at 4 AM
+  template:
+    ttl: 2160h  # 90 days retention
+    includedNamespaces:
+      - "*"
+    excludedNamespaces:
+      - kube-system
+      - kube-public
+      - kube-node-lease
+    storageLocation: default
+    volumeSnapshotLocations:
+      - default
+
+---
+# Backup monitoring
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backup-monitoring
+  namespace: algohive
+data:
+  check-backups.sh: |
+    #!/bin/bash
+    
+    # Check Velero backup status
+    LAST_BACKUP=$(velero backup get -o json | jq -r '.items[0].status.phase')
+    LAST_BACKUP_TIME=$(velero backup get -o json | jq -r '.items[0].status.completionTimestamp')
+    
+    if [ "$LAST_BACKUP" != "Completed" ]; then
+      echo "CRITICAL: Last backup failed with status: $LAST_BACKUP"
+      exit 2
+    fi
+    
+    # Check if backup is recent (within 25 hours)
+    BACKUP_AGE=$(($(date +%s) - $(date -d "$LAST_BACKUP_TIME" +%s)))
+    if [ $BACKUP_AGE -gt 90000 ]; then
+      echo "WARNING: Last successful backup is older than 25 hours"
+      exit 1
+    fi
+    
+    echo "OK: Backup system healthy. Last backup: $LAST_BACKUP_TIME"
+    exit 0
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: backup-monitor
+  namespace: algohive
+spec:
+  schedule: "0 */6 * * *"  # Every 6 hours
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: monitor
+              image: bitnami/kubectl:latest
+              command: ["/bin/bash", "/scripts/check-backups.sh"]
+              volumeMounts:
+                - name: scripts
+                  mountPath: /scripts
+          volumes:
+            - name: scripts
+              configMap:
+                name: backup-monitoring
+                defaultMode: 0755
+          restartPolicy: OnFailure
