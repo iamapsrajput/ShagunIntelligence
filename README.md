@@ -1,19 +1,19 @@
-# AlgoHive - AI-Powered Algorithmic Trading Platform
+# Shagun Intelligence - AI-Powered Algorithmic Trading Platform
 
 <div align="center">
-  <img src="assets/shagunintelligence-logo.png" alt="ShagunIntelligance Logo" width="200"/>
+  <img src="assets/shagunintelligence-logo.png" alt="Shagun Intelligence Logo" width="200"/>
 
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
-[![CI/CD](https://img.shields.io/github/workflow/status/algohive/algohive/CI%20Pipeline/main)](https://github.com/algohive/algohive/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/algohive/algohive)](https://codecov.io/gh/algohive/algohive)
+[![CI/CD](https://img.shields.io/github/workflow/status/shagunintelligence/shagunintelligence/CI%20Pipeline/main)](https://github.com/shagunintelligence/shagunintelligence/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/shagunintelligence/shagunintelligence)](https://codecov.io/gh/shagunintelligence/shagunintelligence)
 
 </div>
 
 ## 🚀 Overview
 
-AlgoHive is a sophisticated AI-powered algorithmic trading platform that leverages multiple AI agents working collaboratively to make intelligent trading decisions in the Indian stock market. Built with cutting-edge technologies including CrewAI for multi-agent orchestration, FastAPI for high-performance APIs, and integration with Zerodha Kite Connect for live trading.
+Shagun Intelligence is a sophisticated AI-powered algorithmic trading platform that leverages multiple AI agents working collaboratively to make intelligent trading decisions in the Indian stock market. Built with cutting-edge technologies including CrewAI for multi-agent orchestration, FastAPI for high-performance APIs, and integration with Zerodha Kite Connect for live trading.
 
 ### Key Features
 
@@ -40,11 +40,11 @@ AlgoHive is a sophisticated AI-powered algorithmic trading platform that leverag
 
 ## 🏗️ Architecture
 
-AlgoHive uses a microservices architecture with AI agents at its core:
+Shagun Intelligence uses a microservices architecture with AI agents at its core:
 
 ```
 ┌────────────────────────────────────────────────────────────┐
-│                        AlgoHive Platform                        │
+│                    Shagun Intelligence Platform                │
 ├────────────────────────────────────────────────────────────┤
 │                                                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐          │
@@ -102,8 +102,8 @@ AlgoHive uses a microservices architecture with AI agents at its core:
 
 ```bash
 # Clone the repository
-git clone https://github.com/algohive/algohive.git
-cd algohive
+git clone https://github.com/shagunintelligence/shagunintelligence.git
+cd shagunintelligence
 
 # Copy environment variables
 cp .env.example .env
@@ -127,8 +127,8 @@ docker-compose up -d
 1. **Clone the repository**
 
 ```bash
-git clone https://github.com/algohive/algohive.git
-cd algohive
+git clone https://github.com/shagunintelligence/shagunintelligence.git
+cd shagunintelligence
 ```
 
 2. **Create virtual environment**
@@ -161,7 +161,7 @@ pip install -r requirements.txt
 
 ```bash
 # Create PostgreSQL database
-createdb algohive
+createdb shagunintelligence
 
 # Run migrations
 alembic upgrade head
@@ -199,7 +199,7 @@ SECRET_KEY=your-secret-key-here
 LOG_LEVEL=INFO
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/algohive
+DATABASE_URL=postgresql://user:password@localhost:5432/shagunintelligence
 
 # Redis
 REDIS_URL=redis://localhost:6379/0
@@ -261,7 +261,7 @@ access_token = kite.generate_session(request_token)
 
 ```bash
 # Using CLI
-python -m algohive start --mode live
+python -m shagunintelligence start --mode live
 
 # Or using API
 curl -X POST http://localhost:8000/api/v1/trading/start
@@ -280,7 +280,7 @@ Test strategies without real money:
 
 ```bash
 # Enable paper trading mode
-python -m algohive start --mode paper --capital 1000000
+python -m shagunintelligence start --mode paper --capital 1000000
 ```
 
 ## 📚 API Documentation
@@ -388,16 +388,16 @@ Current test coverage:
 
 ```bash
 # Create namespace
-kubectl create namespace algohive
+kubectl create namespace shagunintelligence
 
 # Apply configurations
 kubectl apply -k k8s/overlays/production/
 
 # Check deployment status
-kubectl get pods -n algohive
+kubectl get pods -n shagunintelligence
 
 # Scale deployment
-kubectl scale deployment algohive-app --replicas=5 -n algohive
+kubectl scale deployment shagunintelligence-app --replicas=5 -n shagunintelligence
 ```
 
 ### Production Checklist
@@ -449,10 +449,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- Documentation: [docs.algohive.com](https://docs.algohive.com)
-- Issues: [GitHub Issues](https://github.com/algohive/algohive/issues)
-- Email: <support@algohive.com>
-- Discord: [Join our community](https://discord.gg/algohive)
+- Documentation: [docs.shagunintelligence.com](https://docs.shagunintelligence.com)
+- Issues: [GitHub Issues](https://github.com/shagunintelligence/shagunintelligence/issues)
+- Email: <support@shagunintelligence.com>
+- Discord: [Join our community](https://discord.gg/shagunintelligence)
 
 ## 🙏 Acknowledgments
 
@@ -464,5 +464,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 <div align="center">
-  Made with ❤️ by the AlgoHive Team
+  Made with ❤️ by the Shagun Intelligence Team
 </div>

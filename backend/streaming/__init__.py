@@ -1,5 +1,5 @@
 """
-Real-time streaming system for AlgoHive.
+Real-time streaming system for Shagun Intelligence.
 
 This module provides high-performance data streaming from multiple sources
 with quality monitoring, automatic failover, and agent integration.

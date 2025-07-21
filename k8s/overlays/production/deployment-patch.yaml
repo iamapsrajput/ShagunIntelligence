@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: algohive-app
+  name: shagunintelligence-app
 spec:
   replicas: 3
   strategy:
@@ -19,10 +19,10 @@ spec:
                   - key: app
                     operator: In
                     values:
-                      - algohive-app
+                      - shagunintelligence-app
               topologyKey: kubernetes.io/hostname
       containers:
-        - name: algohive-app
+        - name: shagunintelligence-app
           resources:
             requests:
               cpu: 1000m

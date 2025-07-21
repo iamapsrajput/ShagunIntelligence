@@ -2,7 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: postgres-pvc
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   accessModes:
     - ReadWriteOnce
@@ -16,7 +16,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres-service
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   selector:
     app: postgres
@@ -30,7 +30,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   serviceName: postgres-service
   replicas: 1
@@ -49,16 +49,16 @@ spec:
             - containerPort: 5432
           env:
             - name: POSTGRES_DB
-              value: algohive
+              value: shagunintelligence
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: algohive-secrets
+                  name: shagunintelligence-secrets
                   key: DB_USER
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: algohive-secrets
+                  name: shagunintelligence-secrets
                   key: DB_PASSWORD
             - name: PGDATA
               value: /var/lib/postgresql/data/pgdata
@@ -77,7 +77,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - algohive
+                - shagunintelligence
             initialDelaySeconds: 30
             periodSeconds: 10
           readinessProbe:
@@ -85,7 +85,7 @@ spec:
               command:
                 - pg_isready
                 - -U
-                - algohive
+                - shagunintelligence
             initialDelaySeconds: 5
             periodSeconds: 5
   volumeClaimTemplates:

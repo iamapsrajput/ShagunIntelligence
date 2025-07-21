@@ -278,7 +278,7 @@ class TradeLogger:
         summary = self.get_session_summary()
         
         report = f"""
-=== AlgoHive Trade Report ===
+=== Shagun Intelligence Trade Report ===
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 SESSION SUMMARY

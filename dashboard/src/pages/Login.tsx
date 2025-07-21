@@ -55,7 +55,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
             </div>
           </div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-white">
-            AlgoHive Trading System
+            Shagun Intelligence Trading System
           </h2>
           <p className="mt-2 text-center text-sm text-primary-200">
             AI-Powered Algorithmic Trading Platform
@@ -142,7 +142,7 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
         </motion.form>
 
         <div className="text-center text-sm text-primary-200">
-          <p>© 2024 AlgoHive. All rights reserved.</p>
+          <p>© 2024 Shagun Intelligence. All rights reserved.</p>
         </div>
       </motion.div>
     </div>

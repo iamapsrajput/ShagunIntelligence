@@ -1,4 +1,4 @@
-# Sealed Secrets for AlgoHive
+# Sealed Secrets for Shagun Intelligence
 
 This directory contains sealed secrets for secure secret management in Kubernetes.
 
@@ -20,7 +20,7 @@ sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 
 1. Create a regular secret:
 ```bash
-kubectl create secret generic algohive-secrets \
+kubectl create secret generic shagunintelligence-secrets \
   --from-literal=DB_PASSWORD=your-password \
   --from-literal=SECRET_KEY=your-secret-key \
   --dry-run=client -o yaml > secret.yaml

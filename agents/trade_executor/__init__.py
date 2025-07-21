@@ -1,5 +1,5 @@
 """
-Trade Executor Agent for AlgoHive
+Trade Executor Agent for Shagun Intelligence
 
 This module provides comprehensive trade execution capabilities including:
 - Order management with multiple order types

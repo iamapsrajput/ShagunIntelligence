@@ -1,14 +1,14 @@
-# AlgoHive API Documentation
+# Shagun Intelligence API Documentation
 
 ## Base URL
 ```
-Production: https://api.algohive.com
+Production: https://api.shagunintelligence.com
 Development: http://localhost:8000
 ```
 
 ## Authentication
 
-AlgoHive uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
+Shagun Intelligence uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
 
 ```http
 Authorization: Bearer <your-jwt-token>
@@ -578,7 +578,7 @@ Content-Type: application/json
 #### Market Data Stream
 
 ```javascript
-const ws = new WebSocket('wss://api.algohive.com/ws/market');
+const ws = new WebSocket('wss://api.shagunintelligence.com/ws/market');
 
 ws.onopen = () => {
   // Subscribe to symbols
@@ -605,7 +605,7 @@ ws.onmessage = (event) => {
 #### Trading Signals Stream
 
 ```javascript
-const ws = new WebSocket('wss://api.algohive.com/ws/signals');
+const ws = new WebSocket('wss://api.shagunintelligence.com/ws/signals');
 
 ws.onmessage = (event) => {
   const signal = JSON.parse(event.data);
@@ -677,9 +677,9 @@ X-RateLimit-Reset: 1705318800
 ```python
 import requests
 
-class AlgoHiveClient:
+class Shagun IntelligenceClient:
     def __init__(self, api_key):
-        self.base_url = "https://api.algohive.com"
+        self.base_url = "https://api.shagunintelligence.com"
         self.headers = {"Authorization": f"Bearer {api_key}"}
     
     def get_quote(self, symbol):
@@ -698,7 +698,7 @@ class AlgoHiveClient:
         return response.json()
 
 # Usage
-client = AlgoHiveClient("your-api-key")
+client = Shagun IntelligenceClient("your-api-key")
 quote = client.get_quote("RELIANCE")
 print(f"RELIANCE: {quote['last_price']}")
 ```
@@ -708,10 +708,10 @@ print(f"RELIANCE: {quote['last_price']}")
 ```javascript
 const axios = require('axios');
 
-class AlgoHiveClient {
+class Shagun IntelligenceClient {
   constructor(apiKey) {
     this.client = axios.create({
-      baseURL: 'https://api.algohive.com',
+      baseURL: 'https://api.shagunintelligence.com',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json'
@@ -731,7 +731,7 @@ class AlgoHiveClient {
 }
 
 // Usage
-const client = new AlgoHiveClient('your-api-key');
+const client = new Shagun IntelligenceClient('your-api-key');
 const quote = await client.getQuote('RELIANCE');
 console.log(`RELIANCE: ${quote.last_price}`);
 ```

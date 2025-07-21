@@ -1,7 +1,7 @@
 """
 Example demonstrating quality-aware trading with multi-source data.
 
-This example shows how the AlgoHive agents use data quality as a primary
+This example shows how the Shagun Intelligence agents use data quality as a primary
 factor in their trading decisions.
 """
 
@@ -27,7 +27,7 @@ from backend.data_sources.integration import get_data_source_integration
 async def demonstrate_quality_aware_trading():
     """Demonstrate the quality-aware trading workflow."""
     
-    print("=== AlgoHive Quality-Aware Trading Demonstration ===\n")
+    print("=== Shagun Intelligence Quality-Aware Trading Demonstration ===\n")
     
     # Initialize multi-source data manager
     data_manager = MultiSourceDataManager()

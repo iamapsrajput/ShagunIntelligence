@@ -1,4 +1,4 @@
-# AlgoHive Troubleshooting Guide & FAQ
+# Shagun Intelligence Troubleshooting Guide & FAQ
 
 ## Table of Contents
 
@@ -217,7 +217,7 @@ risk_per_trade: 1.0       # Reduce risk percentage
 2. **View Agent Logs**
    ```bash
    # Check specific agent logs
-   grep "market_analyst" logs/algohive.log | tail -50
+   grep "market_analyst" logs/shagunintelligence.log | tail -50
    ```
 
 3. **Test Individual Agent**
@@ -475,7 +475,7 @@ engine = create_engine(
 
 ### General Questions
 
-**Q: Can I run AlgoHive on Windows?**
+**Q: Can I run Shagun Intelligence on Windows?**
 A: Yes, but we recommend using WSL2 (Windows Subsystem for Linux) for better compatibility. Native Windows is supported but may require additional setup.
 
 **Q: What are the minimum system requirements?**
@@ -488,7 +488,7 @@ A:
 **Q: Is paper trading available?**
 A: Yes, enable paper trading mode in configuration:
 ```bash
-python -m algohive start --mode paper --capital 1000000
+python -m shagunintelligence start --mode paper --capital 1000000
 ```
 
 ### Trading Questions
@@ -497,7 +497,7 @@ python -m algohive start --mode paper --capital 1000000
 A: While there's no hardcoded minimum, we recommend at least ₹100,000 for effective position sizing and risk management.
 
 **Q: Can I trade in multiple accounts?**
-A: Currently, AlgoHive supports one Zerodha account per instance. For multiple accounts, run separate instances with different configurations.
+A: Currently, Shagun Intelligence supports one Zerodha account per instance. For multiple accounts, run separate instances with different configurations.
 
 **Q: How do I add custom indicators?**
 A: Create a new indicator in `agents/technical_indicator/custom_indicators.py`:
@@ -549,7 +549,7 @@ A:
 - Agent analysis: < 2 seconds
 - Order execution: < 500ms
 
-**Q: How much bandwidth does AlgoHive use?**
+**Q: How much bandwidth does Shagun Intelligence use?**
 A: Approximately 10-50 MB/hour depending on the number of symbols and market activity.
 
 ## Debug Mode
@@ -611,24 +611,24 @@ python scripts/debug/health_check.py
 ### 1. Check Logs
 ```bash
 # Application logs
-tail -f logs/algohive.log
+tail -f logs/shagunintelligence.log
 
 # Error logs
-grep ERROR logs/algohive.log
+grep ERROR logs/shagunintelligence.log
 
 # Agent-specific logs
-grep "agent_name" logs/algohive.log
+grep "agent_name" logs/shagunintelligence.log
 ```
 
 ### 2. Community Support
-- GitHub Issues: [github.com/algohive/algohive/issues](https://github.com/algohive/algohive/issues)
-- Discord: [discord.gg/algohive](https://discord.gg/algohive)
-- Email: support@algohive.com
+- GitHub Issues: [github.com/shagunintelligence/shagunintelligence/issues](https://github.com/shagunintelligence/shagunintelligence/issues)
+- Discord: [discord.gg/shagunintelligence](https://discord.gg/shagunintelligence)
+- Email: support@shagunintelligence.com
 
 ### 3. Before Reporting an Issue
 
 Gather the following information:
-1. AlgoHive version: `python -m algohive --version`
+1. Shagun Intelligence version: `python -m shagunintelligence --version`
 2. Python version: `python --version`
 3. Operating system: `uname -a`
 4. Error messages and stack traces
@@ -638,7 +638,7 @@ Gather the following information:
 ### 4. Emergency Contacts
 
 For critical production issues:
-- Emergency Support: emergency@algohive.com
+- Emergency Support: emergency@shagunintelligence.com
 - Phone: +91-XXXXXXXXXX (Business hours only)
 
 Remember to always test changes in a development environment before applying to production!

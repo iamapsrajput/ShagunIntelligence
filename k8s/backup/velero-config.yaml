@@ -10,7 +10,7 @@ data:
     backupStorageLocations:
     - name: default
       provider: aws
-      bucket: algohive-velero-backups
+      bucket: shagunintelligence-velero-backups
       config:
         region: us-east-1
         s3ForcePathStyle: "false"
@@ -42,8 +42,8 @@ spec:
   template:
     ttl: 720h  # 30 days retention
     includedNamespaces:
-      - algohive
-      - algohive-staging
+      - shagunintelligence
+      - shagunintelligence-staging
     excludedResources:
       - events
       - events.events.k8s.io
@@ -54,7 +54,7 @@ spec:
       resources:
         - name: postgres-backup
           includedNamespaces:
-            - algohive
+            - shagunintelligence
           labelSelector:
             matchLabels:
               app: postgres
@@ -65,7 +65,7 @@ spec:
                   - /bin/bash
                   - -c
                   - |
-                    pg_dump -U algohive algohive > /backup/pre-velero-backup.sql
+                    pg_dump -U shagunintelligence shagunintelligence > /backup/pre-velero-backup.sql
                 timeout: 10m
 
 ---
@@ -94,7 +94,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backup-monitoring
-  namespace: algohive
+  namespace: shagunintelligence
 data:
   check-backups.sh: |
     #!/bin/bash
@@ -123,7 +123,7 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: backup-monitor
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   schedule: "0 */6 * * *"  # Every 6 hours
   jobTemplate:

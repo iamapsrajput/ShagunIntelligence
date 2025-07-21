@@ -66,7 +66,7 @@ async def performance_alert_handler(alert: PerformanceAlert):
 async def demonstrate_streaming_system():
     """Demonstrate the real-time streaming system."""
     
-    print("=== AlgoHive Real-Time Streaming System Demo ===\n")
+    print("=== Shagun Intelligence Real-Time Streaming System Demo ===\n")
     
     # 1. Configure the streaming system
     print("1. Configuring streaming system...")
@@ -279,7 +279,7 @@ async def demonstrate_quality_scenarios():
 
 
 if __name__ == "__main__":
-    print("Starting AlgoHive Real-Time Streaming Demo...")
+    print("Starting Shagun Intelligence Real-Time Streaming Demo...")
     print("=" * 50)
     
     # Run main demonstration

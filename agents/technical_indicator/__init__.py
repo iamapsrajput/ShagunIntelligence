@@ -1,4 +1,4 @@
-"""Technical Indicator Agent for AlgoHive trading platform."""
+"""Technical Indicator Agent for Shagun Intelligence trading platform."""
 
 from .agent import TechnicalIndicatorAgent
 from .indicator_calculator import IndicatorCalculator

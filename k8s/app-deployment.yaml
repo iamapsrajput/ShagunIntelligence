@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: algohive-app-service
-  namespace: algohive
+  name: shagunintelligence-app-service
+  namespace: shagunintelligence
   labels:
-    app: algohive-app
+    app: shagunintelligence-app
 spec:
   selector:
-    app: algohive-app
+    app: shagunintelligence-app
   ports:
     - name: http
       port: 8000
@@ -18,15 +18,15 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: algohive-app
-  namespace: algohive
+  name: shagunintelligence-app
+  namespace: shagunintelligence
   labels:
-    app: algohive-app
+    app: shagunintelligence-app
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: algohive-app
+      app: shagunintelligence-app
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -35,9 +35,9 @@ spec:
   template:
     metadata:
       labels:
-        app: algohive-app
+        app: shagunintelligence-app
     spec:
-      serviceAccountName: algohive-app
+      serviceAccountName: shagunintelligence-app
       securityContext:
         runAsNonRoot: true
         runAsUser: 1000
@@ -47,26 +47,26 @@ spec:
           image: busybox:1.35
           command: ['sh', '-c', 'until nc -z postgres-service 5432; do echo waiting for db; sleep 2; done;']
         - name: run-migrations
-          image: algohive/app:latest
+          image: shagunintelligence/app:latest
           imagePullPolicy: Always
           command: ['alembic', 'upgrade', 'head']
           envFrom:
             - configMapRef:
-                name: algohive-config
+                name: shagunintelligence-config
             - secretRef:
-                name: algohive-secrets
+                name: shagunintelligence-secrets
       containers:
-        - name: algohive-app
-          image: algohive/app:latest
+        - name: shagunintelligence-app
+          image: shagunintelligence/app:latest
           imagePullPolicy: Always
           ports:
             - containerPort: 8000
               name: http
           envFrom:
             - configMapRef:
-                name: algohive-config
+                name: shagunintelligence-config
             - secretRef:
-                name: algohive-secrets
+                name: shagunintelligence-secrets
           resources:
             requests:
               cpu: 500m
@@ -105,13 +105,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: algohive-app-hpa
-  namespace: algohive
+  name: shagunintelligence-app-hpa
+  namespace: shagunintelligence
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: algohive-app
+    name: shagunintelligence-app
   minReplicas: 3
   maxReplicas: 10
   metrics:
@@ -132,10 +132,10 @@ spec:
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: algohive-app-pdb
-  namespace: algohive
+  name: shagunintelligence-app-pdb
+  namespace: shagunintelligence
 spec:
   minAvailable: 2
   selector:
     matchLabels:
-      app: algohive-app
+      app: shagunintelligence-app

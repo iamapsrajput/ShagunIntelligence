@@ -109,7 +109,7 @@ async def place_order(
                 "price": order.price,
                 "trigger_price": order.trigger_price,
                 "validity": order.validity,
-                "tag": f"algohive_{trade.id}"
+                "tag": f"shagunintelligence_{trade.id}"
             }
             
             order_response = await kite_client.place_order(**kite_order)

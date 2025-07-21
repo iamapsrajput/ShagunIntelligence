@@ -1,5 +1,5 @@
 """
-Comprehensive API configuration management for AlgoHive.
+Comprehensive API configuration management for Shagun Intelligence.
 
 This module provides centralized configuration for all API integrations
 with security, rate limiting, and monitoring capabilities.

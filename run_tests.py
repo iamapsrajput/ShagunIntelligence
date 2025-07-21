@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AlgoHive Test Runner
+Shagun Intelligence Test Runner
 Orchestrates and runs all tests with comprehensive reporting
 """
 
@@ -38,7 +38,7 @@ def run_command(cmd: str, description: str) -> tuple[bool, str]:
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AlgoHive Test Runner")
+    parser = argparse.ArgumentParser(description="Shagun Intelligence Test Runner")
     parser.add_argument(
         "--suite",
         choices=["unit", "integration", "performance", "validation", "all"],

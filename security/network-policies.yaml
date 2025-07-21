@@ -1,13 +1,13 @@
-# Network policies for AlgoHive security
+# Network policies for Shagun Intelligence security
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: algohive-app-network-policy
-  namespace: algohive
+  name: shagunintelligence-app-network-policy
+  namespace: shagunintelligence
 spec:
   podSelector:
     matchLabels:
-      app: algohive-app
+      app: shagunintelligence-app
   policyTypes:
     - Ingress
     - Egress
@@ -77,7 +77,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: postgres-network-policy
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   podSelector:
     matchLabels:
@@ -85,11 +85,11 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Only allow traffic from algohive-app and backup jobs
+    # Only allow traffic from shagunintelligence-app and backup jobs
     - from:
         - podSelector:
             matchLabels:
-              app: algohive-app
+              app: shagunintelligence-app
         - podSelector:
             matchLabels:
               job: backup
@@ -102,7 +102,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: redis-network-policy
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   podSelector:
     matchLabels:
@@ -110,11 +110,11 @@ spec:
   policyTypes:
     - Ingress
   ingress:
-    # Only allow traffic from algohive-app
+    # Only allow traffic from shagunintelligence-app
     - from:
         - podSelector:
             matchLabels:
-              app: algohive-app
+              app: shagunintelligence-app
       ports:
         - protocol: TCP
           port: 6379
@@ -124,7 +124,7 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   name: default-deny-all
-  namespace: algohive
+  namespace: shagunintelligence
 spec:
   podSelector: {}
   policyTypes:

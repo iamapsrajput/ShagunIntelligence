@@ -6,10 +6,10 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: algohive-app
+    container_name: shagunintelligence-app
     environment:
       - APP_ENV=production
-      - DATABASE_URL=postgresql://algohive:algohive@postgres:5432/algohive
+      - DATABASE_URL=postgresql://shagunintelligence:shagunintelligence@postgres:5432/shagunintelligence
       - REDIS_URL=redis://redis:6379/0
       - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
       - KITE_API_KEY=${KITE_API_KEY}
@@ -27,17 +27,17 @@ services:
       - ./logs:/app/logs
       - ./data:/app/data
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
   # PostgreSQL Database
   postgres:
     image: postgres:15-alpine
-    container_name: algohive-postgres
+    container_name: shagunintelligence-postgres
     environment:
-      - POSTGRES_USER=algohive
-      - POSTGRES_PASSWORD=algohive
-      - POSTGRES_DB=algohive
+      - POSTGRES_USER=shagunintelligence
+      - POSTGRES_PASSWORD=shagunintelligence
+      - POSTGRES_DB=shagunintelligence
       - PGDATA=/var/lib/postgresql/data/pgdata
     volumes:
       - postgres-data:/var/lib/postgresql/data
@@ -45,9 +45,9 @@ services:
     ports:
       - "5432:5432"
     networks:
-      - algohive-network
+      - shagunintelligence-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U algohive"]
+      test: ["CMD-SHELL", "pg_isready -U shagunintelligence"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,14 +56,14 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: algohive-redis
+    container_name: shagunintelligence-redis
     command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
     volumes:
       - redis-data:/data
     ports:
       - "6379:6379"
     networks:
-      - algohive-network
+      - shagunintelligence-network
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -74,7 +74,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: algohive-nginx
+    container_name: shagunintelligence-nginx
     volumes:
       - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
       - ./nginx/conf.d:/etc/nginx/conf.d:ro
@@ -86,13 +86,13 @@ services:
     depends_on:
       - app
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
   # Prometheus for monitoring
   prometheus:
     image: prom/prometheus:latest
-    container_name: algohive-prometheus
+    container_name: shagunintelligence-prometheus
     volumes:
       - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
@@ -104,13 +104,13 @@ services:
     ports:
       - "9090:9090"
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
   # Grafana for visualization
   grafana:
     image: grafana/grafana:latest
-    container_name: algohive-grafana
+    container_name: shagunintelligence-grafana
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -123,13 +123,13 @@ services:
     depends_on:
       - prometheus
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
   # Loki for log aggregation
   loki:
     image: grafana/loki:latest
-    container_name: algohive-loki
+    container_name: shagunintelligence-loki
     ports:
       - "3100:3100"
     volumes:
@@ -137,22 +137,22 @@ services:
       - loki-data:/loki
     command: -config.file=/etc/loki/local-config.yaml
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
   # Promtail for log collection
   promtail:
     image: grafana/promtail:latest
-    container_name: algohive-promtail
+    container_name: shagunintelligence-promtail
     volumes:
       - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
-      - ./logs:/var/log/algohive:ro
+      - ./logs:/var/log/shagunintelligence:ro
       - /var/run/docker.sock:/var/run/docker.sock:ro
     command: -config.file=/etc/promtail/config.yml
     depends_on:
       - loki
     networks:
-      - algohive-network
+      - shagunintelligence-network
     restart: unless-stopped
 
 volumes:
@@ -164,5 +164,5 @@ volumes:
   loki-data:
 
 networks:
-  algohive-network:
+  shagunintelligence-network:
     driver: bridge

@@ -24,7 +24,7 @@ class SocialMediaMonitor:
             'reddit': {
                 'client_id': None,  # Set via environment
                 'client_secret': None,
-                'user_agent': 'AlgoHive/1.0',
+                'user_agent': 'Shagun Intelligence/1.0',
                 'base_url': 'https://oauth.reddit.com'
             },
             'stocktwits': {

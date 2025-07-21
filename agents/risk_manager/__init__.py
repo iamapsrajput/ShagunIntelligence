@@ -1,4 +1,4 @@
-"""Risk Management Agent for AlgoHive trading platform."""
+"""Risk Management Agent for Shagun Intelligence trading platform."""
 
 from .agent import RiskManagerAgent
 from .enhanced_agent import EnhancedRiskManagerAgent

@@ -17,7 +17,7 @@ groups:
       - alert: PostgreSQLHighConnections
         expr: |
           (
-            pg_stat_database_numbackends{datname="algohive"}
+            pg_stat_database_numbackends{datname="shagunintelligence"}
             / pg_settings_max_connections
           ) > 0.8
         for: 5m

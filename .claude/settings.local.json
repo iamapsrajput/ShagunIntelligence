@@ -13,7 +13,8 @@
       "Bash(git push:*)",
       "Bash(docker:*)",
       "Bash(docker-compose:*)",
-      "Bash(pip3:*)"
+      "Bash(pip3:*)",
+      "Bash(python:*)"
     ],
     "deny": []
   }

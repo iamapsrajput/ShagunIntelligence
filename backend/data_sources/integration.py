@@ -1,5 +1,5 @@
 """
-Integration module to connect the multi-source data manager with existing AlgoHive components.
+Integration module to connect the multi-source data manager with existing Shagun Intelligence components.
 """
 
 import logging
@@ -22,7 +22,7 @@ logger = logging.getLogger(__name__)
 
 class DataSourceIntegration:
     """
-    Integration layer between multi-source data manager and AlgoHive components.
+    Integration layer between multi-source data manager and Shagun Intelligence components.
     Provides backward compatibility with existing code.
     """
     

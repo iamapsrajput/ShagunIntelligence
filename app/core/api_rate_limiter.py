@@ -1,5 +1,5 @@
 """
-API rate limiting and cost management for AlgoHive.
+API rate limiting and cost management for Shagun Intelligence.
 """
 
 import asyncio

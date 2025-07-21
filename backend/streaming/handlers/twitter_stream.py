@@ -49,7 +49,7 @@ class TwitterStreamHandler(DataStreamHandler):
             # Create session with auth headers
             headers = {
                 "Authorization": f"Bearer {self.bearer_token}",
-                "User-Agent": "AlgoHiveStreamingBot/1.0"
+                "User-Agent": "Shagun IntelligenceStreamingBot/1.0"
             }
             
             timeout = aiohttp.ClientTimeout(total=0, sock_read=90)

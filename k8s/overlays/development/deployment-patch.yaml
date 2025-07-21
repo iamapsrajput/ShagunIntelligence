@@ -1,13 +1,13 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: algohive-app
+  name: shagunintelligence-app
 spec:
   replicas: 1
   template:
     spec:
       containers:
-        - name: algohive-app
+        - name: shagunintelligence-app
           resources:
             requests:
               cpu: 250m

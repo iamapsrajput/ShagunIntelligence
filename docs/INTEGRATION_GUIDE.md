@@ -1,6 +1,6 @@
-# AlgoHive Integration Guide
+# Shagun Intelligence Integration Guide
 
-This guide provides comprehensive instructions for integrating all components of the AlgoHive platform and ensuring smooth operation of the complete system.
+This guide provides comprehensive instructions for integrating all components of the Shagun Intelligence platform and ensuring smooth operation of the complete system.
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@ This guide provides comprehensive instructions for integrating all components of
 
 ## System Integration Overview
 
-AlgoHive consists of multiple interconnected components that must be properly integrated:
+Shagun Intelligence consists of multiple interconnected components that must be properly integrated:
 
 ```
 Frontend (React) ←→ Backend (FastAPI) ←→ Agent System (CrewAI)
@@ -55,8 +55,8 @@ Kubernetes: 1.28+
 
 1. **Clone Repository**
 ```bash
-git clone https://github.com/algohive/algohive.git
-cd algohive
+git clone https://github.com/shagunintelligence/shagunintelligence.git
+cd shagunintelligence
 ```
 
 2. **Create Environment File**
@@ -82,15 +82,15 @@ cd ..
 ```bash
 # Using Docker
 docker run -d \
-  --name algohive-postgres \
-  -e POSTGRES_PASSWORD=algohive \
-  -e POSTGRES_USER=algohive \
-  -e POSTGRES_DB=algohive \
+  --name shagunintelligence-postgres \
+  -e POSTGRES_PASSWORD=shagunintelligence \
+  -e POSTGRES_USER=shagunintelligence \
+  -e POSTGRES_DB=shagunintelligence \
   -p 5432:5432 \
   postgres:15-alpine
 
 # Or native PostgreSQL
-createdb algohive
+createdb shagunintelligence
 ```
 
 2. **Run Migrations**
@@ -109,7 +109,7 @@ python scripts/verify_db.py
 ```bash
 # Using Docker
 docker run -d \
-  --name algohive-redis \
+  --name shagunintelligence-redis \
   -p 6379:6379 \
   redis:7-alpine
 
@@ -278,7 +278,7 @@ from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
     # Application
-    app_name: str = "AlgoHive"
+    app_name: str = "Shagun Intelligence"
     environment: str = "development"
     
     # Database
@@ -378,9 +378,9 @@ services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: algohive
-      POSTGRES_PASSWORD: algohive
-      POSTGRES_DB: algohive
+      POSTGRES_USER: shagunintelligence
+      POSTGRES_PASSWORD: shagunintelligence
+      POSTGRES_DB: shagunintelligence
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -396,7 +396,7 @@ services:
       - postgres
       - redis
     environment:
-      DATABASE_URL: postgresql://algohive:algohive@postgres:5432/algohive
+      DATABASE_URL: postgresql://shagunintelligence:shagunintelligence@postgres:5432/shagunintelligence
       REDIS_URL: redis://redis:6379
     ports:
       - "8000:8000"
@@ -433,9 +433,9 @@ volumes:
 kubectl apply -k k8s/overlays/production/
 
 # Verify deployment
-kubectl get pods -n algohive
-kubectl get services -n algohive
-kubectl get ingress -n algohive
+kubectl get pods -n shagunintelligence
+kubectl get services -n shagunintelligence
+kubectl get ingress -n shagunintelligence
 ```
 
 ## Monitoring Setup
@@ -448,11 +448,11 @@ global:
   scrape_interval: 15s
 
 scrape_configs:
-  - job_name: 'algohive-app'
+  - job_name: 'shagunintelligence-app'
     static_configs:
       - targets: ['app:8000']
     
-  - job_name: 'algohive-agents'
+  - job_name: 'shagunintelligence-agents'
     static_configs:
       - targets: ['agents:9090']
     
@@ -471,7 +471,7 @@ scrape_configs:
 # Import dashboards
 curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
   -H "Content-Type: application/json" \
-  -d @monitoring/dashboards/algohive-dashboard.json
+  -d @monitoring/dashboards/shagunintelligence-dashboard.json
 ```
 
 ## Troubleshooting Integration Issues
@@ -484,7 +484,7 @@ curl -X POST http://admin:admin@localhost:3000/api/dashboards/db \
 pg_isready -h localhost -p 5432
 
 # Test connection
-psql -h localhost -U algohive -d algohive -c "SELECT 1;"
+psql -h localhost -U shagunintelligence -d shagunintelligence -c "SELECT 1;"
 ```
 
 2. **Redis Connection Failed**
@@ -570,12 +570,12 @@ def call_kite_api():
 apiVersion: v1
 kind: Service
 metadata:
-  name: algohive-backend
+  name: shagunintelligence-backend
   labels:
-    app: algohive
+    app: shagunintelligence
 spec:
   selector:
-    app: algohive-backend
+    app: shagunintelligence-backend
   ports:
     - port: 8000
       name: http

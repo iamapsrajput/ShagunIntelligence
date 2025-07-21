@@ -43,7 +43,7 @@ mypy .
 ### Database Operations
 ```bash
 # Access PostgreSQL (development)
-docker exec -it algohive-postgres-1 psql -U algohive -d algohive_dev
+docker exec -it shagunintelligence-postgres-1 psql -U shagunintelligence -d shagunintelligence_dev
 
 # View database tables
 \dt

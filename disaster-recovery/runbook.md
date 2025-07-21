@@ -1,4 +1,4 @@
-# AlgoHive Disaster Recovery Runbook
+# Shagun Intelligence Disaster Recovery Runbook
 
 ## Table of Contents
 1. [Overview](#overview)
@@ -10,7 +10,7 @@
 
 ## Overview
 
-This runbook provides step-by-step procedures for recovering AlgoHive services in case of various disaster scenarios.
+This runbook provides step-by-step procedures for recovering Shagun Intelligence services in case of various disaster scenarios.
 
 **RTO (Recovery Time Objective)**: 4 hours  
 **RPO (Recovery Point Objective)**: 1 hour
@@ -19,9 +19,9 @@ This runbook provides step-by-step procedures for recovering AlgoHive services i
 
 ### Emergency Contacts
 - **On-Call Engineer**: Check PagerDuty
-- **Engineering Lead**: engineering-lead@algohive.com
-- **DevOps Team**: devops@algohive.com
-- **Security Team**: security@algohive.com
+- **Engineering Lead**: engineering-lead@shagunintelligence.com
+- **DevOps Team**: devops@shagunintelligence.com
+- **Security Team**: security@shagunintelligence.com
 
 ### External Contacts
 - **AWS Support**: 1-800-xxx-xxxx (Enterprise Support)
@@ -43,13 +43,13 @@ This runbook provides step-by-step procedures for recovering AlgoHive services i
 ./scripts/dr-failover.sh activate-dr us-west-2
 
 # Verify DR endpoints
-curl https://dr.algohive.com/api/v1/health
+curl https://dr.shagunintelligence.com/api/v1/health
 ```
 
 2. **Restore Latest Data**
 ```bash
 # Find latest cross-region backup
-aws s3 ls s3://algohive-dr-backups/ --recursive | grep backup | tail -1
+aws s3 ls s3://shagunintelligence-dr-backups/ --recursive | grep backup | tail -1
 
 # Restore to DR database
 ./scripts/restore-dr.sh <backup-name>
@@ -61,7 +61,7 @@ aws s3 ls s3://algohive-dr-backups/ --recursive | grep backup | tail -1
 kubectl apply -k k8s/overlays/dr-west/
 
 # Verify all pods are running
-kubectl get pods -n algohive
+kubectl get pods -n shagunintelligence
 ```
 
 ### 2. Database Corruption/Loss
@@ -76,7 +76,7 @@ kubectl get pods -n algohive
 1. **Stop Application Traffic**
 ```bash
 # Scale down application
-kubectl scale deployment algohive-app --replicas=0 -n algohive
+kubectl scale deployment shagunintelligence-app --replicas=0 -n shagunintelligence
 
 # Put maintenance page
 kubectl apply -f k8s/maintenance/maintenance-page.yaml
@@ -85,13 +85,13 @@ kubectl apply -f k8s/maintenance/maintenance-page.yaml
 2. **Restore Database**
 ```bash
 # List available backups
-aws s3 ls s3://algohive-backups/ | grep database
+aws s3 ls s3://shagunintelligence-backups/ | grep database
 
 # Restore specific backup
 ./scripts/restore-database.sh <backup-timestamp>
 
 # Verify database integrity
-psql -h postgres-service -U algohive -c "SELECT COUNT(*) FROM trades;"
+psql -h postgres-service -U shagunintelligence -c "SELECT COUNT(*) FROM trades;"
 ```
 
 3. **Validate Data Consistency**
@@ -115,7 +115,7 @@ python scripts/audit-trades.py --from "2024-01-01" --to "now"
 1. **Activate Backup Cluster**
 ```bash
 # Switch context to backup cluster
-kubectl config use-context algohive-backup
+kubectl config use-context shagunintelligence-backup
 
 # Apply latest configurations
 kubectl apply -k k8s/base/
@@ -149,13 +149,13 @@ python scripts/disable-all-keys.py
 ./scripts/rotate-secrets.sh --all
 
 # Enable emergency mode (read-only)
-kubectl set env deployment/algohive-app EMERGENCY_MODE=true -n algohive
+kubectl set env deployment/shagunintelligence-app EMERGENCY_MODE=true -n shagunintelligence
 ```
 
 2. **Investigation**
 ```bash
 # Export audit logs
-kubectl logs -n algohive -l app=algohive-app --since=24h > audit.log
+kubectl logs -n shagunintelligence -l app=shagunintelligence-app --since=24h > audit.log
 
 # Check for unauthorized trades
 python scripts/audit-security.py --check-unauthorized
@@ -167,10 +167,10 @@ python scripts/audit-security.py --check-unauthorized
 python scripts/generate-new-keys.py
 
 # Update Kubernetes secrets
-kubectl create secret generic algohive-secrets --from-file=secrets.yaml -n algohive
+kubectl create secret generic shagunintelligence-secrets --from-file=secrets.yaml -n shagunintelligence
 
 # Resume normal operations
-kubectl set env deployment/algohive-app EMERGENCY_MODE=false -n algohive
+kubectl set env deployment/shagunintelligence-app EMERGENCY_MODE=false -n shagunintelligence
 ```
 
 ## Recovery Procedures
@@ -209,7 +209,7 @@ kubectl set env deployment/algohive-app EMERGENCY_MODE=false -n algohive
 # restore-database.sh
 
 BACKUP_NAME=$1
-TEMP_DB="algohive_restore_temp"
+TEMP_DB="shagunintelligence_restore_temp"
 
 # Create temporary database
 psql -h postgres-service -U postgres -c "CREATE DATABASE $TEMP_DB;"
@@ -224,8 +224,8 @@ echo "Restored $RECORD_COUNT trade records"
 
 # Swap databases
 psql -h postgres-service -U postgres <<EOF
-ALTER DATABASE algohive RENAME TO algohive_old;
-ALTER DATABASE $TEMP_DB RENAME TO algohive;
+ALTER DATABASE shagunintelligence RENAME TO shagunintelligence_old;
+ALTER DATABASE $TEMP_DB RENAME TO shagunintelligence;
 EOF
 
 echo "Database restore complete"
@@ -238,16 +238,16 @@ echo "Database restore complete"
 # rollback-deployment.sh
 
 # Get previous revision
-PREV_REVISION=$(kubectl rollout history deployment/algohive-app -n algohive | tail -2 | head -1 | awk '{print $1}')
+PREV_REVISION=$(kubectl rollout history deployment/shagunintelligence-app -n shagunintelligence | tail -2 | head -1 | awk '{print $1}')
 
 # Rollback to previous revision
-kubectl rollout undo deployment/algohive-app --to-revision=$PREV_REVISION -n algohive
+kubectl rollout undo deployment/shagunintelligence-app --to-revision=$PREV_REVISION -n shagunintelligence
 
 # Monitor rollback
-kubectl rollout status deployment/algohive-app -n algohive
+kubectl rollout status deployment/shagunintelligence-app -n shagunintelligence
 
 # Verify health
-curl https://algohive.com/api/v1/health
+curl https://shagunintelligence.com/api/v1/health
 ```
 
 ## Validation Steps
@@ -255,16 +255,16 @@ curl https://algohive.com/api/v1/health
 ### 1. Health Checks
 ```bash
 # API Health
-curl https://algohive.com/api/v1/health
+curl https://shagunintelligence.com/api/v1/health
 
 # Database connectivity
-psql -h postgres-service -U algohive -c "SELECT 1;"
+psql -h postgres-service -U shagunintelligence -c "SELECT 1;"
 
 # Redis connectivity
 redis-cli -h redis-service ping
 
 # WebSocket connectivity
-wscat -c wss://algohive.com/ws
+wscat -c wss://shagunintelligence.com/ws
 ```
 
 ### 2. Functional Tests
@@ -319,19 +319,19 @@ python scripts/audit-trades.py --hours 24
 
 ```bash
 # Get all logs for debugging
-kubectl logs -n algohive -l app=algohive-app --tail=1000
+kubectl logs -n shagunintelligence -l app=shagunintelligence-app --tail=1000
 
 # Check resource usage
-kubectl top pods -n algohive
+kubectl top pods -n shagunintelligence
 
 # Database connection string
-postgresql://algohive:password@postgres-service:5432/algohive
+postgresql://shagunintelligence:password@postgres-service:5432/shagunintelligence
 
 # Redis connection
 redis-cli -h redis-service -a password
 
 # Port forwarding for debugging
-kubectl port-forward svc/postgres-service 5432:5432 -n algohive
+kubectl port-forward svc/postgres-service 5432:5432 -n shagunintelligence
 ```
 
 ### Recovery Metrics

@@ -1,6 +1,6 @@
-# AlgoHive Architecture Diagrams
+# Shagun Intelligence Architecture Diagrams
 
-This document contains comprehensive architecture diagrams for the AlgoHive platform using Mermaid syntax. These diagrams can be rendered in any Markdown viewer that supports Mermaid.
+This document contains comprehensive architecture diagrams for the Shagun Intelligence platform using Mermaid syntax. These diagrams can be rendered in any Markdown viewer that supports Mermaid.
 
 ## Table of Contents
 
@@ -766,4 +766,4 @@ graph TD
    - Add to README files
    - Embed in wiki pages
 
-These diagrams provide a comprehensive visual representation of the AlgoHive architecture and can be updated as the system evolves.
+These diagrams provide a comprehensive visual representation of the Shagun Intelligence architecture and can be updated as the system evolves.

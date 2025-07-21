@@ -1,13 +1,13 @@
 #!/bin/bash
 set -e
 
-# AlgoHive Deployment Script
+# Shagun Intelligence Deployment Script
 # Usage: ./deploy.sh [environment] [version]
 
 ENVIRONMENT=${1:-staging}
 VERSION=${2:-latest}
-CLUSTER_NAME="algohive-cluster"
-NAMESPACE="algohive-${ENVIRONMENT}"
+CLUSTER_NAME="shagunintelligence-cluster"
+NAMESPACE="shagunintelligence-${ENVIRONMENT}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -60,21 +60,21 @@ build_and_push() {
     log_info "Building Docker image..."
     
     # Get ECR registry
-    ECR_REGISTRY=$(aws ecr describe-repositories --repository-names algohive --query 'repositories[0].repositoryUri' --output text | cut -d'/' -f1)
+    ECR_REGISTRY=$(aws ecr describe-repositories --repository-names shagunintelligence --query 'repositories[0].repositoryUri' --output text | cut -d'/' -f1)
     
     # Login to ECR
     aws ecr get-login-password | docker login --username AWS --password-stdin $ECR_REGISTRY
     
     # Build image
-    docker build -t algohive:$VERSION .
+    docker build -t shagunintelligence:$VERSION .
     
     # Tag and push
-    docker tag algohive:$VERSION $ECR_REGISTRY/algohive:$VERSION
-    docker push $ECR_REGISTRY/algohive:$VERSION
+    docker tag shagunintelligence:$VERSION $ECR_REGISTRY/shagunintelligence:$VERSION
+    docker push $ECR_REGISTRY/shagunintelligence:$VERSION
     
     if [ "$ENVIRONMENT" == "production" ]; then
-        docker tag algohive:$VERSION $ECR_REGISTRY/algohive:latest
-        docker push $ECR_REGISTRY/algohive:latest
+        docker tag shagunintelligence:$VERSION $ECR_REGISTRY/shagunintelligence:latest
+        docker push $ECR_REGISTRY/shagunintelligence:latest
     fi
     
     log_info "Docker image pushed successfully"
@@ -94,10 +94,10 @@ deploy_kubernetes() {
     kubectl apply -k k8s/overlays/$ENVIRONMENT/ -n $NAMESPACE
     
     # Update image
-    kubectl set image deployment/algohive-app algohive-app=$ECR_REGISTRY/algohive:$VERSION -n $NAMESPACE
+    kubectl set image deployment/shagunintelligence-app shagunintelligence-app=$ECR_REGISTRY/shagunintelligence:$VERSION -n $NAMESPACE
     
     # Wait for rollout
-    kubectl rollout status deployment/algohive-app -n $NAMESPACE --timeout=300s
+    kubectl rollout status deployment/shagunintelligence-app -n $NAMESPACE --timeout=300s
     
     log_info "Kubernetes deployment completed"
 }
@@ -107,7 +107,7 @@ run_migrations() {
     log_info "Running database migrations..."
     
     kubectl run migrations-$VERSION \
-        --image=$ECR_REGISTRY/algohive:$VERSION \
+        --image=$ECR_REGISTRY/shagunintelligence:$VERSION \
         --restart=Never \
         --rm=true \
         -n $NAMESPACE \
@@ -122,7 +122,7 @@ health_checks() {
     
     # Get service endpoint
     if [ "$ENVIRONMENT" == "production" ]; then
-        ENDPOINT="https://algohive.com"
+        ENDPOINT="https://shagunintelligence.com"
     else
         ENDPOINT=$(kubectl get service nginx-service -n $NAMESPACE -o jsonpath='{.status.loadBalancer.ingress[0].hostname}')
         ENDPOINT="http://$ENDPOINT"
@@ -146,8 +146,8 @@ health_checks() {
 rollback() {
     log_error "Deployment failed, rolling back..."
     
-    kubectl rollout undo deployment/algohive-app -n $NAMESPACE
-    kubectl rollout status deployment/algohive-app -n $NAMESPACE
+    kubectl rollout undo deployment/shagunintelligence-app -n $NAMESPACE
+    kubectl rollout status deployment/shagunintelligence-app -n $NAMESPACE
     
     exit 1
 }
@@ -175,7 +175,7 @@ main() {
     if [ "$ENVIRONMENT" == "production" ]; then
         curl -X POST $SLACK_WEBHOOK_URL \
             -H 'Content-type: application/json' \
-            --data "{\"text\":\"✅ AlgoHive $VERSION deployed to production successfully\"}"
+            --data "{\"text\":\"✅ Shagun Intelligence $VERSION deployed to production successfully\"}"
     fi
 }
 

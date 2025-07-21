@@ -2,7 +2,7 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
   external_labels:
-    cluster: 'algohive-production'
+    cluster: 'shagunintelligence-production'
     environment: 'production'
 
 # Alertmanager configuration
@@ -17,13 +17,13 @@ rule_files:
   - "alerts/*.yml"
 
 scrape_configs:
-  # AlgoHive application metrics
-  - job_name: 'algohive-app'
+  # Shagun Intelligence application metrics
+  - job_name: 'shagunintelligence-app'
     kubernetes_sd_configs:
       - role: pod
         namespaces:
           names:
-            - algohive
+            - shagunintelligence
     relabel_configs:
       - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
         action: keep

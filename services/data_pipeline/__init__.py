@@ -1,5 +1,5 @@
 """
-Real-time Data Processing Pipeline for AlgoHive
+Real-time Data Processing Pipeline for Shagun Intelligence
 
 This module provides a high-performance data pipeline for processing live market data
 from Zerodha WebSocket, including:

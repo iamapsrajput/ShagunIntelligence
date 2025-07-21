@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: algohive-dev
+namespace: shagunintelligence-dev
 
 bases:
   - ../../base
@@ -16,7 +16,7 @@ commonAnnotations:
   managed-by: kustomize
 
 configMapGenerator:
-  - name: algohive-config
+  - name: shagunintelligence-config
     behavior: merge
     literals:
       - APP_ENV=development
@@ -26,7 +26,7 @@ configMapGenerator:
       - REDIS_HOST=redis-service
 
 secretGenerator:
-  - name: algohive-secrets
+  - name: shagunintelligence-secrets
     behavior: merge
     literals:
       - DB_PASSWORD=dev-password
@@ -38,11 +38,11 @@ patchesStrategicMerge:
   - service-patch.yaml
 
 replicas:
-  - name: algohive-app
+  - name: shagunintelligence-app
     count: 1
   - name: nginx
     count: 1
 
 images:
-  - name: algohive/app
+  - name: shagunintelligence/app
     newTag: develop

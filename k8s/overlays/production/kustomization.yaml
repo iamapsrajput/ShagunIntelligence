@@ -1,7 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-namespace: algohive
+namespace: shagunintelligence
 
 bases:
   - ../../base
@@ -14,7 +14,7 @@ commonAnnotations:
   managed-by: kustomize
 
 configMapGenerator:
-  - name: algohive-config
+  - name: shagunintelligence-config
     behavior: merge
     literals:
       - APP_ENV=production
@@ -30,14 +30,14 @@ patchesStrategicMerge:
   - ingress-patch.yaml
 
 replicas:
-  - name: algohive-app
+  - name: shagunintelligence-app
     count: 3
   - name: nginx
     count: 3
 
 images:
-  - name: algohive/app
-    newName: ${ECR_REGISTRY}/algohive
+  - name: shagunintelligence/app
+    newName: ${ECR_REGISTRY}/shagunintelligence
     newTag: latest
 
 # Production-specific resources

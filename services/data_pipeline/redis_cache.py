@@ -29,11 +29,11 @@ class RedisCacheManager:
         
         # Key prefixes
         self.key_prefixes = {
-            "tick": "algohive:tick:",
-            "ohlc": "algohive:ohlc:",
-            "buffer": "algohive:buffer:",
-            "stats": "algohive:stats:",
-            "snapshot": "algohive:snapshot:"
+            "tick": "shagunintelligence:tick:",
+            "ohlc": "shagunintelligence:ohlc:",
+            "buffer": "shagunintelligence:buffer:",
+            "stats": "shagunintelligence:stats:",
+            "snapshot": "shagunintelligence:snapshot:"
         }
         
         # Statistics
@@ -332,7 +332,7 @@ class RedisCacheManager:
             while True:
                 cursor, keys = await self.redis_client.scan(
                     cursor,
-                    match="algohive:*",
+                    match="shagunintelligence:*",
                     count=100
                 )
                 

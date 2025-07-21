@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: algohive
+  name: shagunintelligence
   labels:
-    name: algohive
+    name: shagunintelligence
     environment: production

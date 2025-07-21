@@ -1,15 +1,15 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: algohive-app
-  namespace: algohive
+  name: shagunintelligence-app
+  namespace: shagunintelligence
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: algohive-app-role
-  namespace: algohive
+  name: shagunintelligence-app-role
+  namespace: shagunintelligence
 rules:
   - apiGroups: [""]
     resources: ["configmaps", "secrets"]
@@ -22,13 +22,13 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: algohive-app-rolebinding
-  namespace: algohive
+  name: shagunintelligence-app-rolebinding
+  namespace: shagunintelligence
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: algohive-app-role
+  name: shagunintelligence-app-role
 subjects:
   - kind: ServiceAccount
-    name: algohive-app
-    namespace: algohive
+    name: shagunintelligence-app
+    namespace: shagunintelligence

@@ -1,4 +1,4 @@
-"""Sentiment Analysis Agent for AlgoHive trading platform."""
+"""Sentiment Analysis Agent for Shagun Intelligence trading platform."""
 
 from .agent import SentimentAnalystAgent
 from .news_scraper import NewsScraper

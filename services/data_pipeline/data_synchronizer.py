@@ -162,7 +162,7 @@ class DataSynchronizer:
             
             # Create new segment
             segment = SharedDataSegment(
-                name=f"algohive_{symbol}_{datetime.now().timestamp()}",
+                name=f"shagunintelligence_{symbol}_{datetime.now().timestamp()}",
                 size=self.segment_size
             )
             

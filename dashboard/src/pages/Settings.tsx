@@ -21,7 +21,7 @@ export const Settings: React.FC = () => {
   
   const [profile, setProfile] = useState({
     name: 'Demo User',
-    email: 'demo@algohive.com',
+    email: 'demo@shagunintelligence.com',
     phone: '+91 9876543210',
   });
 

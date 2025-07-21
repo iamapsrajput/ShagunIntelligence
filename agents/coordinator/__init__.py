@@ -1,5 +1,5 @@
 """
-Coordinator Agent for AlgoHive
+Coordinator Agent for Shagun Intelligence
 
 This module provides the master orchestration agent that coordinates all other agents
 in the trading system. It includes:

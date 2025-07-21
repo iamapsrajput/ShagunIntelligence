@@ -59,7 +59,7 @@ class BenchmarkMetrics:
 
 
 class TestPerformanceBenchmarks:
-    """Performance benchmark tests for AlgoHive"""
+    """Performance benchmark tests for Shagun Intelligence"""
     
     @pytest.fixture
     def mock_kite_client(self):
@@ -408,7 +408,7 @@ class TestPerformanceBenchmarks:
         }
         
         # Generate report
-        report_content = "# AlgoHive Performance Benchmark Report\n\n"
+        report_content = "# Shagun Intelligence Performance Benchmark Report\n\n"
         report_content += f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
         
         for component, metrics in results.items():

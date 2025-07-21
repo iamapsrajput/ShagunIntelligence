@@ -51,7 +51,7 @@ export const Dashboard: React.FC = () => {
       lg:translate-x-0 lg:static lg:inset-0
     `}>
       <div className="flex items-center justify-between h-16 px-6 bg-gray-800">
-        <h1 className="text-xl font-bold text-white">AlgoHive</h1>
+        <h1 className="text-xl font-bold text-white">Shagun Intelligence</h1>
         <button
           onClick={() => setSidebarOpen(false)}
           className="lg:hidden text-gray-400 hover:text-white"

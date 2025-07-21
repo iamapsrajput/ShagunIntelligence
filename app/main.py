@@ -23,7 +23,7 @@ settings = get_settings()
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Startup
-    logger.info("Starting AlgoHive Trading System...")
+    logger.info("Starting Shagun Intelligence Trading System...")
     
     # Create database tables
     async with engine.begin() as conn:
@@ -47,11 +47,11 @@ async def lifespan(app: FastAPI):
     # Start background scheduler
     trading_scheduler.start()
     
-    logger.info("AlgoHive startup complete")
+    logger.info("Shagun Intelligence startup complete")
     yield
     
     # Shutdown
-    logger.info("Shutting down AlgoHive Trading System...")
+    logger.info("Shutting down Shagun Intelligence Trading System...")
     
     # Stop scheduler
     trading_scheduler.shutdown()
@@ -65,10 +65,10 @@ async def lifespan(app: FastAPI):
     # Dispose database connections
     await engine.dispose()
     
-    logger.info("AlgoHive shutdown complete")
+    logger.info("Shagun Intelligence shutdown complete")
 
 app = FastAPI(
-    title="AlgoHive Trading System",
+    title="Shagun Intelligence Trading System",
     description="AI-powered algorithmic trading platform with multi-agent system",
     version="2.0.0",
     lifespan=lifespan,
@@ -108,7 +108,7 @@ app.include_router(websocket_router, prefix="/ws", tags=["websocket"])
 @app.get("/")
 async def root():
     return {
-        "message": "AlgoHive Trading System API",
+        "message": "Shagun Intelligence Trading System API",
         "version": "2.0.0",
         "status": "running",
         "timestamp": datetime.utcnow().isoformat()

@@ -1,8 +1,8 @@
-# AlgoHive Agent Architecture & Workflows
+# Shagun Intelligence Agent Architecture & Workflows
 
 ## Overview
 
-AlgoHive employs a sophisticated multi-agent system built on the CrewAI framework. Each agent is specialized for specific tasks and collaborates with others to make intelligent trading decisions.
+Shagun Intelligence employs a sophisticated multi-agent system built on the CrewAI framework. Each agent is specialized for specific tasks and collaborates with others to make intelligent trading decisions.
 
 ## Agent Hierarchy
 

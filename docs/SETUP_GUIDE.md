@@ -1,6 +1,6 @@
-# AlgoHive Setup Guide
+# Shagun Intelligence Setup Guide
 
-This guide provides detailed instructions for setting up AlgoHive in various environments.
+This guide provides detailed instructions for setting up Shagun Intelligence in various environments.
 
 ## Table of Contents
 
@@ -77,9 +77,9 @@ Download Docker Desktop with WSL2 backend from [docker.com](https://www.docker.c
 ```bash
 docker run -d \
   --name postgres \
-  -e POSTGRES_PASSWORD=algohive \
-  -e POSTGRES_USER=algohive \
-  -e POSTGRES_DB=algohive \
+  -e POSTGRES_PASSWORD=shagunintelligence \
+  -e POSTGRES_USER=shagunintelligence \
+  -e POSTGRES_DB=shagunintelligence \
   -p 5432:5432 \
   -v pgdata:/var/lib/postgresql/data \
   postgres:15-alpine
@@ -169,8 +169,8 @@ Follow the Ubuntu instructions inside WSL2.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/algohive/algohive.git
-cd algohive
+git clone https://github.com/shagunintelligence/shagunintelligence.git
+cd shagunintelligence
 ```
 
 ### 2. Create Python Virtual Environment
@@ -211,7 +211,7 @@ SECRET_KEY=your-secret-key-here  # Generate with: openssl rand -hex 32
 LOG_LEVEL=DEBUG
 
 # Database
-DATABASE_URL=postgresql://algohive:algohive@localhost:5432/algohive
+DATABASE_URL=postgresql://shagunintelligence:shagunintelligence@localhost:5432/shagunintelligence
 
 # Redis
 REDIS_URL=redis://localhost:6379/0
@@ -236,7 +236,7 @@ STOP_LOSS_PERCENT=2.0
 
 ```bash
 # Create database
-createdb algohive
+createdb shagunintelligence
 
 # Run migrations
 alembic upgrade head
@@ -303,9 +303,9 @@ sudo apt install -y \
 ```bash
 # Clone repository
 cd /opt
-sudo git clone https://github.com/algohive/algohive.git
-sudo chown -R $USER:$USER algohive
-cd algohive
+sudo git clone https://github.com/shagunintelligence/shagunintelligence.git
+sudo chown -R $USER:$USER shagunintelligence
+cd shagunintelligence
 
 # Create production environment
 cp .env.production .env
@@ -327,12 +327,12 @@ docker-compose -f docker-compose.prod.yml logs -f
 
 ### 4. Nginx Configuration
 
-Create `/etc/nginx/sites-available/algohive`:
+Create `/etc/nginx/sites-available/shagunintelligence`:
 
 ```nginx
 server {
     listen 80;
-    server_name algohive.yourdomain.com;
+    server_name shagunintelligence.yourdomain.com;
 
     location / {
         proxy_pass http://localhost:8000;
@@ -357,7 +357,7 @@ server {
 
 Enable the site:
 ```bash
-sudo ln -s /etc/nginx/sites-available/algohive /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/shagunintelligence /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
 ```
@@ -365,22 +365,22 @@ sudo systemctl reload nginx
 ### 5. SSL Certificate
 
 ```bash
-sudo certbot --nginx -d algohive.yourdomain.com
+sudo certbot --nginx -d shagunintelligence.yourdomain.com
 ```
 
 ### 6. Systemd Service
 
-Create `/etc/systemd/system/algohive.service`:
+Create `/etc/systemd/system/shagunintelligence.service`:
 
 ```ini
 [Unit]
-Description=AlgoHive Trading Platform
+Description=Shagun Intelligence Trading Platform
 After=network.target
 
 [Service]
 Type=forking
-User=algohive
-WorkingDirectory=/opt/algohive
+User=shagunintelligence
+WorkingDirectory=/opt/shagunintelligence
 ExecStart=/usr/local/bin/docker-compose -f docker-compose.prod.yml up -d
 ExecStop=/usr/local/bin/docker-compose -f docker-compose.prod.yml down
 Restart=on-failure
@@ -392,8 +392,8 @@ WantedBy=multi-user.target
 
 Enable and start:
 ```bash
-sudo systemctl enable algohive
-sudo systemctl start algohive
+sudo systemctl enable shagunintelligence
+sudo systemctl start shagunintelligence
 ```
 
 ## Configuration Details
@@ -435,18 +435,18 @@ DB_POOL_RECYCLE=1800
 #### Backup Configuration
 ```bash
 # Create backup script
-cat > /opt/algohive/scripts/backup.sh << 'EOF'
+cat > /opt/shagunintelligence/scripts/backup.sh << 'EOF'
 #!/bin/bash
-BACKUP_DIR="/backups/algohive"
+BACKUP_DIR="/backups/shagunintelligence"
 mkdir -p $BACKUP_DIR
-pg_dump $DATABASE_URL | gzip > $BACKUP_DIR/algohive_$(date +%Y%m%d_%H%M%S).sql.gz
+pg_dump $DATABASE_URL | gzip > $BACKUP_DIR/shagunintelligence_$(date +%Y%m%d_%H%M%S).sql.gz
 find $BACKUP_DIR -type f -mtime +7 -delete
 EOF
 
-chmod +x /opt/algohive/scripts/backup.sh
+chmod +x /opt/shagunintelligence/scripts/backup.sh
 
 # Add to crontab
-0 2 * * * /opt/algohive/scripts/backup.sh
+0 2 * * * /opt/shagunintelligence/scripts/backup.sh
 ```
 
 ### Redis Configuration
@@ -531,13 +531,13 @@ DEBUG=True
 Check logs:
 ```bash
 # Application logs
-tail -f logs/algohive.log
+tail -f logs/shagunintelligence.log
 
 # Docker logs
 docker-compose logs -f app
 
 # System logs
-journalctl -u algohive -f
+journalctl -u shagunintelligence -f
 ```
 
 ### Performance Tuning

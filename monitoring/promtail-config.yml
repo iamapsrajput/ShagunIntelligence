@@ -9,14 +9,14 @@ clients:
   - url: http://loki:3100/loki/api/v1/push
 
 scrape_configs:
-  # AlgoHive application logs
-  - job_name: algohive
+  # Shagun Intelligence application logs
+  - job_name: shagunintelligence
     static_configs:
       - targets:
           - localhost
         labels:
-          job: algohive
-          __path__: /var/log/algohive/*.log
+          job: shagunintelligence
+          __path__: /var/log/shagunintelligence/*.log
     pipeline_stages:
       - json:
           expressions:

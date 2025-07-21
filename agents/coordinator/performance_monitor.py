@@ -389,7 +389,7 @@ class PerformanceMonitor:
         stats = self.get_trade_statistics()
         
         report = f"""
-=== AlgoHive Performance Report ===
+=== Shagun Intelligence Performance Report ===
 Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
 
 ACCOUNT SUMMARY

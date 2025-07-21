@@ -1,5 +1,5 @@
 groups:
-  - name: algohive_app_alerts
+  - name: shagunintelligence_app_alerts
     interval: 30s
     rules:
       # High error rate
@@ -17,7 +17,7 @@ groups:
         annotations:
           summary: "High error rate on {{ $labels.service }}"
           description: "Error rate is {{ $value | humanizePercentage }} for service {{ $labels.service }}"
-          runbook_url: "https://wiki.algohive.com/runbooks/high-error-rate"
+          runbook_url: "https://wiki.shagunintelligence.com/runbooks/high-error-rate"
 
       # API latency
       - alert: HighAPILatency
@@ -88,8 +88,8 @@ groups:
       - alert: HighMemoryUsage
         expr: |
           (
-            container_memory_usage_bytes{pod=~"algohive-app-.*"}
-            / container_spec_memory_limit_bytes{pod=~"algohive-app-.*"}
+            container_memory_usage_bytes{pod=~"shagunintelligence-app-.*"}
+            / container_spec_memory_limit_bytes{pod=~"shagunintelligence-app-.*"}
           ) > 0.9
         for: 5m
         labels:
@@ -103,8 +103,8 @@ groups:
       - alert: HighCPUUsage
         expr: |
           (
-            rate(container_cpu_usage_seconds_total{pod=~"algohive-app-.*"}[5m])
-            / container_spec_cpu_quota{pod=~"algohive-app-.*"}
+            rate(container_cpu_usage_seconds_total{pod=~"shagunintelligence-app-.*"}[5m])
+            / container_spec_cpu_quota{pod=~"shagunintelligence-app-.*"}
           ) > 0.8
         for: 10m
         labels:
@@ -117,7 +117,7 @@ groups:
       # Pod restart
       - alert: PodRestartingTooOften
         expr: |
-          increase(kube_pod_container_status_restarts_total{namespace="algohive"}[1h]) > 5
+          increase(kube_pod_container_status_restarts_total{namespace="shagunintelligence"}[1h]) > 5
         for: 5m
         labels:
           severity: warning

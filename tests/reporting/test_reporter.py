@@ -11,7 +11,7 @@ from jinja2 import Template
 
 
 class TestReporter:
-    """Automated test reporting system for AlgoHive"""
+    """Automated test reporting system for Shagun Intelligence"""
     
     def __init__(self, output_dir: Path):
         self.output_dir = output_dir
@@ -50,7 +50,7 @@ class TestReporter:
 <!DOCTYPE html>
 <html>
 <head>
-    <title>AlgoHive Test Report - {{ timestamp }}</title>
+    <title>Shagun Intelligence Test Report - {{ timestamp }}</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
         .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
@@ -92,7 +92,7 @@ class TestReporter:
 </head>
 <body>
     <div class="header">
-        <h1>AlgoHive Test Report</h1>
+        <h1>Shagun Intelligence Test Report</h1>
         <p>Generated: {{ timestamp }}</p>
         <p>Duration: {{ duration }}</p>
     </div>
@@ -420,7 +420,7 @@ class TestReporter:
 
 
 # Pytest plugin to automatically generate reports
-class AlgoHiveTestPlugin:
+class Shagun IntelligenceTestPlugin:
     """Pytest plugin for automated test reporting"""
     
     def __init__(self):

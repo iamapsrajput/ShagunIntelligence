@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: backup-scripts
-  namespace: algohive
+  namespace: shagunintelligence
 data:
   backup.sh: |
     #!/bin/bash
@@ -10,9 +10,9 @@ data:
     
     # Configuration
     BACKUP_DIR="/backup"
-    S3_BUCKET="s3://algohive-backups"
+    S3_BUCKET="s3://shagunintelligence-backups"
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
-    BACKUP_NAME="algohive-backup-${TIMESTAMP}"
+    BACKUP_NAME="shagunintelligence-backup-${TIMESTAMP}"
     
     echo "Starting backup at ${TIMESTAMP}"
     
@@ -69,7 +69,7 @@ data:
     
     # Configuration
     BACKUP_DIR="/backup"
-    S3_BUCKET="s3://algohive-backups"
+    S3_BUCKET="s3://shagunintelligence-backups"
     
     if [ -z "$1" ]; then
       echo "Usage: ./restore.sh <backup-name>"
@@ -106,8 +106,8 @@ data:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: algohive-backup
-  namespace: algohive
+  name: shagunintelligence-backup
+  namespace: shagunintelligence
 spec:
   schedule: "0 2 * * *"  # Daily at 2 AM
   concurrencyPolicy: Forbid
@@ -124,7 +124,7 @@ spec:
           restartPolicy: OnFailure
           containers:
             - name: backup
-              image: algohive/backup-tools:latest
+              image: shagunintelligence/backup-tools:latest
               command: ["/bin/bash", "/scripts/backup.sh"]
               env:
                 - name: DB_HOST
@@ -132,21 +132,21 @@ spec:
                 - name: DB_USER
                   valueFrom:
                     secretKeyRef:
-                      name: algohive-secrets
+                      name: shagunintelligence-secrets
                       key: DB_USER
                 - name: DB_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: algohive-secrets
+                      name: shagunintelligence-secrets
                       key: DB_PASSWORD
                 - name: DB_NAME
-                  value: algohive
+                  value: shagunintelligence
                 - name: REDIS_HOST
                   value: redis-service
                 - name: REDIS_PASSWORD
                   valueFrom:
                     secretKeyRef:
-                      name: algohive-secrets
+                      name: shagunintelligence-secrets
                       key: REDIS_PASSWORD
                 - name: APP_VERSION
                   value: "latest"
@@ -183,14 +183,14 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: backup-sa
-  namespace: algohive
+  namespace: shagunintelligence
 
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: backup-role
-  namespace: algohive
+  namespace: shagunintelligence
 rules:
   - apiGroups: [""]
     resources: ["pods", "pods/exec"]
@@ -204,7 +204,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: backup-rolebinding
-  namespace: algohive
+  namespace: shagunintelligence
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -212,4 +212,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: backup-sa
-    namespace: algohive
+    namespace: shagunintelligence

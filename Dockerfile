@@ -40,31 +40,31 @@ COPY --from=builder /usr/lib/libta_lib* /usr/lib/
 COPY --from=builder /usr/include/ta-lib /usr/include/ta-lib
 
 # Create non-root user
-RUN groupadd -g 1000 algohive && \
-    useradd -r -u 1000 -g algohive algohive
+RUN groupadd -g 1000 shagunintelligence && \
+    useradd -r -u 1000 -g shagunintelligence shagunintelligence
 
 # Set working directory
 WORKDIR /app
 
 # Copy Python dependencies from builder
-COPY --from=builder /root/.local /home/algohive/.local
+COPY --from=builder /root/.local /home/shagunintelligence/.local
 
 # Create necessary directories
 RUN mkdir -p logs data /app/static && \
-    chown -R algohive:algohive /app
+    chown -R shagunintelligence:shagunintelligence /app
 
 # Copy application code
-COPY --chown=algohive:algohive . .
+COPY --chown=shagunintelligence:shagunintelligence . .
 
 # Set environment variables
-ENV PATH=/home/algohive/.local/bin:$PATH \
+ENV PATH=/home/shagunintelligence/.local/bin:$PATH \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONPATH=/app \
     APP_ENV=production
 
 # Switch to non-root user
-USER algohive
+USER shagunintelligence
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

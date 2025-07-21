@@ -78,7 +78,7 @@ class APIKeyManager:
         if master_password:
             # Derive key from password
             password = master_password.encode()
-            salt = b'algohive_api_salt'  # In production, use random salt
+            salt = b'shagunintelligence_api_salt'  # In production, use random salt
             kdf = PBKDF2HMAC(
                 algorithm=hashes.SHA256(),
                 length=32,
@@ -436,7 +436,7 @@ class APIKeyManager:
     def export_template(self, filepath: str = ".env.template"):
         """Export environment variable template."""
         template_lines = [
-            "# AlgoHive API Configuration Template",
+            "# Shagun Intelligence API Configuration Template",
             "# Copy this file to .env and fill in your API keys",
             "",
             "# Environment: development, staging, production",

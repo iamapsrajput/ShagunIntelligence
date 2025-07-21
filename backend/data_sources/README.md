@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Multi-Source Data Manager is a robust, fault-tolerant system for managing multiple data sources with automatic failover capabilities. It ensures continuous data availability for the AlgoHive trading platform by intelligently switching between primary and backup data sources when failures occur.
+The Multi-Source Data Manager is a robust, fault-tolerant system for managing multiple data sources with automatic failover capabilities. It ensures continuous data availability for the Shagun Intelligence trading platform by intelligently switching between primary and backup data sources when failures occur.
 
 ## Features
 
