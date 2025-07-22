@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 🔒 Security Vulnerability
+    url: https://github.com/iamapsrajput/ShagunIntelligence/blob/main/SECURITY.md
+    about: "Please report security vulnerabilities privately following our security policy"
+  - name: 💬 GitHub Discussions
+    url: https://github.com/iamapsrajput/ShagunIntelligence/discussions
+    about: "For general questions, feature discussions, and community support"
+  - name: 📖 Documentation
+    url: https://github.com/iamapsrajput/ShagunIntelligence/tree/main/docs
+    about: "Check our comprehensive documentation and guides"
+  - name: 🚀 Trading Platform Demo
+    url: https://demo.shagunintelligence.com
+    about: "Try out the live demo of our trading platform (if available)"

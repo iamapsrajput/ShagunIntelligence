@@ -1,0 +1,150 @@
+name: "CodeQL Security Analysis"
+
+on:
+  push:
+    branches: [ "main", "develop" ]
+  pull_request:
+    branches: [ "main", "develop" ]
+  schedule:
+    # Run CodeQL analysis daily at 2 AM UTC (7:30 AM IST)
+    - cron: '0 2 * * *'
+
+jobs:
+  analyze:
+    name: Analyze Code with CodeQL
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ 'python', 'javascript' ]
+        # CodeQL supports 'cpp', 'csharp', 'go', 'java', 'javascript', 'python', 'ruby'
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v3
+      with:
+        languages: ${{ matrix.language }}
+        # Custom queries for financial/trading applications
+        queries: +security-extended,security-and-quality
+        # Configuration file for custom rules
+        config-file: ./.github/codeql/codeql-config.yml
+
+    # For Python, we need to install dependencies for better analysis
+    - name: Set up Python
+      if: matrix.language == 'python'
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install Python dependencies
+      if: matrix.language == 'python'
+      run: |
+        python -m pip install --upgrade pip
+        # Install core dependencies for better code analysis
+        pip install fastapi uvicorn pydantic sqlalchemy
+        pip install crewai langchain openai
+        pip install pandas numpy scipy
+        # Don't install all deps to avoid timeout, just core ones for analysis
+
+    # For JavaScript/TypeScript (frontend components)
+    - name: Set up Node.js
+      if: matrix.language == 'javascript'
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: '**/package-lock.json'
+
+    - name: Install JavaScript dependencies
+      if: matrix.language == 'javascript'
+      run: |
+        if [ -f "package.json" ]; then
+          npm ci
+        elif [ -f "frontend/package.json" ]; then
+          cd frontend && npm ci
+        elif [ -f "dashboard/package.json" ]; then
+          cd dashboard && npm ci
+        fi
+
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v3
+      with:
+        category: "/language:${{matrix.language}}"
+        # Upload results even if there are findings
+        upload: true
+
+  # Additional security scanning for Python
+  security-scan:
+    name: Additional Security Scans
+    runs-on: ubuntu-latest
+    if: github.event_name != 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+
+    - name: Install security scanning tools
+      run: |
+        python -m pip install --upgrade pip
+        pip install bandit safety semgrep
+
+    - name: Run Bandit security scan
+      run: |
+        bandit -r app/ agents/ services/ -f sarif -o bandit-results.sarif || true
+
+    - name: Run Safety vulnerability scan
+      run: |
+        safety check --json --output safety-results.json || true
+
+    - name: Run Semgrep security scan
+      run: |
+        semgrep --config=auto --sarif --output=semgrep-results.sarif app/ agents/ services/ || true
+
+    - name: Upload Bandit results to GitHub Security
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: bandit-results.sarif
+        category: bandit
+
+    - name: Upload Semgrep results to GitHub Security
+      if: always()
+      uses: github/codeql-action/upload-sarif@v3
+      with:
+        sarif_file: semgrep-results.sarif
+        category: semgrep
+
+    - name: Create security report
+      if: always()
+      run: |
+        echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [ -f "bandit-results.sarif" ]; then
+          echo "✅ Bandit scan completed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f "safety-results.json" ]; then
+          echo "✅ Safety vulnerability scan completed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [ -f "semgrep-results.sarif" ]; then
+          echo "✅ Semgrep security scan completed" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📊 Results uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY

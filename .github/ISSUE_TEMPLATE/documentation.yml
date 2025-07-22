@@ -1,0 +1,87 @@
+name: 📚 Documentation Issue
+description: Report missing, incorrect, or unclear documentation
+title: "[DOCS] "
+labels: ["documentation", "good first issue"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve our documentation! Clear documentation is essential for developers and traders using Shagun Intelligence.
+
+  - type: dropdown
+    id: doc-type
+    attributes:
+      label: Documentation Type
+      description: What type of documentation needs attention?
+      options:
+        - "API Documentation"
+        - "Setup/Installation Guide"
+        - "User Guide/Tutorials"
+        - "Developer Documentation"
+        - "Architecture Documentation"
+        - "Trading Strategy Documentation"
+        - "Configuration Guide"
+        - "Troubleshooting Guide"
+        - "Code Comments"
+        - "README Files"
+        - "Other"
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: issue-type
+    attributes:
+      label: Issue Type
+      description: What's wrong with the documentation?
+      options:
+        - "Missing Documentation"
+        - "Incorrect Information"
+        - "Unclear/Confusing"
+        - "Outdated Content"
+        - "Broken Links"
+        - "Formatting Issues"
+        - "Typos/Grammar"
+        - "Translation Needed"
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: location
+    attributes:
+      label: Documentation Location
+      description: Where is the documentation issue located?
+      placeholder: |
+        - File: /docs/SETUP_GUIDE.md
+        - Section: "Environment Setup"
+        - URL: https://github.com/...
+        - Line numbers: 45-50
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-content
+    attributes:
+      label: Current Content
+      description: What does the current documentation say? (copy/paste the problematic section)
+      placeholder: Copy the current text here...
+
+  - type: textarea
+    id: suggested-content
+    attributes:
+      label: Suggested Improvement
+      description: What should the documentation say instead?
+      placeholder: Suggested replacement text...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional Context
+      description: Why is this change needed? What confusion does it cause?
+      placeholder: |
+        This documentation issue causes confusion because...
+        Users might think...
+        The current explanation doesn't cover...

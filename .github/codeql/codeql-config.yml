@@ -1,0 +1,99 @@
+# CodeQL configuration for Shagun Intelligence
+# Custom configuration for AI-powered trading platform security analysis
+
+name: "Shagun Intelligence Security Analysis"
+
+# Disable default queries and specify custom ones
+disable-default-queries: false
+
+# Additional query packs for financial/trading applications
+query-filters:
+  - exclude:
+      id: "py/unused-import"
+      # Allow unused imports in __init__.py files for module structure
+      - include:
+          paths:
+            - "*/__init__.py"
+  - exclude:
+      id: "py/similar-function"
+      # AI agents may have similar patterns by design
+      - include:
+          paths:
+            - "agents/**"
+
+# Paths to analyze
+paths:
+  - "app/"
+  - "agents/"
+  - "services/"
+  - "backend/"
+  - "config/"
+  - "scripts/"
+
+# Paths to ignore
+paths-ignore:
+  - "tests/"
+  - "test_output/"
+  - "docs/"
+  - "assets/"
+  - "k8s/"
+  - "monitoring/"
+  - ".claude/"
+  - "**/__pycache__/"
+  - "**/.pytest_cache/"
+  - "**/node_modules/"
+  - "venv/"
+  - ".venv/"
+
+# Custom query suite for financial applications
+queries:
+  - name: financial-security
+    uses: 
+      - security-extended
+      - security-and-quality
+    
+  # Add specific financial/trading security patterns
+  - name: trading-specific
+    queries:
+      # SQL injection prevention (critical for financial data)
+      - ql/src/semmle/python/security/injection/SqlInjection.ql
+      # Command injection (important for trading systems)
+      - ql/src/semmle/python/security/injection/CommandInjection.ql
+      # Path traversal (file system security)
+      - ql/src/semmle/python/security/injection/PathInjection.ql
+      # Insecure randomness (critical for trading algorithms)
+      - ql/src/semmle/python/security/insecure-randomness/InsecureRandomness.ql
+      # Hard-coded credentials
+      - ql/src/semmle/python/security/credentials/HardcodedCredentials.ql
+      # Sensitive data exposure
+      - ql/src/semmle/python/security/sensitive-data/SensitiveDataExposure.ql
+
+# Compilation configuration
+compile-commands:
+  - python
+  
+# Analysis configuration
+database:
+  # Enable all features for comprehensive analysis
+  features:
+    - "default"
+    - "security"
+    - "quality"
+    - "maintainability"
+
+# Custom analysis rules
+rules:
+  # Financial data handling
+  - id: "financial-data-logging"
+    description: "Detect logging of potentially sensitive financial data"
+    severity: "high"
+    
+  # Trading system integrity
+  - id: "trading-decision-validation"
+    description: "Ensure trading decisions have proper validation"
+    severity: "critical"
+    
+  # AI model security
+  - id: "ai-model-input-validation"
+    description: "Validate inputs to AI models and agents"
+    severity: "high"

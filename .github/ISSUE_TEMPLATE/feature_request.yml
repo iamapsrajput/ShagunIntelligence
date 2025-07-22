@@ -1,0 +1,145 @@
+name: ✨ Feature Request
+description: Suggest a new feature or enhancement for Shagun Intelligence
+title: "[FEATURE] "
+labels: ["enhancement", "needs-review"]
+assignees: ["iamapsrajput"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting a new feature! Please provide as much detail as possible to help us understand and evaluate your request.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have read the project documentation and this feature doesn't already exist
+          required: true
+        - label: I have considered if this feature aligns with the project's goals
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Feature Category
+      description: Which area does this feature relate to?
+      options:
+        - "AI/ML Enhancement (Agents, Models)"
+        - "Trading Features (Strategies, Orders)"
+        - "User Experience (UI/UX, Dashboard)"
+        - "API Enhancement (Endpoints, Integration)"
+        - "Security & Authentication"
+        - "Performance & Optimization"
+        - "Data Management (Storage, Analysis)"
+        - "DevOps & Infrastructure"
+        - "Documentation"
+        - "Other"
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority Level
+      description: How important is this feature to you?
+      options:
+        - "🔴 Critical (Essential for core functionality)"
+        - "🟠 High (Important for user experience)"
+        - "🟡 Medium (Nice to have, moderate impact)"
+        - "🟢 Low (Minor improvement)"
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement
+      description: Is your feature request related to a problem? Please describe.
+      placeholder: I'm always frustrated when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution
+      description: Describe the solution you'd like to see implemented
+      placeholder: I would like to see...
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Solutions
+      description: Describe any alternative solutions or features you've considered
+      placeholder: An alternative approach could be...
+
+  - type: textarea
+    id: use-cases
+    attributes:
+      label: Use Cases
+      description: Provide specific examples of how this feature would be used
+      placeholder: |
+        1. As a trader, I want to...
+        2. As a developer, I need to...
+        3. As an admin, I would like to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: technical-details
+    attributes:
+      label: Technical Considerations
+      description: Any technical details, implementation ideas, or constraints to consider
+      placeholder: |
+        - This feature might require...
+        - Consider integration with...
+        - Potential performance impact...
+
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: Acceptance Criteria
+      description: Define what success looks like for this feature
+      placeholder: |
+        This feature is complete when:
+        - [ ] User can...
+        - [ ] System should...
+        - [ ] Documentation includes...
+
+  - type: dropdown
+    id: complexity
+    attributes:
+      label: Estimated Complexity
+      description: How complex do you think this feature is to implement?
+      options:
+        - "🟢 Simple (Few hours to days)"
+        - "🟡 Medium (1-2 weeks)"
+        - "🟠 Complex (2-4 weeks)"
+        - "🔴 Very Complex (1+ months)"
+        - "❓ Unknown"
+      default: 4
+
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution Interest
+      description: Are you interested in contributing to this feature?
+      options:
+        - label: I'm willing to contribute code for this feature
+        - label: I can help with testing this feature
+        - label: I can help with documentation for this feature
+        - label: I can provide domain expertise/consultation
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Add any other context, mockups, diagrams, or examples
+      placeholder: Any additional information, links, or resources that might help...
