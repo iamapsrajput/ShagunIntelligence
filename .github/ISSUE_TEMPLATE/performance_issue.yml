@@ -1,0 +1,185 @@
+name: 🚀 Performance Issue
+description: Report a performance problem or optimization opportunity
+title: "[PERFORMANCE] "
+labels: ["performance", "needs-investigation"]
+assignees: ["iamapsrajput"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a performance issue! Performance is critical for trading systems, so we take these reports seriously.
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before submitting
+      options:
+        - label: I have searched existing issues to ensure this is not a duplicate
+          required: true
+        - label: I have profiled or measured the performance issue
+        - label: I have tested in a realistic environment (not just development)
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      description: Which component has the performance issue?
+      options:
+        - "AI Agents (Decision Making)"
+        - "API Endpoints (HTTP Response)"
+        - "Database Queries (SQL Performance)"
+        - "Real-time Data Processing"
+        - "WebSocket Connections"
+        - "Memory Usage"
+        - "CPU Usage"
+        - "Trading Execution Speed"
+        - "Market Data Processing"
+        - "Background Jobs/Tasks"
+        - "Docker Container Performance"
+        - "Kubernetes Cluster Performance"
+        - "Other"
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Performance Impact
+      description: How severe is the performance impact?
+      options:
+        - "🔴 Critical (System unusable, trading affected)"
+        - "🟠 High (Significant slowdown, user frustration)"
+        - "🟡 Medium (Noticeable delay, moderate impact)"
+        - "🟢 Low (Minor optimization opportunity)"
+      default: 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Performance Issue Description
+      description: Describe the performance problem in detail
+      placeholder: The system is slow when...
+    validations:
+      required: true
+
+  - type: textarea
+    id: current-performance
+    attributes:
+      label: Current Performance Metrics
+      description: What performance are you currently experiencing?
+      placeholder: |
+        - Response time: X seconds
+        - Memory usage: X GB
+        - CPU usage: X%
+        - Throughput: X requests/second
+        - Query time: X ms
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected-performance
+    attributes:
+      label: Expected Performance
+      description: What performance should this component achieve?
+      placeholder: |
+        - Expected response time: X seconds
+        - Expected memory usage: X GB
+        - Expected throughput: X requests/second
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      description: How can we reproduce this performance issue?
+      placeholder: |
+        1. Set up environment with...
+        2. Generate load by...
+        3. Monitor performance using...
+        4. Observe the slowdown...
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment Details
+      description: Your environment and system specifications
+      value: |
+        - OS: 
+        - Python version: 
+        - CPU: 
+        - Memory: 
+        - Disk type (SSD/HDD): 
+        - Docker version: 
+        - Kubernetes version: 
+        - Database version: 
+        - Load characteristics: 
+    validations:
+      required: true
+
+  - type: textarea
+    id: profiling-data
+    attributes:
+      label: Profiling Data
+      description: |
+        Include any profiling data, performance metrics, or monitoring output.
+        
+        **Tools you might use:**
+        - Python: cProfile, py-spy, memory_profiler
+        - HTTP: curl, ab, wrk, locust
+        - Database: EXPLAIN ANALYZE, pg_stat_statements
+        - System: top, htop, iotop, vmstat
+        - APM: New Relic, DataDog, Prometheus
+      placeholder: |
+        Paste profiling output here...
+        
+        Performance measurements:
+        - Before optimization: ...
+        - Benchmark results: ...
+        - Resource utilization: ...
+
+  - type: textarea
+    id: investigation
+    attributes:
+      label: Initial Investigation
+      description: What have you already tried or investigated?
+      placeholder: |
+        - Checked database indexes: ...
+        - Reviewed code hotspots: ...
+        - Tested with different configurations: ...
+        - Identified bottlenecks: ...
+
+  - type: textarea
+    id: suggestions
+    attributes:
+      label: Optimization Suggestions
+      description: Do you have any ideas for how to improve performance?
+      placeholder: |
+        Potential optimizations:
+        - Add database index on...
+        - Use caching for...
+        - Optimize algorithm by...
+        - Scale horizontally by...
+
+  - type: textarea
+    id: business-impact
+    attributes:
+      label: Business Impact
+      description: How does this performance issue affect trading or business operations?
+      placeholder: |
+        - Trading latency increased by...
+        - User experience degraded because...
+        - System capacity reduced to...
+        - Cost impact: ...
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Context
+      description: Any other relevant information, graphs, or monitoring data

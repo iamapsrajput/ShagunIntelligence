@@ -1,0 +1,72 @@
+# Code Owners for Shagun Intelligence
+# This file defines who is responsible for code reviews in different areas
+# 
+# Global owner - will be requested for all PRs unless more specific rules apply
+* @iamapsrajput
+
+# Security and configuration files - require admin review
+.github/ @iamapsrajput
+.github/workflows/ @iamapsrajput
+.github/dependabot.yml @iamapsrajput
+SECURITY.md @iamapsrajput
+.env* @iamapsrajput
+docker-compose*.yml @iamapsrajput
+Dockerfile* @iamapsrajput
+requirements.txt @iamapsrajput
+
+# Core application architecture
+app/ @iamapsrajput
+app/core/ @iamapsrajput
+app/core/config.py @iamapsrajput
+app/core/auth.py @iamapsrajput
+app/models/ @iamapsrajput
+
+# AI Agents - Critical trading logic
+agents/ @iamapsrajput
+agents/crew_manager.py @iamapsrajput
+agents/market_analyst/ @iamapsrajput
+agents/trader/ @iamapsrajput
+agents/risk_manager/ @iamapsrajput
+
+# Trading services - Require financial domain expertise
+services/kite/ @iamapsrajput
+services/database/ @iamapsrajput
+
+# Infrastructure and deployment
+k8s/ @iamapsrajput
+monitoring/ @iamapsrajput
+disaster-recovery/ @iamapsrajput
+
+# Backend services
+backend/ @iamapsrajput
+
+# Configuration management
+config/ @iamapsrajput
+
+# Documentation - Can be reviewed by broader team
+docs/ @iamapsrajput
+*.md @iamapsrajput
+README.md @iamapsrajput
+
+# Testing - Should involve the relevant component owners
+tests/unit/test_agents/ @iamapsrajput
+tests/unit/test_trading/ @iamapsrajput
+tests/integration/ @iamapsrajput
+pytest.ini @iamapsrajput
+run_tests.py @iamapsrajput
+
+# Frontend/Dashboard - If applicable
+frontend/ @iamapsrajput
+dashboard/ @iamapsrajput
+
+# Scripts and automation
+scripts/ @iamapsrajput
+
+# Database migrations and schemas
+**/migrations/ @iamapsrajput
+**/alembic/ @iamapsrajput
+
+# Critical security files that need multiple approvals
+SECURITY.md @iamapsrajput
+.github/workflows/codeql.yml @iamapsrajput
+.github/dependabot.yml @iamapsrajput

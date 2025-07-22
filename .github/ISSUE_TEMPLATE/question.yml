@@ -1,0 +1,92 @@
+name: ❓ Question/Support
+description: Ask a question or get support for using Shagun Intelligence
+title: "[QUESTION] "
+labels: ["question", "help wanted"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We're here to help! Please provide as much detail as possible so we can assist you effectively.
+        
+        **Note**: For urgent trading system issues, please also check our [troubleshooting guide](./docs/TROUBLESHOOTING.md).
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Pre-submission Checklist
+      description: Please verify these items before asking
+      options:
+        - label: I have searched existing issues and discussions
+          required: true
+        - label: I have read the relevant documentation
+        - label: I have checked the troubleshooting guide
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Question Category
+      description: What area is your question about?
+      options:
+        - "Setup & Installation"
+        - "Configuration"
+        - "Trading Strategies & AI Agents"
+        - "API Usage"
+        - "Database & Data Management"
+        - "Deployment (Docker/Kubernetes)"
+        - "Integration (Zerodha/External APIs)"
+        - "Performance & Optimization"
+        - "Security & Authentication"
+        - "Troubleshooting"
+        - "Best Practices"
+        - "Other"
+      default: 0
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your Question
+      description: What would you like to know?
+      placeholder: I'm trying to understand how to...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Context & Background
+      description: Provide context about what you're trying to achieve
+      placeholder: |
+        I'm working on...
+        My goal is to...
+        I need this because...
+
+  - type: textarea
+    id: attempted
+    attributes:
+      label: What You've Tried
+      description: What have you already attempted?
+      placeholder: |
+        I tried...
+        I looked at...
+        I searched for...
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment (if relevant)
+      description: Your setup details
+      value: |
+        - OS: 
+        - Python version: 
+        - Installation method: 
+        - Deployment type: 
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: Any other details that might help us answer your question

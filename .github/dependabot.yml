@@ -1,0 +1,105 @@
+# Dependabot configuration for Shagun Intelligence
+# Automatically creates pull requests to keep dependencies up to date
+
+version: 2
+updates:
+  # Python dependencies
+  - package-ecosystem: "pip"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "python"
+      - "security"
+    reviewers:
+      - "iamapsrajput"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # Group related updates together
+    groups:
+      fastapi-stack:
+        patterns:
+          - "fastapi*"
+          - "uvicorn*"
+          - "pydantic*"
+          - "starlette*"
+      crewai-stack:
+        patterns:
+          - "crewai*"
+          - "langchain*"
+          - "openai*"
+      database-stack:
+        patterns:
+          - "sqlalchemy*"
+          - "alembic*"
+          - "psycopg*"
+          - "asyncpg*"
+          - "redis*"
+      data-science:
+        patterns:
+          - "pandas*"
+          - "numpy*"
+          - "scipy*"
+          - "scikit-learn*"
+      testing-tools:
+        patterns:
+          - "pytest*"
+          - "black*"
+          - "flake8*"
+          - "mypy*"
+      security-tools:
+        patterns:
+          - "cryptography*"
+          - "passlib*"
+          - "python-jose*"
+    # Security-only updates for critical packages
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # Allow automatic security updates
+    allow:
+      - dependency-type: "all"
+
+  # Docker dependencies
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "tuesday"
+      time: "10:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "docker"
+      - "infrastructure"
+    reviewers:
+      - "iamapsrajput"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+      day: "first-monday"
+      time: "11:00"
+      timezone: "Asia/Kolkata"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci-cd"
+    reviewers:
+      - "iamapsrajput"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
