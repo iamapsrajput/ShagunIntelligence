@@ -1,0 +1,174 @@
+{
+  "name": "Shagun Intelligence Security Ruleset",
+  "description": "Comprehensive security and governance rules for the AI-powered algorithmic trading platform",
+  "enforcement": "active",
+  "target": {
+    "branch": ["main", "develop"]
+  },
+  "rules": [
+    {
+      "name": "Require pull request reviews",
+      "parameters": {
+        "required_approving_review_count": 1,
+        "dismiss_stale_reviews": true,
+        "require_code_owner_reviews": true,
+        "require_last_push_approval": false
+      }
+    },
+    {
+      "name": "Require status checks to pass before merging",
+      "parameters": {
+        "strict_required_status_checks_policy": {
+          "required_status_checks": [
+            {
+              "context": "CI Pipeline / lint",
+              "integration_id": null
+            },
+            {
+              "context": "CI Pipeline / test",
+              "integration_id": null
+            },
+            {
+              "context": "CI Pipeline / build-docker",
+              "integration_id": null
+            },
+            {
+              "context": "CodeQL Security Analysis / analyze (python)",
+              "integration_id": null
+            },
+            {
+              "context": "CodeQL Security Analysis / security-scan",
+              "integration_id": null
+            }
+          ],
+          "strict_required_status_checks_policy": true
+        }
+      }
+    },
+    {
+      "name": "Require branches to be up to date before merging",
+      "parameters": {
+        "strict_required_status_checks_policy": {
+          "strict_required_status_checks_policy": true
+        }
+      }
+    },
+    {
+      "name": "Require conversation resolution before merging",
+      "parameters": {}
+    },
+    {
+      "name": "Require signed commits",
+      "parameters": {}
+    },
+    {
+      "name": "Require linear history",
+      "parameters": {}
+    },
+    {
+      "name": "Restrict force pushes",
+      "parameters": {}
+    },
+    {
+      "name": "Restrict deletions",
+      "parameters": {}
+    },
+    {
+      "name": "Require deployments to succeed before merging",
+      "parameters": {
+        "required_deployment_environments": ["production", "staging"]
+      }
+    },
+    {
+      "name": "Require security policy to be present",
+      "parameters": {}
+    },
+    {
+      "name": "Require security advisories to be reviewed",
+      "parameters": {}
+    },
+    {
+      "name": "Require vulnerability alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require code scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require secret scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require dependency review",
+      "parameters": {}
+    },
+    {
+      "name": "Require security policy to be present",
+      "parameters": {}
+    },
+    {
+      "name": "Require security advisories to be reviewed",
+      "parameters": {}
+    },
+    {
+      "name": "Require vulnerability alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require code scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require secret scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require dependency review",
+      "parameters": {}
+    },
+    {
+      "name": "Require security policy to be present",
+      "parameters": {}
+    },
+    {
+      "name": "Require security advisories to be reviewed",
+      "parameters": {}
+    },
+    {
+      "name": "Require vulnerability alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require code scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require secret scanning alerts to be resolved or dismissed",
+      "parameters": {}
+    },
+    {
+      "name": "Require dependency review",
+      "parameters": {}
+    }
+  ],
+  "conditions": {
+    "repository_name_pattern": {
+      "operator": "starts_with",
+      "pattern": "ShagunIntelligence"
+    },
+    "ref_name": {
+      "include": ["refs/heads/main", "refs/heads/develop"],
+      "exclude": ["refs/heads/feature/*", "refs/heads/hotfix/*"]
+    }
+  },
+  "bypass_actors": [
+    {
+      "actor_id": 26918678,
+      "actor_type": "User",
+      "bypass_mode": "always"
+    }
+  ],
+  "created_at": "2025-01-23T00:00:00Z",
+  "updated_at": "2025-01-23T00:00:00Z"
+}
