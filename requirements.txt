@@ -83,4 +83,4 @@ memory_profiler==0.61.0
 matplotlib==3.10.3
 
 # Additional dependencies for data sources
-cryptography==41.0.7
+cryptography==44.0.1
