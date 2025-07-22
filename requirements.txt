@@ -4,14 +4,14 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
 
-# CrewAI framework
-crewai==0.28.8
-crewai-tools==0.1.6
+# CrewAI framework - Updated to compatible versions
+crewai==0.148.0
+crewai-tools==0.55.0
 langchain==0.2.5
 langchain-openai==0.0.6
 
 # Zerodha Kite Connect SDK
-kiteconnect==4.1.1
+kiteconnect==5.0.1
 
 # Sentiment Analysis
 textblob==0.17.1
@@ -19,17 +19,20 @@ aiohttp==3.9.1
 
 # News and NLP
 pytz==2023.3
+feedparser==6.0.11
 
 # Database and ORM
 sqlalchemy==2.0.23
 alembic==1.13.1
 psycopg2-binary==2.9.9
+asyncpg==0.29.0
 redis==5.0.1
 
 # Data processing and analysis
 pandas==2.1.4
 numpy==1.25.2
-ta-lib==0.4.28
+scipy==1.16.0
+# ta-lib==0.4.28  # Commented out - requires system dependencies
 yfinance==0.2.28
 
 # Machine Learning
@@ -50,12 +53,12 @@ loguru==0.7.2
 prometheus-client==0.19.0
 
 # Date and time handling
-pytz==2023.3
 python-dateutil==2.8.2
 
 # Security
 python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
+email-validator==2.2.0
 
 # Development and testing
 pytest==7.4.3
@@ -66,3 +69,18 @@ mypy==1.7.1
 
 # Docker health checks
 psutil==5.9.6
+
+# Task scheduling
+apscheduler==3.11.0
+
+# File operations
+aiofiles==24.1.0
+
+# Performance monitoring
+memory_profiler==0.61.0
+
+# Visualization
+matplotlib==3.10.3
+
+# Additional dependencies for data sources
+cryptography==41.0.7

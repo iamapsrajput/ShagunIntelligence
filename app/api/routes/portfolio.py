@@ -60,24 +60,24 @@ async def get_portfolio_summary(
     """Get portfolio summary"""
     try:
         kite_client = request.app.state.kite_client
-        
+
         # Get portfolio data from Kite
         portfolio = await kite_client.get_portfolio()
         positions = await kite_client.get_positions()
-        
+
         # Calculate metrics
         total_value = portfolio.get("equity", 0)
         cash_balance = portfolio.get("available_cash", 0)
         invested_value = total_value - cash_balance
-        
+
         # Calculate P&L
         day_pnl = sum(pos.get("pnl", 0) for pos in positions.get("net", []))
         total_pnl = sum(pos.get("pnl", 0) for pos in positions.get("day", []))
-        
+
         # Calculate percentages
         day_pnl_percent = (day_pnl / (total_value - day_pnl) * 100) if total_value > day_pnl else 0
         total_pnl_percent = (total_pnl / invested_value * 100) if invested_value > 0 else 0
-        
+
         # Broadcast portfolio update
         await websocket_broadcaster.broadcast_portfolio_update({
             "totalValue": total_value,
@@ -101,7 +101,7 @@ async def get_portfolio_summary(
             "cash": cash_balance,
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         return PortfolioSummary(
             total_value=total_value,
             day_pnl=day_pnl,
@@ -120,9 +120,9 @@ async def get_portfolio_summary(
 
 @router.get("/history")
 async def get_portfolio_history(
-    days: int = Query(30, description="Number of days of history"),
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    days: int = Query(30, description="Number of days of history")
 ):
     """Get portfolio value history"""
     try:
@@ -131,20 +131,20 @@ async def get_portfolio_history(
         history = []
         base_value = 100000
         current_date = datetime.now()
-        
+
         for i in range(days):
             date = current_date - timedelta(days=days-i-1)
             # Simulate portfolio value changes
             change = (i * 0.1) + ((-1) ** i * 0.5)  # Simple simulation
             value = base_value + (base_value * change / 100)
-            
+
             history.append({
                 "date": date.date().isoformat(),
                 "value": round(value, 2),
                 "pnl": round(value - base_value, 2),
                 "pnl_percent": round((value - base_value) / base_value * 100, 2)
             })
-        
+
         return {
             "history": history,
             "period": f"{days} days",
@@ -158,21 +158,21 @@ async def get_portfolio_history(
 
 @router.get("/performance", response_model=PerformanceMetrics)
 async def get_performance_metrics(
-    period: str = Query("1M", description="Period: 1D, 1W, 1M, 3M, 6M, 1Y, ALL"),
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    period: str = Query("1M", description="Period: 1D, 1W, 1M, 3M, 6M, 1Y, ALL")
 ):
     """Get portfolio performance metrics"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Calculate performance metrics
         metrics = await crew_manager.calculate_performance_metrics(
             user_id=current_user.id,
             period=period
         )
-        
+
         return PerformanceMetrics(
             returns=metrics.get("returns", {}),
             sharpe_ratio=metrics.get("sharpe_ratio", 0),
@@ -200,16 +200,16 @@ async def get_risk_metrics(
     try:
         crew_manager = request.app.state.crew_manager
         kite_client = request.app.state.kite_client
-        
+
         # Get current positions
         positions = await kite_client.get_positions()
-        
+
         # Calculate risk metrics
         risk_analysis = await crew_manager.analyze_portfolio_risk(
             positions=positions.get("net", []),
             user_id=current_user.id
         )
-        
+
         return RiskMetrics(
             portfolio_beta=risk_analysis.get("beta", 0),
             var_95=risk_analysis.get("var_95", 0),
@@ -235,10 +235,10 @@ async def analyze_holdings(
     try:
         crew_manager = request.app.state.crew_manager
         kite_client = request.app.state.kite_client
-        
+
         # Get positions
         positions = await kite_client.get_positions()
-        
+
         # Analyze each holding
         holdings_analysis = []
         for position in positions.get("net", []):
@@ -249,7 +249,7 @@ async def analyze_holdings(
                     quantity=position["quantity"],
                     avg_price=position["average_price"]
                 )
-                
+
                 holdings_analysis.append({
                     "symbol": position["tradingsymbol"],
                     "quantity": position["quantity"],
@@ -266,7 +266,7 @@ async def analyze_holdings(
                     "stop_loss": analysis.get("stop_loss"),
                     "analysis": analysis.get("analysis", {})
                 })
-        
+
         return {
             "holdings": holdings_analysis,
             "total_holdings": len(holdings_analysis),
@@ -287,18 +287,18 @@ async def suggest_rebalancing(
     try:
         crew_manager = request.app.state.crew_manager
         kite_client = request.app.state.kite_client
-        
+
         # Get current positions and portfolio value
         positions = await kite_client.get_positions()
         portfolio = await kite_client.get_portfolio()
-        
+
         # Calculate rebalancing suggestions
         suggestions = await crew_manager.calculate_rebalancing(
             current_positions=positions.get("net", []),
             portfolio_value=portfolio.get("equity", 0),
             target_allocation=target_allocation
         )
-        
+
         return {
             "suggestions": suggestions,
             "estimated_cost": sum(s.get("estimated_cost", 0) for s in suggestions),
@@ -312,16 +312,16 @@ async def suggest_rebalancing(
 
 @router.get("/tax/summary")
 async def get_tax_summary(
-    financial_year: Optional[str] = None,
     request: Request,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    financial_year: Optional[str] = None
 ):
     """Get tax summary for capital gains"""
     try:
         # Calculate tax summary from trades
         # This is a simplified version - actual implementation would be more complex
-        
+
         return {
             "financial_year": financial_year or "2024-25",
             "short_term_gains": 0,

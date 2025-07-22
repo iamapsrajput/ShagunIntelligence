@@ -1,0 +1,50 @@
+{
+  "timestamp": "2025-07-22T20:43:41.232526",
+  "summary": {
+    "total_tests": 2,
+    "passed": 1,
+    "failed": 1,
+    "skipped": 0
+  },
+  "coverage": {
+    "agents.market_analyst": 85.5,
+    "agents.risk_manager": 92.3,
+    "services.kite": 78.9
+  },
+  "performance_metrics": {
+    "api_response_time": [
+      {
+        "value": 0.15,
+        "unit": "seconds",
+        "timestamp": "2025-07-22T20:43:41.232551"
+      }
+    ],
+    "memory_usage": [
+      {
+        "value": 45.6,
+        "unit": "MB",
+        "timestamp": "2025-07-22T20:43:41.232556"
+      }
+    ]
+  },
+  "test_results": [
+    {
+      "name": "test_market_analysis",
+      "module": "test_market_analyst",
+      "status": "pass",
+      "duration": 1.234,
+      "timestamp": "2025-07-22T20:43:41.232534"
+    },
+    {
+      "name": "test_risk_calculation",
+      "module": "test_risk_manager",
+      "status": "fail",
+      "duration": 0.567,
+      "message": "Assertion error: Expected 100, got 99",
+      "timestamp": "2025-07-22T20:43:41.232545"
+    }
+  ],
+  "recommendations": [
+    "Test pass rate is 50.0%. Investigate failing tests."
+  ]
+}

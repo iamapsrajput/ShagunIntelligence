@@ -55,35 +55,35 @@ async def get_system_status(
     try:
         crew_manager = request.app.state.crew_manager
         kite_client = request.app.state.kite_client
-        
+
         # Get system components status
         agents_status = await crew_manager.get_all_agents_status()
         active_agents = [
-            agent for agent, status in agents_status.items() 
+            agent for agent, status in agents_status.items()
             if status.get("enabled", False)
         ]
-        
+
         # Get trading statistics
         positions = await kite_client.get_positions()
         open_positions = len([p for p in positions.get("net", []) if p["quantity"] != 0])
-        
+
         # Calculate daily P&L
         day_pnl = sum(pos.get("pnl", 0) for pos in positions.get("net", []))
-        
+
         # Determine risk level
         risk_level = "LOW"
         if open_positions > 8:
             risk_level = "HIGH"
         elif open_positions > 5:
             risk_level = "MEDIUM"
-        
+
         # System health check
         system_health = "healthy"
         if len(active_agents) < 3:
             system_health = "degraded"
         elif not kite_client.is_connected():
             system_health = "critical"
-        
+
         status = SystemStatus(
             is_active=getattr(request.app.state, "trading_active", True),
             trading_enabled=getattr(request.app.state, "trading_enabled", True),
@@ -96,7 +96,7 @@ async def get_system_status(
             system_health=system_health,
             last_update=datetime.utcnow()
         )
-        
+
         # Broadcast status update
         await websocket_broadcaster.broadcast_system_status({
             "isActive": status.is_active,
@@ -104,7 +104,7 @@ async def get_system_status(
             "riskLevel": status.risk_level,
             "lastUpdate": status.last_update.isoformat()
         })
-        
+
         return status
     except Exception as e:
         logger.error(f"Error fetching system status: {str(e)}")
@@ -121,14 +121,14 @@ async def toggle_system(
     """Toggle system on/off"""
     try:
         request.app.state.trading_active = active
-        
+
         # Start or stop background tasks
         if active:
             # Start trading scheduler
             trading_scheduler = request.app.state.get("trading_scheduler")
             if trading_scheduler and not trading_scheduler.running:
                 trading_scheduler.start()
-            
+
             message = "Trading system activated"
             logger.info(f"System activated by {current_user.username}")
         else:
@@ -136,10 +136,10 @@ async def toggle_system(
             trading_scheduler = request.app.state.get("trading_scheduler")
             if trading_scheduler and trading_scheduler.running:
                 trading_scheduler.pause()
-            
+
             message = "Trading system deactivated"
             logger.warning(f"System deactivated by {current_user.username}")
-        
+
         # Broadcast system status
         background_tasks.add_task(
             websocket_broadcaster.broadcast_system_status,
@@ -149,7 +149,7 @@ async def toggle_system(
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
-        
+
         return {
             "status": "success",
             "active": active,
@@ -177,7 +177,7 @@ async def get_system_settings(
             allowed_symbols=getattr(request.app.state, "allowed_symbols", []),
             blocked_symbols=getattr(request.app.state, "blocked_symbols", [])
         )
-        
+
         return settings
     except Exception as e:
         logger.error(f"Error fetching system settings: {str(e)}")
@@ -200,11 +200,11 @@ async def update_system_settings(
         request.app.state.market_hours_only = settings.market_hours_only
         request.app.state.allowed_symbols = settings.allowed_symbols
         request.app.state.blocked_symbols = settings.blocked_symbols
-        
+
         # In production, save to database
-        
+
         logger.info(f"System settings updated by {current_user.username}")
-        
+
         return {
             "status": "success",
             "message": "System settings updated successfully",
@@ -234,7 +234,7 @@ async def get_risk_parameters(
             use_trailing_stop=getattr(request.app.state, "use_trailing_stop", True),
             trailing_stop_percent=getattr(request.app.state, "trailing_stop_percent", 1.5)
         )
-        
+
         return params
     except Exception as e:
         logger.error(f"Error fetching risk parameters: {str(e)}")
@@ -260,11 +260,11 @@ async def update_risk_parameters(
         request.app.state.allow_short_selling = params.allow_short_selling
         request.app.state.use_trailing_stop = params.use_trailing_stop
         request.app.state.trailing_stop_percent = params.trailing_stop_percent
-        
+
         # Update crew manager risk parameters
         crew_manager = request.app.state.crew_manager
         await crew_manager.update_risk_parameters(params.dict())
-        
+
         # Broadcast update
         background_tasks.add_task(
             websocket_broadcaster.broadcast_system_status,
@@ -274,9 +274,9 @@ async def update_risk_parameters(
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
-        
+
         logger.info(f"Risk parameters updated by {current_user.username}")
-        
+
         return {
             "status": "success",
             "message": "Risk parameters updated successfully",
@@ -296,15 +296,15 @@ async def emergency_stop(
     """Emergency stop - close all positions and halt trading"""
     try:
         kite_client = request.app.state.kite_client
-        
+
         # Set system to inactive
         request.app.state.trading_active = False
         request.app.state.trading_enabled = False
-        
+
         # Get all open positions
         positions = await kite_client.get_positions()
         closed_positions = []
-        
+
         # Close all positions
         for position in positions.get("net", []):
             if position["quantity"] != 0:
@@ -320,7 +320,7 @@ async def emergency_stop(
                         "order_type": "MARKET",
                         "tag": "emergency_stop"
                     })
-                    
+
                     closed_positions.append({
                         "symbol": position["tradingsymbol"],
                         "quantity": position["quantity"],
@@ -328,10 +328,10 @@ async def emergency_stop(
                     })
                 except Exception as e:
                     logger.error(f"Failed to close position {position['tradingsymbol']}: {str(e)}")
-        
+
         # Log emergency stop
         logger.critical(f"EMERGENCY STOP executed by {current_user.username}. Reason: {reason}")
-        
+
         # Broadcast alert
         await websocket_broadcaster.broadcast_alert({
             "type": "emergency_stop",
@@ -340,7 +340,7 @@ async def emergency_stop(
             "closed_positions": len(closed_positions),
             "timestamp": datetime.utcnow().isoformat()
         })
-        
+
         return {
             "status": "emergency_stop_executed",
             "reason": reason,
@@ -354,9 +354,9 @@ async def emergency_stop(
 
 @router.get("/logs/recent")
 async def get_recent_logs(
+    current_user: User = Depends(get_current_active_superuser),
     level: Optional[str] = None,
-    limit: int = 100,
-    current_user: User = Depends(get_current_active_superuser)
+    limit: int = 100
 ):
     """Get recent system logs (admin only)"""
     try:
@@ -369,7 +369,7 @@ async def get_recent_logs(
                 "module": "system"
             }
         ]
-        
+
         return {
             "logs": logs,
             "count": len(logs),
@@ -383,20 +383,20 @@ async def get_recent_logs(
 @router.post("/maintenance-mode")
 async def toggle_maintenance_mode(
     enabled: bool,
-    message: Optional[str] = None,
     request: Request,
-    current_user: User = Depends(get_current_active_superuser)
+    current_user: User = Depends(get_current_active_superuser),
+    message: Optional[str] = None
 ):
     """Toggle maintenance mode (admin only)"""
     try:
         request.app.state.maintenance_mode = enabled
         request.app.state.maintenance_message = message or "System is under maintenance"
-        
+
         if enabled:
             logger.warning(f"Maintenance mode enabled by {current_user.username}")
         else:
             logger.info(f"Maintenance mode disabled by {current_user.username}")
-        
+
         return {
             "status": "success",
             "maintenance_mode": enabled,

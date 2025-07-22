@@ -1,0 +1,201 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Shagun Intelligence Test Report - 2025-07-22 20:43:41</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .header { background-color: #f0f0f0; padding: 20px; border-radius: 5px; }
+        .summary { margin: 20px 0; }
+        .metrics { display: flex; justify-content: space-around; margin: 20px 0; }
+        .metric-card {
+            background: #fff;
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: center;
+            min-width: 150px;
+        }
+        .metric-value { font-size: 24px; font-weight: bold; }
+        .metric-label { color: #666; margin-top: 5px; }
+        .test-results { margin: 20px 0; }
+        .test-pass { color: green; }
+        .test-fail { color: red; }
+        .test-skip { color: orange; }
+        table { border-collapse: collapse; width: 100%; margin: 20px 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .chart { margin: 20px 0; text-align: center; }
+        .coverage-bar {
+            background-color: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 20px;
+            margin: 5px 0;
+        }
+        .coverage-fill {
+            background-color: #4CAF50;
+            height: 100%;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Shagun Intelligence Test Report</h1>
+        <p>Generated: 2025-07-22 20:43:41</p>
+        <p>Duration: 0:00:00.000011</p>
+    </div>
+
+    <div class="summary">
+        <h2>Test Summary</h2>
+        <div class="metrics">
+            <div class="metric-card">
+                <div class="metric-value">2</div>
+                <div class="metric-label">Total Tests</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value test-pass">1</div>
+                <div class="metric-label">Passed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value test-fail">1</div>
+                <div class="metric-label">Failed</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value test-skip">0</div>
+                <div class="metric-label">Skipped</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">50.0%</div>
+                <div class="metric-label">Pass Rate</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="coverage">
+        <h2>Code Coverage</h2>
+        <table>
+            <tr>
+                <th>Module</th>
+                <th>Coverage</th>
+                <th>Visual</th>
+            </tr>
+            
+            <tr>
+                <td>agents.market_analyst</td>
+                <td>85.5%</td>
+                <td>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 85.5%">
+                            85.5%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>agents.risk_manager</td>
+                <td>92.3%</td>
+                <td>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 92.3%">
+                            92.3%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+            <tr>
+                <td>services.kite</td>
+                <td>78.9%</td>
+                <td>
+                    <div class="coverage-bar">
+                        <div class="coverage-fill" style="width: 78.9%">
+                            78.9%
+                        </div>
+                    </div>
+                </td>
+            </tr>
+            
+        </table>
+        <p><strong>Overall Coverage: 85.6%</strong></p>
+    </div>
+
+    <div class="performance">
+        <h2>Performance Metrics</h2>
+        <table>
+            <tr>
+                <th>Metric</th>
+                <th>Value</th>
+                <th>Unit</th>
+            </tr>
+            
+            <tr>
+                <td>api_response_time</td>
+                <td>0.150</td>
+                <td>seconds</td>
+            </tr>
+            
+            <tr>
+                <td>memory_usage</td>
+                <td>45.600</td>
+                <td>MB</td>
+            </tr>
+            
+        </table>
+    </div>
+
+    <div class="test-results">
+        <h2>Detailed Test Results</h2>
+        <table>
+            <tr>
+                <th>Test Name</th>
+                <th>Module</th>
+                <th>Status</th>
+                <th>Duration (s)</th>
+                <th>Message</th>
+            </tr>
+            
+            <tr>
+                <td>test_market_analysis</td>
+                <td>test_market_analyst</td>
+                <td class="test-pass">pass</td>
+                <td>1.234</td>
+                <td>-</td>
+            </tr>
+            
+            <tr>
+                <td>test_risk_calculation</td>
+                <td>test_risk_manager</td>
+                <td class="test-fail">fail</td>
+                <td>0.567</td>
+                <td>Assertion error: Expected 100, got 99</td>
+            </tr>
+            
+        </table>
+    </div>
+
+    <div class="charts">
+        <h2>Test Trends</h2>
+        <div class="chart">
+            <img src="test_trends.png" alt="Test Trends">
+        </div>
+        <div class="chart">
+            <img src="performance_chart.png" alt="Performance Metrics">
+        </div>
+    </div>
+
+    <div class="recommendations">
+        <h2>Recommendations</h2>
+        <ul>
+            
+            <li>Test pass rate is 50.0%. Investigate failing tests.</li>
+            
+        </ul>
+    </div>
+</body>
+</html>
+        

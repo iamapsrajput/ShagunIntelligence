@@ -1,57 +1,71 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from app.core.config import get_settings
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
-
-from app.core.config import get_settings
 
 settings = get_settings()
 
 # Create async engine
-engine = create_async_engine(
-    settings.DATABASE_URL,
-    echo=settings.DEBUG,
-    future=True,
-    pool_pre_ping=True,
-    poolclass=NullPool  # Use NullPool for better connection management
-)
+if settings.DATABASE_URL.startswith("sqlite"):
+    # For SQLite, use sync engine since SQLite doesn't support async
+    engine = None
+else:
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=settings.DEBUG,
+        future=True,
+        pool_pre_ping=True,
+        poolclass=NullPool,  # Use NullPool for better connection management
+    )
 
 # Create async session factory
-AsyncSessionLocal = sessionmaker(
-    engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-    autocommit=False,
-    autoflush=False,
-)
+if settings.DATABASE_URL.startswith("sqlite"):
+    AsyncSessionLocal = None
+else:
+    AsyncSessionLocal = sessionmaker(
+        engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+        autocommit=False,
+        autoflush=False,
+    )
 
 
 # Dependency to get DB session
 async def get_db():
-    async with AsyncSessionLocal() as session:
+    if settings.DATABASE_URL.startswith("sqlite"):
+        # For SQLite, use sync session
+        db = SessionLocal()
         try:
-            yield session
-            await session.commit()
+            yield db
+            db.commit()
         except Exception:
-            await session.rollback()
+            db.rollback()
             raise
         finally:
-            await session.close()
+            db.close()
+    else:
+        # For PostgreSQL, use async session
+        async with AsyncSessionLocal() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+            finally:
+                await session.close()
 
 
 # For synchronous operations (if needed)
 from sqlalchemy import create_engine
-from sqlalchemy.orm import Session
 
 sync_engine = create_engine(
     settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://"),
     pool_pre_ping=True,
 )
 
-SessionLocal = sessionmaker(
-    autocommit=False,
-    autoflush=False,
-    bind=sync_engine
-)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=sync_engine)
 
 
 def get_sync_db():

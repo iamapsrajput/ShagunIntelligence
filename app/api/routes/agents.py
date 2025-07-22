@@ -42,7 +42,7 @@ async def get_agents_status(
     try:
         crew_manager = request.app.state.crew_manager
         agents_status = await crew_manager.get_all_agents_status()
-        
+
         return {
             agent_type: AgentStatus(
                 agent_type=agent_type,
@@ -69,10 +69,10 @@ async def get_agent_status(
     try:
         crew_manager = request.app.state.crew_manager
         status = await crew_manager.get_agent_status(agent_type)
-        
+
         if not status:
             raise HTTPException(status_code=404, detail=f"Agent {agent_type} not found")
-        
+
         return AgentStatus(
             agent_type=agent_type,
             status=status.get("status", "unknown"),
@@ -91,14 +91,14 @@ async def get_agent_status(
 @router.get("/{agent_type}/analysis", response_model=AgentAnalysis)
 async def get_agent_analysis(
     agent_type: str,
-    symbol: Optional[str] = None,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    symbol: Optional[str] = None
 ):
     """Get latest analysis from a specific agent"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Get agent analysis
         if agent_type == "market":
             analysis = await crew_manager.get_market_analysis(symbol)
@@ -112,7 +112,7 @@ async def get_agent_analysis(
             analysis = await crew_manager.get_coordinator_decision(symbol)
         else:
             raise HTTPException(status_code=404, detail=f"Agent {agent_type} not found")
-        
+
         return AgentAnalysis(
             agent_type=agent_type,
             analysis=analysis.get("analysis", {}),
@@ -137,7 +137,7 @@ async def update_agent_config(
     """Update agent configuration"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Update agent configuration
         result = await crew_manager.update_agent_config(
             agent_type=agent_type,
@@ -145,10 +145,10 @@ async def update_agent_config(
             weight=config.weight,
             parameters=config.parameters
         )
-        
+
         if not result:
             raise HTTPException(status_code=404, detail=f"Agent {agent_type} not found")
-        
+
         # Broadcast configuration update
         background_tasks.add_task(
             websocket_broadcaster.broadcast_agent_activity,
@@ -165,9 +165,9 @@ async def update_agent_config(
                 "timestamp": datetime.utcnow().isoformat()
             }
         )
-        
+
         logger.info(f"Agent {agent_type} configuration updated by {current_user.username}")
-        
+
         return {
             "agent_type": agent_type,
             "status": "updated",
@@ -189,15 +189,15 @@ async def restart_agent(
     """Restart a specific agent"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Restart agent
         result = await crew_manager.restart_agent(agent_type)
-        
+
         if not result:
             raise HTTPException(status_code=404, detail=f"Agent {agent_type} not found")
-        
+
         logger.info(f"Agent {agent_type} restarted by {current_user.username}")
-        
+
         return {
             "agent_type": agent_type,
             "status": "restarted",
@@ -212,17 +212,17 @@ async def restart_agent(
 
 @router.get("/performance/metrics")
 async def get_agents_performance(
-    period: str = "1d",  # 1h, 1d, 1w, 1m
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    period: str = "1d"  # 1h, 1d, 1w, 1m
 ):
     """Get performance metrics for all agents"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Get performance metrics
         metrics = await crew_manager.get_agents_performance_metrics(period)
-        
+
         return {
             "period": period,
             "metrics": metrics,
@@ -235,21 +235,21 @@ async def get_agents_performance(
 
 @router.get("/activity/recent")
 async def get_recent_activity(
-    limit: int = 50,
-    agent_type: Optional[str] = None,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    limit: int = 50,
+    agent_type: Optional[str] = None
 ):
     """Get recent agent activities"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Get recent activities
         activities = await crew_manager.get_recent_agent_activities(
             limit=limit,
             agent_type=agent_type
         )
-        
+
         return {
             "activities": activities,
             "count": len(activities),
@@ -270,17 +270,17 @@ async def execute_crew_task(
     """Execute a custom crew task"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Validate task
         if "type" not in task:
             raise HTTPException(status_code=400, detail="Task type is required")
-        
+
         # Execute task
         result = await crew_manager.execute_custom_task(task)
-        
+
         # Log task execution
         logger.info(f"Custom crew task executed by {current_user.username}: {task['type']}")
-        
+
         return {
             "task_id": result.get("task_id"),
             "status": "executed",
@@ -296,21 +296,21 @@ async def execute_crew_task(
 
 @router.get("/decisions/history")
 async def get_decision_history(
-    symbol: Optional[str] = None,
-    limit: int = 100,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
+    symbol: Optional[str] = None,
+    limit: int = 100
 ):
     """Get agent decision history"""
     try:
         crew_manager = request.app.state.crew_manager
-        
+
         # Get decision history
         decisions = await crew_manager.get_decision_history(
             symbol=symbol,
             limit=limit
         )
-        
+
         return {
             "decisions": decisions,
             "count": len(decisions),
