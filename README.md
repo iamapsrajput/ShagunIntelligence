@@ -6,8 +6,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
-[![CI/CD](https://img.shields.io/github/workflow/status/shagunintelligence/shagunintelligence/CI%20Pipeline/main)](https://github.com/shagunintelligence/shagunintelligence/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/shagunintelligence/shagunintelligence)](https://codecov.io/gh/shagunintelligence/shagunintelligence)
+[![CI/CD](https://img.shields.io/github/workflow/status/iamapsrajput/ShagunIntelligence/CI%20Pipeline/main)](https://github.com/iamapsrajput/ShagunIntelligence/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/iamapsrajput/ShagunIntelligence)](https://codecov.io/gh/iamapsrajput/ShagunIntelligence)
 
 </div>
 
