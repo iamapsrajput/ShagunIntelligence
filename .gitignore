@@ -139,4 +139,5 @@ data/local/
 # Trading data
 historical_data/
 backtest_results/
-trading_logs/
+dashboard/node_modules/
+dashboard/package-lock.json

@@ -1,5 +1,5 @@
 # FastAPI and web framework
-fastapi==0.104.1
+fastapi==0.116.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 pydantic-settings==2.1.0
@@ -30,7 +30,7 @@ redis==5.0.1
 
 # Data processing and analysis
 pandas==2.1.4
-numpy==1.25.2
+numpy==2.3.2
 scipy==1.16.0
 # ta-lib==0.4.28  # Commented out - requires system dependencies
 yfinance==0.2.28
@@ -46,7 +46,7 @@ websockets==12.0
 
 # Environment and configuration
 python-dotenv==1.0.0
-python-multipart==0.0.18
+python-multipart==0.0.20
 
 # Logging and monitoring
 loguru==0.7.2
@@ -56,7 +56,7 @@ prometheus-client==0.19.0
 python-dateutil==2.8.2
 
 # Security
-python-jose[cryptography]==3.3.0
+python-jose[cryptography]==3.5.0
 passlib[bcrypt]==1.7.4
 email-validator==2.2.0
 
