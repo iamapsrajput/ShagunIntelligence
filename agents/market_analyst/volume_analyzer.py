@@ -75,7 +75,7 @@ class VolumeSignal:
 class VolumeIndicators:
     """Volume-based technical indicators"""
 
-        @staticmethod
+    @staticmethod
     def calculate_volume_indicators(df: pd.DataFrame) -> pd.DataFrame:
         """Calculate various volume indicators"""
         if df.empty or len(df) < 20:

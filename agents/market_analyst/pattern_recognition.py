@@ -58,7 +58,7 @@ class BreakoutSignal:
 class CandlestickPatternRecognizer:
     """Recognizes candlestick patterns using TA-Lib"""
 
-        @staticmethod
+    @staticmethod
     def detect_patterns(df: pd.DataFrame) -> Dict[str, List[int]]:
         """Detect various candlestick patterns"""
         if df.empty or len(df) < 10:
@@ -147,7 +147,6 @@ class CandlestickPatternRecognizer:
 
         except Exception as e:
             logger.error(f"Error in basic pattern detection: {str(e)}")
-            return {}
             return {}
 
 
