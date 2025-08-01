@@ -35,7 +35,7 @@ numpy==1.26.4
 scipy==1.16.0
 # Additional runtime requirements
 simpleeval==0.9.13
-jinja2==3.1.5
+jinja2==3.1.6
 # ta-lib==0.4.28  # Commented out - requires system dependencies
 yfinance==0.2.28
 
