@@ -9,6 +9,14 @@ from pathlib import Path
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import types
+sys.modules['crewai'] = types.SimpleNamespace(Agent=object, Task=object, Crew=object, Process=object)
+sys.modules['langchain_openai'] = types.SimpleNamespace(ChatOpenAI=object)
+sys.modules['langchain'] = types.SimpleNamespace()
+sys.modules['langchain.llms'] = types.SimpleNamespace()
+sys.modules['langchain.llms.base'] = types.SimpleNamespace(BaseLLM=object)
+sys.modules['openai'] = types.SimpleNamespace()
+
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
