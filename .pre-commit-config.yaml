@@ -30,7 +30,8 @@ repos:
     rev: v1.17.1
     hooks:
       - id: mypy
-        additional_dependencies: [types-requests, types-redis, types-python-dateutil]
+        additional_dependencies:
+          [types-requests, types-redis, types-python-dateutil]
         args: [--ignore-missing-imports, --no-strict-optional]
 
   - repo: https://github.com/PyCQA/bandit
@@ -68,7 +69,20 @@ repos:
     hooks:
       - id: flake8
         additional_dependencies: [flake8-docstrings, flake8-bugbear]
-        args: [--max-line-length=88, --extend-ignore=E203,W503,D100,D101,D102,D103,D104,D105,D106,D107]
+        args:
+          [
+            --max-line-length=88,
+            --extend-ignore=E203,
+            W503,
+            D100,
+            D101,
+            D102,
+            D103,
+            D104,
+            D105,
+            D106,
+            D107,
+          ]
 
 ci:
   autofix_commit_msg: |
@@ -76,8 +90,8 @@ ci:
 
     for more information, see https://pre-commit.ci
   autofix_prs: true
-  autoupdate_branch: ''
-  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+  autoupdate_branch: ""
+  autoupdate_commit_msg: "[pre-commit.ci] pre-commit autoupdate"
   autoupdate_schedule: weekly
   skip: []
   submodules: false
