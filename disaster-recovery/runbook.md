@@ -1,6 +1,7 @@
 # Shagun Intelligence Disaster Recovery Runbook
 
 ## Table of Contents
+
 1. [Overview](#overview)
 2. [Contact Information](#contact-information)
 3. [Disaster Scenarios](#disaster-scenarios)
@@ -12,32 +13,36 @@
 
 This runbook provides step-by-step procedures for recovering Shagun Intelligence services in case of various disaster scenarios.
 
-**RTO (Recovery Time Objective)**: 4 hours  
+**RTO (Recovery Time Objective)**: 4 hours
 **RPO (Recovery Point Objective)**: 1 hour
 
 ## Contact Information
 
 ### Emergency Contacts
+
 - **On-Call Engineer**: Check PagerDuty
-- **Engineering Lead**: engineering-lead@shagunintelligence.com
-- **DevOps Team**: devops@shagunintelligence.com
-- **Security Team**: security@shagunintelligence.com
+- **Engineering Lead**: <engineering-lead@shagunintelligence.com>
+- **DevOps Team**: <devops@shagunintelligence.com>
+- **Security Team**: <security@shagunintelligence.com>
 
 ### External Contacts
+
 - **AWS Support**: 1-800-xxx-xxxx (Enterprise Support)
-- **Zerodha API Support**: api-support@zerodha.com
+- **Zerodha API Support**: <api-support@zerodha.com>
 
 ## Disaster Scenarios
 
 ### 1. Complete Region Failure
 
 #### Detection
+
 - All services in primary region (us-east-1) are unreachable
 - AWS status page shows region-wide issues
 
 #### Recovery Steps
 
 1. **Activate DR Region (us-west-2)**
+
 ```bash
 # Switch DNS to DR region
 ./scripts/dr-failover.sh activate-dr us-west-2
@@ -47,6 +52,7 @@ curl https://dr.shagunintelligence.com/api/v1/health
 ```
 
 2. **Restore Latest Data**
+
 ```bash
 # Find latest cross-region backup
 aws s3 ls s3://shagunintelligence-dr-backups/ --recursive | grep backup | tail -1
@@ -56,6 +62,7 @@ aws s3 ls s3://shagunintelligence-dr-backups/ --recursive | grep backup | tail -
 ```
 
 3. **Update Configuration**
+
 ```bash
 # Update Kubernetes configs for DR region
 kubectl apply -k k8s/overlays/dr-west/
@@ -67,6 +74,7 @@ kubectl get pods -n shagunintelligence
 ### 2. Database Corruption/Loss
 
 #### Detection
+
 - Database queries failing with corruption errors
 - Unexpected data inconsistencies
 - Backup validation failures
@@ -74,6 +82,7 @@ kubectl get pods -n shagunintelligence
 #### Recovery Steps
 
 1. **Stop Application Traffic**
+
 ```bash
 # Scale down application
 kubectl scale deployment shagunintelligence-app --replicas=0 -n shagunintelligence
@@ -83,6 +92,7 @@ kubectl apply -f k8s/maintenance/maintenance-page.yaml
 ```
 
 2. **Restore Database**
+
 ```bash
 # List available backups
 aws s3 ls s3://shagunintelligence-backups/ | grep database
@@ -95,6 +105,7 @@ psql -h postgres-service -U shagunintelligence -c "SELECT COUNT(*) FROM trades;"
 ```
 
 3. **Validate Data Consistency**
+
 ```bash
 # Run consistency checks
 python scripts/validate-database.py
@@ -106,6 +117,7 @@ python scripts/audit-trades.py --from "2024-01-01" --to "now"
 ### 3. Kubernetes Cluster Failure
 
 #### Detection
+
 - Unable to connect to Kubernetes API
 - Multiple node failures
 - Control plane unresponsive
@@ -113,6 +125,7 @@ python scripts/audit-trades.py --from "2024-01-01" --to "now"
 #### Recovery Steps
 
 1. **Activate Backup Cluster**
+
 ```bash
 # Switch context to backup cluster
 kubectl config use-context shagunintelligence-backup
@@ -123,6 +136,7 @@ kubectl apply -k k8s/overlays/production/
 ```
 
 2. **Restore Persistent Volumes**
+
 ```bash
 # Restore from Velero backup
 velero restore create --from-backup daily-backup-latest
@@ -134,6 +148,7 @@ velero restore describe daily-backup-latest --details
 ### 4. Security Breach
 
 #### Detection
+
 - Unusual API activity patterns
 - Unauthorized access attempts
 - Compromised credentials alert
@@ -141,6 +156,7 @@ velero restore describe daily-backup-latest --details
 #### Recovery Steps
 
 1. **Immediate Containment**
+
 ```bash
 # Disable all API keys
 python scripts/disable-all-keys.py
@@ -153,6 +169,7 @@ kubectl set env deployment/shagunintelligence-app EMERGENCY_MODE=true -n shaguni
 ```
 
 2. **Investigation**
+
 ```bash
 # Export audit logs
 kubectl logs -n shagunintelligence -l app=shagunintelligence-app --since=24h > audit.log
@@ -162,6 +179,7 @@ python scripts/audit-security.py --check-unauthorized
 ```
 
 3. **Recovery**
+
 ```bash
 # Generate new API keys
 python scripts/generate-new-keys.py
@@ -253,6 +271,7 @@ curl https://shagunintelligence.com/api/v1/health
 ## Validation Steps
 
 ### 1. Health Checks
+
 ```bash
 # API Health
 curl https://shagunintelligence.com/api/v1/health
@@ -268,6 +287,7 @@ wscat -c wss://shagunintelligence.com/ws
 ```
 
 ### 2. Functional Tests
+
 ```bash
 # Run smoke tests
 pytest tests/smoke/ -v
@@ -280,6 +300,7 @@ python scripts/test-agents.py
 ```
 
 ### 3. Data Validation
+
 ```bash
 # Check data integrity
 python scripts/validate-data.py --full
@@ -337,6 +358,7 @@ kubectl port-forward svc/postgres-service 5432:5432 -n shagunintelligence
 ### Recovery Metrics
 
 Track these metrics during recovery:
+
 - Time to detection
 - Time to recovery initiation
 - Time to service restoration

@@ -94,8 +94,8 @@ const RealTimeQualityChart: React.FC<RealTimeQualityChartProps> = ({
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={filteredData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               angle={-45}
               textAnchor="end"
               height={60}
@@ -132,8 +132,8 @@ const RealTimeQualityChart: React.FC<RealTimeQualityChartProps> = ({
         <ResponsiveContainer width="100%" height={400}>
           <AreaChart data={filteredData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               angle={-45}
               textAnchor="end"
               height={60}
@@ -161,8 +161,8 @@ const RealTimeQualityChart: React.FC<RealTimeQualityChartProps> = ({
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={filteredData}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               angle={-45}
               textAnchor="end"
               height={60}
@@ -223,10 +223,10 @@ const RealTimeQualityChart: React.FC<RealTimeQualityChartProps> = ({
         {chartData.length > 0 ? (
           renderChart()
         ) : (
-          <Box 
-            height={400} 
-            display="flex" 
-            alignItems="center" 
+          <Box
+            height={400}
+            display="flex"
+            alignItems="center"
             justifyContent="center"
           >
             <Typography color="text.secondary">

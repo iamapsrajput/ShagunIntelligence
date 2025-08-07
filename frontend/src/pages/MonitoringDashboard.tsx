@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Grid, 
-  Paper, 
-  Typography, 
+import {
+  Grid,
+  Paper,
+  Typography,
   Box,
   Tab,
   Tabs,
@@ -60,11 +60,11 @@ const MonitoringDashboard: React.FC = () => {
   const [sentimentData, setSentimentData] = useState<any>(null);
 
   // WebSocket connection for real-time quality updates
-  const { 
-    data: wsData, 
-    isConnected, 
-    subscribe, 
-    unsubscribe 
+  const {
+    data: wsData,
+    isConnected,
+    subscribe,
+    unsubscribe
   } = useWebSocket('/api/v1/data-quality/ws/quality-monitor');
 
   // Load initial data
@@ -163,7 +163,7 @@ const MonitoringDashboard: React.FC = () => {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <StyledPaper>
-              <DataQualityOverview 
+              <DataQualityOverview
                 symbol={selectedSymbol}
                 data={qualityData}
                 onSymbolChange={handleSymbolChange}
@@ -172,7 +172,7 @@ const MonitoringDashboard: React.FC = () => {
           </Grid>
           <Grid item xs={12} lg={8}>
             <StyledPaper>
-              <RealTimeQualityChart 
+              <RealTimeQualityChart
                 symbol={selectedSymbol}
                 data={qualityData}
               />
@@ -205,7 +205,7 @@ const MonitoringDashboard: React.FC = () => {
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <StyledPaper>
-              <SentimentFusionChart 
+              <SentimentFusionChart
                 symbol={selectedSymbol}
                 data={sentimentData}
                 onSymbolChange={handleSymbolChange}

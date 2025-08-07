@@ -1,12 +1,11 @@
-import logging
 import hashlib
 import json
-import json
-from typing import Dict, Any, Optional, Union
+import logging
+from collections import OrderedDict
 from datetime import datetime, timedelta
 from pathlib import Path
-import asyncio
-from collections import OrderedDict
+from typing import Any
+
 import aiofiles
 
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +28,7 @@ class ResponseCache:
         self.enable_disk_cache = enable_disk_cache
 
         # In-memory cache using OrderedDict for LRU
-        self.memory_cache: OrderedDict[str, Dict[str, Any]] = OrderedDict()
+        self.memory_cache: OrderedDict[str, dict[str, Any]] = OrderedDict()
 
         # Cache statistics
         self.stats = {
@@ -66,12 +65,17 @@ class ResponseCache:
         provider: str,
         use_case: str,
         prompt: str,
-        model: Optional[str] = None,
-        additional_params: Optional[Dict[str, Any]] = None,
+        model: str | None = None,
+        additional_params: dict[str, Any] | None = None,
     ) -> str:
         """Generate a unique cache key for the request"""
         # Create a dictionary of all parameters
-        key_data = {"provider": provider, "use_case": use_case, "prompt": prompt, "model": model}
+        key_data = {
+            "provider": provider,
+            "use_case": use_case,
+            "prompt": prompt,
+            "model": model,
+        }
 
         # Add additional parameters if provided
         if additional_params:
@@ -83,7 +87,9 @@ class ResponseCache:
         # Generate SHA256 hash
         return hashlib.sha256(key_string.encode()).hexdigest()
 
-    async def get(self, cache_key: str, use_case: Optional[str] = None) -> Optional[Dict[str, Any]]:
+    async def get(
+        self, cache_key: str, use_case: str | None = None
+    ) -> dict[str, Any] | None:
         """Retrieve cached response if available and not expired"""
         # Check memory cache first
         if cache_key in self.memory_cache:
@@ -122,9 +128,9 @@ class ResponseCache:
 
                 # Update saved statistics
                 if "usage" in disk_entry["response"]:
-                    self.stats["total_saved_tokens"] += disk_entry["response"]["usage"].get(
-                        "total_tokens", 0
-                    )
+                    self.stats["total_saved_tokens"] += disk_entry["response"][
+                        "usage"
+                    ].get("total_tokens", 0)
                 if "cost" in disk_entry["response"]:
                     self.stats["total_saved_cost"] += disk_entry["response"]["cost"]
 
@@ -137,9 +143,9 @@ class ResponseCache:
     async def set(
         self,
         cache_key: str,
-        response: Dict[str, Any],
-        use_case: Optional[str] = None,
-        ttl_hours: Optional[int] = None,
+        response: dict[str, Any],
+        use_case: str | None = None,
+        ttl_hours: int | None = None,
     ) -> None:
         """Store response in cache"""
         # Determine TTL
@@ -166,7 +172,7 @@ class ResponseCache:
 
         logger.debug(f"Cached response: {cache_key[:8]}... (TTL: {ttl_hours}h)")
 
-    async def _add_to_memory_cache(self, cache_key: str, entry: Dict[str, Any]) -> None:
+    async def _add_to_memory_cache(self, cache_key: str, entry: dict[str, Any]) -> None:
         """Add entry to memory cache with LRU eviction"""
         # Check if we need to evict
         if len(self.memory_cache) >= self.max_memory_items:
@@ -178,7 +184,9 @@ class ResponseCache:
         # Add new entry
         self.memory_cache[cache_key] = entry
 
-    def _is_entry_valid(self, entry: Dict[str, Any], use_case: Optional[str] = None) -> bool:
+    def _is_entry_valid(
+        self, entry: dict[str, Any], use_case: str | None = None
+    ) -> bool:
         """Check if cache entry is still valid"""
         # Check expiry
         if datetime.now() > entry["expiry"]:
@@ -196,7 +204,7 @@ class ResponseCache:
 
         return True
 
-    async def _save_to_disk(self, cache_key: str, entry: Dict[str, Any]) -> None:
+    async def _save_to_disk(self, cache_key: str, entry: dict[str, Any]) -> None:
         """Save cache entry to disk"""
         if not self.cache_dir:
             return
@@ -214,7 +222,7 @@ class ResponseCache:
         except Exception as e:
             logger.error(f"Error saving to disk cache: {str(e)}")
 
-    async def _load_from_disk(self, cache_key: str) -> Optional[Dict[str, Any]]:
+    async def _load_from_disk(self, cache_key: str) -> dict[str, Any] | None:
         """Load cache entry from disk"""
         if not self.cache_dir:
             return None
@@ -252,7 +260,7 @@ class ResponseCache:
         for cache_file in self.cache_dir.glob("*.json"):
             try:
                 # Load and check if expired
-                with open(cache_file, "r") as f:
+                with open(cache_file) as f:
                     entry = json.load(f)
                     entry["expiry"] = datetime.fromisoformat(entry["expiry"])
 
@@ -273,14 +281,16 @@ class ResponseCache:
         if removed_count > 0:
             logger.info(f"Cleaned up {removed_count} expired cache files")
 
-    async def clear_cache(self, use_case: Optional[str] = None) -> int:
+    async def clear_cache(self, use_case: str | None = None) -> int:
         """Clear cache entries, optionally filtered by use case"""
         cleared_count = 0
 
         # Clear memory cache
         if use_case:
             keys_to_remove = [
-                key for key, entry in self.memory_cache.items() if entry.get("use_case") == use_case
+                key
+                for key, entry in self.memory_cache.items()
+                if entry.get("use_case") == use_case
             ]
             for key in keys_to_remove:
                 del self.memory_cache[key]
@@ -295,7 +305,7 @@ class ResponseCache:
                 # Need to check each file
                 for cache_file in self.cache_dir.glob("*.json"):
                     try:
-                        with open(cache_file, "r") as f:
+                        with open(cache_file) as f:
                             entry = json.load(f)
 
                         if entry.get("use_case") == use_case:
@@ -319,14 +329,16 @@ class ResponseCache:
 
         return cleared_count
 
-    def get_stats(self) -> Dict[str, Any]:
+    def get_stats(self) -> dict[str, Any]:
         """Get cache statistics"""
         total_requests = self.stats["hits"] + self.stats["misses"]
 
         return {
             **self.stats,
             "memory_size": len(self.memory_cache),
-            "hit_rate": (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0,
+            "hit_rate": (
+                (self.stats["hits"] / total_requests * 100) if total_requests > 0 else 0
+            ),
             "memory_hit_rate": (
                 (self.stats["memory_hits"] / self.stats["hits"] * 100)
                 if self.stats["hits"] > 0
@@ -349,13 +361,13 @@ class ResponseCache:
             ),
         }
 
-    def get_memory_usage(self) -> Dict[str, Any]:
+    def get_memory_usage(self) -> dict[str, Any]:
         """Get detailed memory cache usage"""
         usage_by_use_case = {}
         oldest_entry = None
         newest_entry = None
 
-        for key, entry in self.memory_cache.items():
+        for _key, entry in self.memory_cache.items():
             use_case = entry.get("use_case", "unknown")
 
             if use_case not in usage_by_use_case:
@@ -382,7 +394,7 @@ class ResponseCache:
             },
         }
 
-    async def warmup_cache(self, common_queries: List[Dict[str, Any]]) -> None:
+    async def warmup_cache(self, common_queries: list[dict[str, Any]]) -> None:
         """Pre-populate cache with common queries"""
         logger.info(f"Warming up cache with {len(common_queries)} queries")
 

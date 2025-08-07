@@ -29,10 +29,10 @@ interface ChartData {
   bollinger_lower?: number[];
 }
 
-export const MarketChart: React.FC<MarketChartProps> = ({ 
-  symbol, 
+export const MarketChart: React.FC<MarketChartProps> = ({
+  symbol,
   interval = '5m',
-  showIndicators = true 
+  showIndicators = true
 }) => {
   const [chartData, setChartData] = useState<ChartData | null>(null);
   const [currentPrice, setCurrentPrice] = useState<MarketData | null>(null);
@@ -42,20 +42,20 @@ export const MarketChart: React.FC<MarketChartProps> = ({
   useEffect(() => {
     // Load historical data
     loadHistoricalData();
-    
+
     // Subscribe to real-time updates
     const ws = require('@/services/websocket').default;
     ws.subscribeToSymbol(symbol);
-    
+
     const handleMarketUpdate = (data: MarketData) => {
       if (data.symbol === symbol) {
         setCurrentPrice(data);
         updateChart(data);
       }
     };
-    
+
     ws.on('market:update', handleMarketUpdate);
-    
+
     return () => {
       ws.off('market:update', handleMarketUpdate);
       ws.unsubscribeFromSymbol(symbol);
@@ -67,7 +67,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
       setLoading(true);
       const api = require('@/services/api').default;
       const data = await api.getHistoricalData(symbol, interval);
-      
+
       // Process and set chart data
       const processed = processChartData(data);
       setChartData(processed);
@@ -112,11 +112,11 @@ export const MarketChart: React.FC<MarketChartProps> = ({
     // Update the last candle with new price data
     const newChartData = { ...chartData };
     const lastIndex = newChartData.close.length - 1;
-    
+
     newChartData.close[lastIndex] = data.price;
     newChartData.high[lastIndex] = Math.max(newChartData.high[lastIndex], data.price);
     newChartData.low[lastIndex] = Math.min(newChartData.low[lastIndex], data.price);
-    
+
     setChartData(newChartData);
   };
 
@@ -157,7 +157,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
     name: 'Volume',
     yaxis: 'y2',
     marker: {
-      color: chartData.close.map((close, i) => 
+      color: chartData.close.map((close, i) =>
         i > 0 && close >= chartData.close[i - 1] ? '#22c55e' : '#ef4444'
       ),
     },
@@ -270,7 +270,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
               <div className={`flex items-center ${currentPrice.change >= 0 ? 'text-green-500' : 'text-red-500'}`}>
                 {currentPrice.change >= 0 ? <TrendingUp size={20} /> : <TrendingDown size={20} />}
                 <span className="ml-1">
-                  {currentPrice.change >= 0 ? '+' : ''}{currentPrice.change.toFixed(2)} 
+                  {currentPrice.change >= 0 ? '+' : ''}{currentPrice.change.toFixed(2)}
                   ({currentPrice.changePercent.toFixed(2)}%)
                 </span>
               </div>
@@ -328,7 +328,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
               height: 200,
               margin: { l: 50, r: 50, t: 20, b: 50 },
               xaxis: { gridcolor: '#e5e7eb' },
-              yaxis: { 
+              yaxis: {
                 title: 'RSI',
                 range: [0, 100],
                 gridcolor: '#e5e7eb',
@@ -371,7 +371,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
                 y: chartData.macd?.map((m, i) => m - (chartData.signal?.[i] || 0)),
                 name: 'Histogram',
                 marker: {
-                  color: chartData.macd?.map((m, i) => 
+                  color: chartData.macd?.map((m, i) =>
                     m - (chartData.signal?.[i] || 0) >= 0 ? '#22c55e' : '#ef4444'
                   ),
                 },
@@ -381,7 +381,7 @@ export const MarketChart: React.FC<MarketChartProps> = ({
               height: 200,
               margin: { l: 50, r: 50, t: 20, b: 50 },
               xaxis: { gridcolor: '#e5e7eb' },
-              yaxis: { 
+              yaxis: {
                 title: 'MACD',
                 gridcolor: '#e5e7eb',
               },

@@ -1,10 +1,11 @@
-import logging
-from typing import Dict, Any, Deque, Optional, Tuple
-from datetime import datetime, timedelta
-from collections import deque, defaultdict
-import time
 import asyncio
+import logging
+import time
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
+from datetime import datetime
+from typing import Any
+
 import numpy as np
 
 logging.basicConfig(level=logging.INFO)
@@ -14,20 +15,31 @@ logger = logging.getLogger(__name__)
 @dataclass
 class PerformanceMetric:
     """Represents a performance metric with time window"""
+
     name: str
     window_size: int  # seconds
-    values: Deque[Tuple[float, float]] = field(default_factory=lambda: deque(maxlen=10000))
+    values: deque[tuple[float, float]] = field(
+        default_factory=lambda: deque(maxlen=10000)
+    )
 
-    def add_value(self, value: float, timestamp: Optional[float] = None):
+    def add_value(self, value: float, timestamp: float | None = None):
         """Add a value with timestamp"""
         if timestamp is None:
             timestamp = time.time()
         self.values.append((timestamp, value))
 
-    def get_current_value(self, window_seconds: Optional[int] = None) -> Dict[str, float]:
+    def get_current_value(self, window_seconds: int | None = None) -> dict[str, float]:
         """Get current metric values within time window"""
         if not self.values:
-            return {"count": 0, "mean": 0, "min": 0, "max": 0, "p50": 0, "p95": 0, "p99": 0}
+            return {
+                "count": 0,
+                "mean": 0,
+                "min": 0,
+                "max": 0,
+                "p50": 0,
+                "p95": 0,
+                "p99": 0,
+            }
 
         current_time = time.time()
         window = window_seconds or self.window_size
@@ -37,7 +49,15 @@ class PerformanceMetric:
         recent_values = [v for t, v in self.values if t >= cutoff_time]
 
         if not recent_values:
-            return {"count": 0, "mean": 0, "min": 0, "max": 0, "p50": 0, "p95": 0, "p99": 0}
+            return {
+                "count": 0,
+                "mean": 0,
+                "min": 0,
+                "max": 0,
+                "p50": 0,
+                "p95": 0,
+                "p99": 0,
+            }
 
         values_array = np.array(recent_values)
 
@@ -49,7 +69,7 @@ class PerformanceMetric:
             "p50": np.percentile(values_array, 50),
             "p95": np.percentile(values_array, 95),
             "p99": np.percentile(values_array, 99),
-            "std": np.std(values_array)
+            "std": np.std(values_array),
         }
 
 
@@ -64,7 +84,7 @@ class PerformanceTracker:
             "distribution_latency": PerformanceMetric("distribution_latency", 60),
             "validation_time": PerformanceMetric("validation_time", 60),
             "buffer_write_time": PerformanceMetric("buffer_write_time", 60),
-            "sync_time": PerformanceMetric("sync_time", 60)
+            "sync_time": PerformanceMetric("sync_time", 60),
         }
 
         # Counters
@@ -75,22 +95,22 @@ class PerformanceTracker:
         self.rate_metrics = {
             "ticks_per_second": deque(maxlen=300),  # 5 minutes
             "errors_per_minute": deque(maxlen=60),  # 1 hour
-            "bytes_per_second": deque(maxlen=300)
+            "bytes_per_second": deque(maxlen=300),
         }
 
         # System metrics
         self.system_metrics = {
             "memory_usage_mb": deque(maxlen=300),
             "cpu_percent": deque(maxlen=300),
-            "active_connections": deque(maxlen=300)
+            "active_connections": deque(maxlen=300),
         }
 
         # Performance thresholds
         self.thresholds = {
             "tick_processing_time_ms": 5,  # 5ms warning threshold
-            "websocket_latency_ms": 10,    # 10ms warning threshold
-            "error_rate_percent": 1,        # 1% error rate warning
-            "memory_usage_mb": 500          # 500MB warning threshold
+            "websocket_latency_ms": 10,  # 10ms warning threshold
+            "error_rate_percent": 1,  # 1% error rate warning
+            "memory_usage_mb": 500,  # 500MB warning threshold
         }
 
         # Alert tracking
@@ -114,7 +134,7 @@ class PerformanceTracker:
         if processing_time_ms > self.thresholds["tick_processing_time_ms"]:
             self._raise_alert(
                 "high_processing_time",
-                f"Tick processing time {processing_time_ms:.2f}ms exceeds threshold"
+                f"Tick processing time {processing_time_ms:.2f}ms exceeds threshold",
             )
 
     def record_websocket_latency(self, latency_ms: float) -> None:
@@ -124,7 +144,7 @@ class PerformanceTracker:
         if latency_ms > self.thresholds["websocket_latency_ms"]:
             self._raise_alert(
                 "high_websocket_latency",
-                f"WebSocket latency {latency_ms:.2f}ms exceeds threshold"
+                f"WebSocket latency {latency_ms:.2f}ms exceeds threshold",
             )
 
     def record_distribution_latency(self, latency_ms: float) -> None:
@@ -193,29 +213,39 @@ class PerformanceTracker:
                 # Calculate rates
                 tick_count = self.counters["ticks_processed"]
                 ticks_per_second = tick_count - last_tick_count
-                self.rate_metrics["ticks_per_second"].append((current_time, ticks_per_second))
+                self.rate_metrics["ticks_per_second"].append(
+                    (current_time, ticks_per_second)
+                )
                 last_tick_count = tick_count
 
                 byte_count = self.counters["bytes_processed"]
                 bytes_per_second = byte_count - last_byte_count
-                self.rate_metrics["bytes_per_second"].append((current_time, bytes_per_second))
+                self.rate_metrics["bytes_per_second"].append(
+                    (current_time, bytes_per_second)
+                )
                 last_byte_count = byte_count
 
                 # Error rate (per minute)
                 if int(current_time) % 60 == 0:  # Every minute
                     error_count = self.counters["errors_total"]
                     errors_per_minute = error_count - last_error_count
-                    self.rate_metrics["errors_per_minute"].append((current_time, errors_per_minute))
+                    self.rate_metrics["errors_per_minute"].append(
+                        (current_time, errors_per_minute)
+                    )
                     last_error_count = error_count
 
                     # Check error rate threshold
-                    total_operations = self.counters["ticks_processed"] + self.counters["errors_total"]
+                    total_operations = (
+                        self.counters["ticks_processed"] + self.counters["errors_total"]
+                    )
                     if total_operations > 0:
-                        error_rate = (self.counters["errors_total"] / total_operations) * 100
+                        error_rate = (
+                            self.counters["errors_total"] / total_operations
+                        ) * 100
                         if error_rate > self.thresholds["error_rate_percent"]:
                             self._raise_alert(
                                 "high_error_rate",
-                                f"Error rate {error_rate:.2f}% exceeds threshold"
+                                f"Error rate {error_rate:.2f}% exceeds threshold",
                             )
 
                 # Collect system metrics
@@ -227,8 +257,9 @@ class PerformanceTracker:
     async def _collect_system_metrics(self) -> None:
         """Collect system-level metrics"""
         try:
-            import psutil
             import os
+
+            import psutil
 
             # Memory usage
             process = psutil.Process(os.getpid())
@@ -238,7 +269,7 @@ class PerformanceTracker:
             if memory_mb > self.thresholds["memory_usage_mb"]:
                 self._raise_alert(
                     "high_memory_usage",
-                    f"Memory usage {memory_mb:.2f}MB exceeds threshold"
+                    f"Memory usage {memory_mb:.2f}MB exceeds threshold",
                 )
 
             # CPU usage
@@ -263,7 +294,7 @@ class PerformanceTracker:
         alert = {
             "timestamp": datetime.now().isoformat(),
             "type": alert_type,
-            "message": message
+            "message": message,
         }
 
         self.alerts.append(alert)
@@ -271,7 +302,7 @@ class PerformanceTracker:
 
         logger.warning(f"Performance alert: {alert_type} - {message}")
 
-    def get_metrics(self) -> Dict[str, Any]:
+    def get_metrics(self) -> dict[str, Any]:
         """Get current performance metrics"""
         metrics_summary = {}
 
@@ -286,21 +317,33 @@ class PerformanceTracker:
         # Get recent rates
         ticks_per_second = 0
         if self.rate_metrics["ticks_per_second"]:
-            recent_tps = [v for t, v in self.rate_metrics["ticks_per_second"]
-                         if t > current_time - 10]  # Last 10 seconds
+            recent_tps = [
+                v
+                for t, v in self.rate_metrics["ticks_per_second"]
+                if t > current_time - 10
+            ]  # Last 10 seconds
             if recent_tps:
                 ticks_per_second = np.mean(recent_tps)
 
         errors_per_minute = 0
         if self.rate_metrics["errors_per_minute"]:
-            recent_epm = [v for t, v in self.rate_metrics["errors_per_minute"]
-                         if t > current_time - 300]  # Last 5 minutes
+            recent_epm = [
+                v
+                for t, v in self.rate_metrics["errors_per_minute"]
+                if t > current_time - 300
+            ]  # Last 5 minutes
             if recent_epm:
                 errors_per_minute = np.mean(recent_epm)
 
         # Calculate error rate
-        total_operations = self.counters["ticks_processed"] + self.counters["errors_total"]
-        error_rate = (self.counters["errors_total"] / total_operations * 100) if total_operations > 0 else 0
+        total_operations = (
+            self.counters["ticks_processed"] + self.counters["errors_total"]
+        )
+        error_rate = (
+            (self.counters["errors_total"] / total_operations * 100)
+            if total_operations > 0
+            else 0
+        )
 
         return {
             "metrics": metrics_summary,
@@ -309,15 +352,15 @@ class PerformanceTracker:
                 "ticks_per_second": ticks_per_second,
                 "errors_per_minute": errors_per_minute,
                 "error_rate": error_rate,
-                "bytes_per_second": self._get_recent_rate("bytes_per_second", 10)
+                "bytes_per_second": self._get_recent_rate("bytes_per_second", 10),
             },
             "system": {
                 "memory_usage_mb": self._get_recent_value("memory_usage_mb"),
                 "cpu_percent": self._get_recent_value("cpu_percent"),
-                "active_connections": self._get_recent_value("active_connections")
+                "active_connections": self._get_recent_value("active_connections"),
             },
             "runtime_seconds": runtime_seconds,
-            "recent_alerts": list(self.alerts)[-10:]  # Last 10 alerts
+            "recent_alerts": list(self.alerts)[-10:],  # Last 10 alerts
         }
 
     def _get_recent_rate(self, metric_name: str, window_seconds: int) -> float:
@@ -326,14 +369,20 @@ class PerformanceTracker:
             return 0
 
         current_time = time.time()
-        recent_values = [v for t, v in self.rate_metrics[metric_name]
-                        if t > current_time - window_seconds]
+        recent_values = [
+            v
+            for t, v in self.rate_metrics[metric_name]
+            if t > current_time - window_seconds
+        ]
 
         return np.mean(recent_values) if recent_values else 0
 
     def _get_recent_value(self, metric_name: str) -> float:
         """Get most recent value for a system metric"""
-        if metric_name not in self.system_metrics or not self.system_metrics[metric_name]:
+        if (
+            metric_name not in self.system_metrics
+            or not self.system_metrics[metric_name]
+        ):
             return 0
 
         return self.system_metrics[metric_name][-1][1]
@@ -383,6 +432,8 @@ Active Connections: {metrics['system']['active_connections']:.0f}
         if metrics["recent_alerts"]:
             report += "\nRECENT ALERTS\n-------------\n"
             for alert in metrics["recent_alerts"][-5:]:
-                report += f"{alert['timestamp']}: {alert['type']} - {alert['message']}\n"
+                report += (
+                    f"{alert['timestamp']}: {alert['type']} - {alert['message']}\n"
+                )
 
         return report

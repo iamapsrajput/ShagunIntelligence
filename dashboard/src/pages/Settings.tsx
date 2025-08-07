@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  User, 
-  Bell, 
-  Shield, 
-  Database, 
+import {
+  ArrowLeft,
+  User,
+  Bell,
+  Database,
   Save,
   Key,
   Mail,
@@ -18,7 +17,7 @@ import toast from 'react-hot-toast';
 export const Settings: React.FC = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const [profile, setProfile] = useState({
     name: 'Demo User',
     email: 'demo@shagunintelligence.com',
@@ -110,7 +109,7 @@ export const Settings: React.FC = () => {
               <User className="h-5 w-5 mr-2" />
               Profile Settings
             </h2>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -123,7 +122,7 @@ export const Settings: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email Address
@@ -138,7 +137,7 @@ export const Settings: React.FC = () => {
                   />
                 </div>
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Phone Number
@@ -154,7 +153,7 @@ export const Settings: React.FC = () => {
                 </div>
               </div>
             </div>
-            
+
             <button
               onClick={handleSaveProfile}
               disabled={isLoading}
@@ -176,7 +175,7 @@ export const Settings: React.FC = () => {
               <Bell className="h-5 w-5 mr-2" />
               Notification Preferences
             </h2>
-            
+
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -197,7 +196,7 @@ export const Settings: React.FC = () => {
                   />
                 </Switch>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">SMS Alerts</p>
@@ -217,7 +216,7 @@ export const Settings: React.FC = () => {
                   />
                 </Switch>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Trade Executions</p>
@@ -237,7 +236,7 @@ export const Settings: React.FC = () => {
                   />
                 </Switch>
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Daily Reports</p>
@@ -258,7 +257,7 @@ export const Settings: React.FC = () => {
                 </Switch>
               </div>
             </div>
-            
+
             <button
               onClick={handleSaveNotifications}
               disabled={isLoading}
@@ -280,7 +279,7 @@ export const Settings: React.FC = () => {
               <Key className="h-5 w-5 mr-2" />
               API Keys
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -293,7 +292,7 @@ export const Settings: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Zerodha API Secret
@@ -305,7 +304,7 @@ export const Settings: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   OpenAI API Key
@@ -317,7 +316,7 @@ export const Settings: React.FC = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Anthropic API Key
@@ -330,7 +329,7 @@ export const Settings: React.FC = () => {
                 />
               </div>
             </div>
-            
+
             <button
               onClick={handleSaveApiKeys}
               disabled={isLoading}
@@ -352,7 +351,7 @@ export const Settings: React.FC = () => {
               <Database className="h-5 w-5 mr-2" />
               Data Retention
             </h2>
-            
+
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -361,14 +360,14 @@ export const Settings: React.FC = () => {
                 <input
                   type="number"
                   value={dataRetention.tradeHistory}
-                  onChange={(e) => setDataRetention({ 
-                    ...dataRetention, 
-                    tradeHistory: parseInt(e.target.value) 
+                  onChange={(e) => setDataRetention({
+                    ...dataRetention,
+                    tradeHistory: parseInt(e.target.value)
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Performance Data (days)
@@ -376,14 +375,14 @@ export const Settings: React.FC = () => {
                 <input
                   type="number"
                   value={dataRetention.performanceData}
-                  onChange={(e) => setDataRetention({ 
-                    ...dataRetention, 
-                    performanceData: parseInt(e.target.value) 
+                  onChange={(e) => setDataRetention({
+                    ...dataRetention,
+                    performanceData: parseInt(e.target.value)
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Log Retention (days)
@@ -391,9 +390,9 @@ export const Settings: React.FC = () => {
                 <input
                   type="number"
                   value={dataRetention.logRetention}
-                  onChange={(e) => setDataRetention({ 
-                    ...dataRetention, 
-                    logRetention: parseInt(e.target.value) 
+                  onChange={(e) => setDataRetention({
+                    ...dataRetention,
+                    logRetention: parseInt(e.target.value)
                   })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500"
                 />

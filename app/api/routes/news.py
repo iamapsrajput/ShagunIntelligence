@@ -1,23 +1,25 @@
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from backend.data_sources.integration import get_data_source_integration
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 
 from app.core.auth import get_current_user
 from app.schemas.auth import UserResponse as User
+from backend.data_sources.integration import get_data_source_integration
 
 router = APIRouter(prefix="/api/v1/news", tags=["news"])
 
 
 @router.get("/")
 async def get_news(
-    symbols: Optional[str] = Query(None, description="Comma-separated stock symbols"),
-    categories: Optional[str] = Query(None, description="Comma-separated categories"),
+    symbols: str | None = Query(None, description="Comma-separated stock symbols"),
+    categories: str | None = Query(None, description="Comma-separated categories"),
     hours: int = Query(24, ge=1, le=168, description="Hours to look back"),
-    min_relevance: float = Query(0.3, ge=0.0, le=1.0, description="Minimum relevance score"),
+    min_relevance: float = Query(
+        0.3, ge=0.0, le=1.0, description="Minimum relevance score"
+    ),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Get aggregated financial news from multiple sources.
 
@@ -35,10 +37,15 @@ async def get_news(
         symbol_list = [s.strip() for s in symbols.split(",")] if symbols else None
 
         # Parse categories
-        category_list = [c.strip() for c in categories.split(",")] if categories else None
+        category_list = (
+            [c.strip() for c in categories.split(",")] if categories else None
+        )
 
         news = await integration.get_news(
-            symbols=symbol_list, categories=category_list, hours=hours, min_relevance=min_relevance
+            symbols=symbol_list,
+            categories=category_list,
+            hours=hours,
+            min_relevance=min_relevance,
         )
 
         return news
@@ -50,10 +57,10 @@ async def get_news(
 
 @router.get("/breaking")
 async def get_breaking_news(
-    symbols: Optional[str] = Query(None, description="Comma-separated stock symbols"),
+    symbols: str | None = Query(None, description="Comma-separated stock symbols"),
     minutes: int = Query(15, ge=5, le=60, description="Minutes to look back"),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Get breaking/recent news with high market impact.
 
@@ -65,7 +72,9 @@ async def get_breaking_news(
         # Parse symbols
         symbol_list = [s.strip() for s in symbols.split(",")] if symbols else None
 
-        breaking = await integration.get_breaking_news(symbols=symbol_list, minutes=minutes)
+        breaking = await integration.get_breaking_news(
+            symbols=symbol_list, minutes=minutes
+        )
 
         return breaking
 
@@ -79,7 +88,7 @@ async def get_news_sentiment_summary(
     symbol: str,
     hours: int = Query(24, ge=1, le=168, description="Hours to analyze"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get news sentiment summary for a specific symbol.
 
@@ -92,7 +101,9 @@ async def get_news_sentiment_summary(
     try:
         integration = get_data_source_integration()
 
-        summary = await integration.get_news_sentiment_summary(symbol=symbol, hours=hours)
+        summary = await integration.get_news_sentiment_summary(
+            symbol=symbol, hours=hours
+        )
 
         return summary
 
@@ -102,7 +113,9 @@ async def get_news_sentiment_summary(
 
 
 @router.post("/monitor")
-async def monitor_news_symbols(symbols: List[str], current_user: User = Depends(get_current_user)) -> Dict[str, str]:
+async def monitor_news_symbols(
+    symbols: list[str], current_user: User = Depends(get_current_user)
+) -> dict[str, str]:
     """
     Start monitoring news for specific symbols.
 
@@ -110,12 +123,17 @@ async def monitor_news_symbols(symbols: List[str], current_user: User = Depends(
     """
     try:
         if len(symbols) > 20:
-            raise HTTPException(status_code=400, detail="Maximum 20 symbols allowed for monitoring")
+            raise HTTPException(
+                status_code=400, detail="Maximum 20 symbols allowed for monitoring"
+            )
 
         integration = get_data_source_integration()
         await integration.monitor_news_for_symbols(symbols)
 
-        return {"message": f"Now monitoring news for {len(symbols)} symbols", "symbols": ", ".join(symbols)}
+        return {
+            "message": f"Now monitoring news for {len(symbols)} symbols",
+            "symbols": ", ".join(symbols),
+        }
 
     except HTTPException:
         raise
@@ -125,7 +143,9 @@ async def monitor_news_symbols(symbols: List[str], current_user: User = Depends(
 
 
 @router.get("/sources/stats")
-async def get_news_sources_stats(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_news_sources_stats(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get statistics about news sources.
 
@@ -145,7 +165,9 @@ async def get_news_sources_stats(current_user: User = Depends(get_current_user))
 
 
 @router.get("/categories")
-async def get_news_categories(current_user: User = Depends(get_current_user)) -> List[str]:
+async def get_news_categories(
+    current_user: User = Depends(get_current_user),
+) -> list[str]:
     """
     Get available news categories.
     """
@@ -157,10 +179,10 @@ async def get_news_categories(current_user: User = Depends(get_current_user)) ->
 @router.get("/search")
 async def search_news(
     query: str = Query(..., description="Search query"),
-    symbols: Optional[str] = Query(None, description="Filter by symbols"),
+    symbols: str | None = Query(None, description="Filter by symbols"),
     hours: int = Query(24, ge=1, le=168, description="Hours to look back"),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Search news articles by query.
 
@@ -180,7 +202,8 @@ async def search_news(
         filtered_news = [
             article
             for article in all_news
-            if query_lower in article.get("title", "").lower() or query_lower in article.get("summary", "").lower()
+            if query_lower in article.get("title", "").lower()
+            or query_lower in article.get("summary", "").lower()
         ]
 
         return filtered_news[:50]  # Limit results

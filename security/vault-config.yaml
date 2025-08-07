@@ -7,7 +7,7 @@ metadata:
 data:
   vault.hcl: |
     ui = true
-    
+
     listener "tcp" {
       tls_disable = 0
       address = "[::]:8200"
@@ -15,25 +15,25 @@ data:
       tls_cert_file = "/vault/certs/tls.crt"
       tls_key_file = "/vault/certs/tls.key"
     }
-    
+
     storage "consul" {
       path = "vault"
       address = "consul:8500"
     }
-    
+
     seal "awskms" {
       region = "us-east-1"
       kms_key_id = "alias/vault-unseal"
     }
-    
+
     telemetry {
       prometheus_retention_time = "30s"
       disable_hostname = true
     }
-    
+
     api_addr = "https://vault.shagunintelligence.com"
     cluster_addr = "https://vault.shagunintelligence.com:8201"
-    
+
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -46,25 +46,25 @@ data:
     path "secret/data/shagunintelligence/*" {
       capabilities = ["read", "list"]
     }
-    
+
     path "database/creds/shagunintelligence-app" {
       capabilities = ["read"]
     }
-    
+
     path "pki/issue/shagunintelligence-cert" {
       capabilities = ["create", "update"]
     }
-    
+
     path "auth/token/renew-self" {
       capabilities = ["update"]
     }
-    
+
   admin-policy.hcl: |
     # Admin policy
     path "*" {
       capabilities = ["create", "read", "update", "delete", "list", "sudo"]
     }
-    
+
 ---
 apiVersion: batch/v1
 kind: Job
@@ -87,30 +87,30 @@ spec:
                 echo "Waiting for Vault to be ready..."
                 sleep 5
               done
-              
+
               # Initialize Vault if not already initialized
               if ! vault status | grep -q "Initialized.*true"; then
                 vault operator init \
                   -key-shares=5 \
                   -key-threshold=3 \
                   -format=json > /tmp/vault-init.json
-                
+
                 # Store init keys in K8s secret (temporary, should use KMS)
                 kubectl create secret generic vault-init \
                   --from-file=/tmp/vault-init.json \
                   -n shagunintelligence
               fi
-              
+
               # Unseal Vault (in production, use auto-unseal with KMS)
               # This is just for initial setup
-              
+
               # Configure auth methods
               vault auth enable kubernetes
               vault write auth/kubernetes/config \
                 kubernetes_host="https://$KUBERNETES_PORT_443_TCP_ADDR:443" \
                 kubernetes_ca_cert=@/var/run/secrets/kubernetes.io/serviceaccount/ca.crt \
                 token_reviewer_jwt=@/var/run/secrets/kubernetes.io/serviceaccount/token
-              
+
               # Configure database secrets engine
               vault secrets enable database
               vault write database/config/postgresql \
@@ -119,42 +119,42 @@ spec:
                 connection_url="postgresql://{{username}}:{{password}}@postgres-service:5432/shagunintelligence?sslmode=disable" \
                 username="vault" \
                 password="vault-password"
-              
+
               vault write database/roles/shagunintelligence-app \
                 db_name=postgresql \
                 creation_statements="CREATE ROLE \"{{name}}\" WITH LOGIN PASSWORD '{{password}}' VALID UNTIL '{{expiration}}'; \
                                    GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO \"{{name}}\";" \
                 default_ttl="1h" \
                 max_ttl="24h"
-              
+
               # Configure PKI secrets engine
               vault secrets enable pki
               vault secrets tune -max-lease-ttl=87600h pki
-              
+
               vault write pki/root/generate/internal \
                 common_name="Shagun Intelligence Root CA" \
                 ttl=87600h
-              
+
               vault write pki/config/urls \
                 issuing_certificates="https://vault.shagunintelligence.com/v1/pki/ca" \
                 crl_distribution_points="https://vault.shagunintelligence.com/v1/pki/crl"
-              
+
               vault write pki/roles/shagunintelligence-cert \
                 allowed_domains="shagunintelligence.com" \
                 allow_subdomains=true \
                 max_ttl="720h"
-              
+
               # Apply policies
               vault policy write shagunintelligence-app /vault/policies/shagunintelligence-app-policy.hcl
               vault policy write admin /vault/policies/admin-policy.hcl
-              
+
               # Configure Kubernetes auth roles
               vault write auth/kubernetes/role/shagunintelligence-app \
                 bound_service_account_names=shagunintelligence-app \
                 bound_service_account_namespaces=shagunintelligence \
                 policies=shagunintelligence-app \
                 ttl=24h
-              
+
           env:
             - name: VAULT_ADDR
               value: "http://vault:8200"

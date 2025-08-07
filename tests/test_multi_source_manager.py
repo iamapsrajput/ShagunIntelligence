@@ -3,11 +3,13 @@ Tests for the multi-source data manager.
 """
 
 import asyncio
+from collections.abc import Callable
 from datetime import datetime
-from typing import Any, Callable, Dict, List
+from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
+
 from backend.data_sources import (
     DataSourceConfig,
     DataSourceHealth,
@@ -48,7 +50,7 @@ class MockMarketDataSource(MarketDataSource):
     async def validate_credentials(self) -> bool:
         return True
 
-    async def get_quote(self, symbol: str) -> Dict[str, Any]:
+    async def get_quote(self, symbol: str) -> dict[str, Any]:
         self.call_count += 1
 
         if self.fail_after >= 0 and self.call_count > self.fail_after:
@@ -56,7 +58,7 @@ class MockMarketDataSource(MarketDataSource):
 
         return {"symbol": symbol, "last_price": 100.0, "source": self.config.name}
 
-    async def get_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def get_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any]]:
         result = {}
         for symbol in symbols:
             result[symbol] = await self.get_quote(symbol)
@@ -64,16 +66,28 @@ class MockMarketDataSource(MarketDataSource):
 
     async def get_historical_data(
         self, symbol: str, interval: str, from_date: datetime, to_date: datetime
-    ) -> List[Dict[str, Any]]:
-        return [{"timestamp": from_date, "open": 100, "high": 105, "low": 95, "close": 102, "volume": 1000}]
+    ) -> list[dict[str, Any]]:
+        return [
+            {
+                "timestamp": from_date,
+                "open": 100,
+                "high": 105,
+                "low": 95,
+                "close": 102,
+                "volume": 1000,
+            }
+        ]
 
-    async def get_market_depth(self, symbol: str) -> Dict[str, Any]:
-        return {"bids": [{"price": 99.5, "quantity": 100}], "asks": [{"price": 100.5, "quantity": 100}]}
+    async def get_market_depth(self, symbol: str) -> dict[str, Any]:
+        return {
+            "bids": [{"price": 99.5, "quantity": 100}],
+            "asks": [{"price": 100.5, "quantity": 100}],
+        }
 
-    async def subscribe_live_data(self, symbols: List[str], callback: Callable) -> None:
+    async def subscribe_live_data(self, symbols: list[str], callback: Callable) -> None:
         pass
 
-    async def unsubscribe_live_data(self, symbols: List[str]) -> None:
+    async def unsubscribe_live_data(self, symbols: list[str]) -> None:
         pass
 
 
@@ -236,7 +250,9 @@ class TestMultiSourceDataManager:
         manager.add_source(healthy)
 
         # Should skip unhealthy and use degraded
-        result = await manager.execute_with_failover(DataSourceType.MARKET_DATA, "get_quote", "RELIANCE")
+        result = await manager.execute_with_failover(
+            DataSourceType.MARKET_DATA, "get_quote", "RELIANCE"
+        )
 
         assert result["source"] == "degraded"
 

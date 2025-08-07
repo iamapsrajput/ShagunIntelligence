@@ -7,6 +7,7 @@ The market data sources module provides a robust, failover-enabled system for fe
 ## Supported Data Sources
 
 ### 1. GlobalDatafeeds (NSE/BSE Focus)
+
 - **Markets**: NSE, BSE, NFO, MCX
 - **Cost**: ₹299/month (Professional plan)
 - **Features**:
@@ -17,6 +18,7 @@ The market data sources module provides a robust, failover-enabled system for fe
 - **Best For**: Indian market trading with low-latency requirements
 
 ### 2. Alpha Vantage (Global Markets)
+
 - **Markets**: US, NYSE, NASDAQ, FOREX, CRYPTO, TSX, LSE
 - **Cost**: Free tier (500 requests/day) or $49.99/month (Premium)
 - **Features**:
@@ -27,6 +29,7 @@ The market data sources module provides a robust, failover-enabled system for fe
 - **Best For**: Technical analysis and global market data
 
 ### 3. Finnhub (Real-time + Sentiment)
+
 - **Markets**: US, EU, UK, JP, FOREX, CRYPTO
 - **Cost**: Free tier (60 req/min) or $49-999/month
 - **Features**:
@@ -37,6 +40,7 @@ The market data sources module provides a robust, failover-enabled system for fe
 - **Best For**: Sentiment-driven trading strategies
 
 ### 4. Polygon.io (Institutional Grade)
+
 - **Markets**: US, NYSE, NASDAQ, OPTIONS, FOREX, CRYPTO
 - **Cost**: Free (delayed) or $199-1999/month
 - **Features**:
@@ -118,6 +122,7 @@ task = await integration.stream_market_data(
 ### Advanced Features
 
 #### Technical Indicators (Alpha Vantage)
+
 ```python
 # Get RSI indicator
 rsi = await integration.get_technical_indicators(
@@ -129,6 +134,7 @@ rsi = await integration.get_technical_indicators(
 ```
 
 #### Market Sentiment (Finnhub)
+
 ```python
 # Get sentiment analysis
 sentiment = await integration.get_market_sentiment("AAPL")
@@ -137,6 +143,7 @@ print(f"Buzz Score: {sentiment['buzz']}")
 ```
 
 #### Options Chain (Polygon)
+
 ```python
 # Get options chain
 if "polygon" in manager.sources:
@@ -211,12 +218,13 @@ for source, info in status['sources'].items():
 
 ## Best Practices
 
-1. **Use appropriate strategy**: 
+1. **Use appropriate strategy**:
    - Cost-sensitive: Use COST_OPTIMIZED
    - HFT/Scalping: Use LATENCY_OPTIMIZED
    - Long-term investing: Use BALANCED
 
 2. **Monitor health status**:
+
    ```python
    health = await integration.force_health_check()
    ```

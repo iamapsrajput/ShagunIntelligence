@@ -11,22 +11,17 @@ in the trading system. It includes:
 - Inter-agent communication
 """
 
-from .agent import CoordinatorAgent, AgentType, TradingOpportunity
-from .decision_fusion_engine import DecisionFusionEngine, SignalStrength, FusedSignal
-from .task_delegator import TaskDelegator, Task, TaskStatus, TaskPriority
-from .trade_approval_workflow import (
-    TradeApprovalWorkflow, 
-    ApprovalStatus, 
-    RejectionReason,
-    ApprovalRule
-)
-from .learning_manager import LearningManager, LearningEvent, Adaptation, AdaptationType
+from .agent import AgentType, CoordinatorAgent, TradingOpportunity
+from .communication_hub import CommunicationHub, Message, MessagePriority, MessageType
+from .decision_fusion_engine import DecisionFusionEngine, FusedSignal, SignalStrength
+from .learning_manager import Adaptation, AdaptationType, LearningEvent, LearningManager
 from .performance_monitor import PerformanceMonitor, TradeMetrics
-from .communication_hub import (
-    CommunicationHub,
-    Message,
-    MessageType,
-    MessagePriority
+from .task_delegator import Task, TaskDelegator, TaskPriority, TaskStatus
+from .trade_approval_workflow import (
+    ApprovalRule,
+    ApprovalStatus,
+    RejectionReason,
+    TradeApprovalWorkflow,
 )
 
 __all__ = [
@@ -34,37 +29,31 @@ __all__ = [
     "CoordinatorAgent",
     "AgentType",
     "TradingOpportunity",
-    
     # Decision fusion
     "DecisionFusionEngine",
     "SignalStrength",
     "FusedSignal",
-    
     # Task management
     "TaskDelegator",
     "Task",
     "TaskStatus",
     "TaskPriority",
-    
     # Trade approval
     "TradeApprovalWorkflow",
     "ApprovalStatus",
     "RejectionReason",
     "ApprovalRule",
-    
     # Learning
     "LearningManager",
     "LearningEvent",
     "Adaptation",
     "AdaptationType",
-    
     # Performance
     "PerformanceMonitor",
     "TradeMetrics",
-    
     # Communication
     "CommunicationHub",
     "Message",
     "MessageType",
-    "MessagePriority"
+    "MessagePriority",
 ]

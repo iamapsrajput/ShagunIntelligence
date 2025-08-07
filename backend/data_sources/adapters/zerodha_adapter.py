@@ -3,14 +3,15 @@ Zerodha Kite Connect adapter for the multi-source data manager.
 """
 
 import asyncio
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Callable
-import logging
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
 from kiteconnect import KiteConnect, KiteTicker
 
-from ..base import MarketDataSource, DataSourceStatus, DataSourceConfig
 from backend.data_sources.base import DataSourceHealth
+
+from ..base import DataSourceConfig, DataSourceStatus, MarketDataSource
 
 
 class ZerodhaMarketDataSource(MarketDataSource):
@@ -18,8 +19,8 @@ class ZerodhaMarketDataSource(MarketDataSource):
 
     def __init__(self, config: DataSourceConfig):
         super().__init__(config)
-        self.kite: Optional[KiteConnect] = None
-        self.ticker: Optional[KiteTicker] = None
+        self.kite: KiteConnect | None = None
+        self.ticker: KiteTicker | None = None
         self._ticker_callbacks = {}
         self._ticker_task = None
 
@@ -31,7 +32,7 @@ class ZerodhaMarketDataSource(MarketDataSource):
             # Initialize KiteConnect
             self.kite = KiteConnect(
                 api_key=self.config.api_key,
-                access_token=self.config.extra_config.get('access_token')
+                access_token=self.config.extra_config.get("access_token"),
             )
 
             # Validate connection
@@ -39,10 +40,10 @@ class ZerodhaMarketDataSource(MarketDataSource):
             self.logger.info(f"Connected to Zerodha as {profile.get('user_name')}")
 
             # Initialize ticker for live data
-            if self.config.extra_config.get('enable_websocket', True):
+            if self.config.extra_config.get("enable_websocket", True):
                 self.ticker = KiteTicker(
                     api_key=self.config.api_key,
-                    access_token=self.config.extra_config.get('access_token')
+                    access_token=self.config.extra_config.get("access_token"),
                 )
                 self._setup_ticker_callbacks()
 
@@ -93,10 +94,12 @@ class ZerodhaMarketDataSource(MarketDataSource):
 
             # Add metadata
             self.health.metadata = {
-                'user_id': profile.get('user_id'),
-                'user_name': profile.get('user_name'),
-                'broker': profile.get('broker'),
-                'websocket_connected': self.ticker.is_connected() if self.ticker else False
+                "user_id": profile.get("user_id"),
+                "user_name": profile.get("user_name"),
+                "broker": profile.get("broker"),
+                "websocket_connected": (
+                    self.ticker.is_connected() if self.ticker else False
+                ),
             }
 
         except Exception as e:
@@ -118,11 +121,11 @@ class ZerodhaMarketDataSource(MarketDataSource):
             self.logger.error(f"Credential validation failed: {e}")
             return False
 
-    async def get_quote(self, symbol: str) -> Dict[str, Any]:
+    async def get_quote(self, symbol: str) -> dict[str, Any]:
         """Get current quote for a symbol."""
         return await self.execute_with_retry(self._get_quote, symbol)
 
-    async def _get_quote(self, symbol: str) -> Dict[str, Any]:
+    async def _get_quote(self, symbol: str) -> dict[str, Any]:
         """Internal method to get quote."""
         if not self.kite:
             raise Exception("Not connected to Zerodha")
@@ -136,11 +139,11 @@ class ZerodhaMarketDataSource(MarketDataSource):
         # Normalize to standard format
         return self._normalize_quote(zerodha_symbol, quote_data)
 
-    async def get_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def get_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any]]:
         """Get quotes for multiple symbols."""
         return await self.execute_with_retry(self._get_quotes, symbols)
 
-    async def _get_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def _get_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any]]:
         """Internal method to get multiple quotes."""
         if not self.kite:
             raise Exception("Not connected to Zerodha")
@@ -155,33 +158,23 @@ class ZerodhaMarketDataSource(MarketDataSource):
         for i, symbol in enumerate(symbols):
             zerodha_symbol = zerodha_symbols[i]
             if zerodha_symbol in quotes:
-                result[symbol] = self._normalize_quote(zerodha_symbol, quotes[zerodha_symbol])
+                result[symbol] = self._normalize_quote(
+                    zerodha_symbol, quotes[zerodha_symbol]
+                )
 
         return result
 
     async def get_historical_data(
-        self,
-        symbol: str,
-        interval: str,
-        from_date: datetime,
-        to_date: datetime
-    ) -> List[Dict[str, Any]]:
+        self, symbol: str, interval: str, from_date: datetime, to_date: datetime
+    ) -> list[dict[str, Any]]:
         """Get historical data for a symbol."""
         return await self.execute_with_retry(
-            self._get_historical_data,
-            symbol,
-            interval,
-            from_date,
-            to_date
+            self._get_historical_data, symbol, interval, from_date, to_date
         )
 
     async def _get_historical_data(
-        self,
-        symbol: str,
-        interval: str,
-        from_date: datetime,
-        to_date: datetime
-    ) -> List[Dict[str, Any]]:
+        self, symbol: str, interval: str, from_date: datetime, to_date: datetime
+    ) -> list[dict[str, Any]]:
         """Internal method to get historical data."""
         if not self.kite:
             raise Exception("Not connected to Zerodha")
@@ -197,17 +190,17 @@ class ZerodhaMarketDataSource(MarketDataSource):
             instrument_token,
             from_date,
             to_date,
-            zerodha_interval
+            zerodha_interval,
         )
 
         # Normalize to standard format
         return [self._normalize_candle(candle) for candle in data]
 
-    async def get_market_depth(self, symbol: str) -> Dict[str, Any]:
+    async def get_market_depth(self, symbol: str) -> dict[str, Any]:
         """Get market depth for a symbol."""
         return await self.execute_with_retry(self._get_market_depth, symbol)
 
-    async def _get_market_depth(self, symbol: str) -> Dict[str, Any]:
+    async def _get_market_depth(self, symbol: str) -> dict[str, Any]:
         """Internal method to get market depth."""
         if not self.kite:
             raise Exception("Not connected to Zerodha")
@@ -215,15 +208,13 @@ class ZerodhaMarketDataSource(MarketDataSource):
         zerodha_symbol = self._convert_symbol(symbol)
 
         quote = await asyncio.to_thread(self.kite.quote, [zerodha_symbol])
-        depth_data = quote.get(zerodha_symbol, {}).get('depth', {})
+        depth_data = quote.get(zerodha_symbol, {}).get("depth", {})
 
         # Normalize to standard format
         return self._normalize_depth(depth_data)
 
     async def subscribe_live_data(
-        self,
-        symbols: List[str],
-        callback: Callable[[Dict[str, Any]], None]
+        self, symbols: list[str], callback: Callable[[dict[str, Any]], None]
     ) -> None:
         """Subscribe to live market data."""
         if not self.ticker:
@@ -245,7 +236,7 @@ class ZerodhaMarketDataSource(MarketDataSource):
         if not self.ticker.is_connected():
             self._ticker_task = asyncio.create_task(self._run_ticker())
 
-    async def unsubscribe_live_data(self, symbols: List[str]) -> None:
+    async def unsubscribe_live_data(self, symbols: list[str]) -> None:
         """Unsubscribe from live market data."""
         if not self.ticker:
             return
@@ -264,18 +255,17 @@ class ZerodhaMarketDataSource(MarketDataSource):
 
     def _setup_ticker_callbacks(self) -> None:
         """Setup WebSocket ticker callbacks."""
+
         def on_ticks(ws, ticks):
             # Process ticks in async context
             for tick in ticks:
-                token = tick.get('instrument_token')
+                token = tick.get("instrument_token")
                 if token in self._ticker_callbacks:
                     normalized_tick = self._normalize_tick(tick)
                     callback = self._ticker_callbacks[token]
 
                     # Schedule callback in event loop
-                    asyncio.create_task(
-                        asyncio.to_thread(callback, normalized_tick)
-                    )
+                    asyncio.create_task(asyncio.to_thread(callback, normalized_tick))
 
         def on_connect(ws, response):
             self.logger.info("WebSocket connected")
@@ -301,7 +291,7 @@ class ZerodhaMarketDataSource(MarketDataSource):
     def _convert_symbol(self, symbol: str) -> str:
         """Convert symbol to Zerodha format."""
         # Example: RELIANCE -> NSE:RELIANCE
-        if ':' in symbol:
+        if ":" in symbol:
             return symbol
 
         # Default to NSE
@@ -317,68 +307,70 @@ class ZerodhaMarketDataSource(MarketDataSource):
     def _convert_interval(self, interval: str) -> str:
         """Convert interval to Zerodha format."""
         interval_map = {
-            '1min': 'minute',
-            '5min': '5minute',
-            '15min': '15minute',
-            '30min': '30minute',
-            '60min': '60minute',
-            '1hour': '60minute',
-            'day': 'day',
-            'week': 'week',
-            'month': 'month'
+            "1min": "minute",
+            "5min": "5minute",
+            "15min": "15minute",
+            "30min": "30minute",
+            "60min": "60minute",
+            "1hour": "60minute",
+            "day": "day",
+            "week": "week",
+            "month": "month",
         }
         return interval_map.get(interval, interval)
 
-    def _normalize_quote(self, symbol: str, quote_data: Dict) -> Dict[str, Any]:
+    def _normalize_quote(self, symbol: str, quote_data: dict) -> dict[str, Any]:
         """Normalize Zerodha quote to standard format."""
         return {
-            'symbol': symbol,
-            'last_price': quote_data.get('last_price'),
-            'open': quote_data.get('ohlc', {}).get('open'),
-            'high': quote_data.get('ohlc', {}).get('high'),
-            'low': quote_data.get('ohlc', {}).get('low'),
-            'close': quote_data.get('ohlc', {}).get('close'),
-            'volume': quote_data.get('volume'),
-            'bid': quote_data.get('depth', {}).get('buy', [{}])[0].get('price'),
-            'ask': quote_data.get('depth', {}).get('sell', [{}])[0].get('price'),
-            'bid_size': quote_data.get('depth', {}).get('buy', [{}])[0].get('quantity'),
-            'ask_size': quote_data.get('depth', {}).get('sell', [{}])[0].get('quantity'),
-            'change': quote_data.get('change'),
-            'change_percent': quote_data.get('change_percent'),
-            'timestamp': quote_data.get('last_trade_time', datetime.now())
+            "symbol": symbol,
+            "last_price": quote_data.get("last_price"),
+            "open": quote_data.get("ohlc", {}).get("open"),
+            "high": quote_data.get("ohlc", {}).get("high"),
+            "low": quote_data.get("ohlc", {}).get("low"),
+            "close": quote_data.get("ohlc", {}).get("close"),
+            "volume": quote_data.get("volume"),
+            "bid": quote_data.get("depth", {}).get("buy", [{}])[0].get("price"),
+            "ask": quote_data.get("depth", {}).get("sell", [{}])[0].get("price"),
+            "bid_size": quote_data.get("depth", {}).get("buy", [{}])[0].get("quantity"),
+            "ask_size": quote_data.get("depth", {})
+            .get("sell", [{}])[0]
+            .get("quantity"),
+            "change": quote_data.get("change"),
+            "change_percent": quote_data.get("change_percent"),
+            "timestamp": quote_data.get("last_trade_time", datetime.now()),
         }
 
-    def _normalize_candle(self, candle: Dict) -> Dict[str, Any]:
+    def _normalize_candle(self, candle: dict) -> dict[str, Any]:
         """Normalize Zerodha candle to standard format."""
         return {
-            'timestamp': candle.get('date'),
-            'open': candle.get('open'),
-            'high': candle.get('high'),
-            'low': candle.get('low'),
-            'close': candle.get('close'),
-            'volume': candle.get('volume')
+            "timestamp": candle.get("date"),
+            "open": candle.get("open"),
+            "high": candle.get("high"),
+            "low": candle.get("low"),
+            "close": candle.get("close"),
+            "volume": candle.get("volume"),
         }
 
-    def _normalize_depth(self, depth_data: Dict) -> Dict[str, Any]:
+    def _normalize_depth(self, depth_data: dict) -> dict[str, Any]:
         """Normalize Zerodha depth to standard format."""
         return {
-            'bids': [
-                {'price': level.get('price'), 'quantity': level.get('quantity')}
-                for level in depth_data.get('buy', [])
+            "bids": [
+                {"price": level.get("price"), "quantity": level.get("quantity")}
+                for level in depth_data.get("buy", [])
             ],
-            'asks': [
-                {'price': level.get('price'), 'quantity': level.get('quantity')}
-                for level in depth_data.get('sell', [])
-            ]
+            "asks": [
+                {"price": level.get("price"), "quantity": level.get("quantity")}
+                for level in depth_data.get("sell", [])
+            ],
         }
 
-    def _normalize_tick(self, tick: Dict) -> Dict[str, Any]:
+    def _normalize_tick(self, tick: dict) -> dict[str, Any]:
         """Normalize Zerodha tick to standard format."""
         return {
-            'symbol': tick.get('tradingsymbol'),
-            'last_price': tick.get('last_price'),
-            'volume': tick.get('volume'),
-            'bid': tick.get('depth', {}).get('buy', [{}])[0].get('price'),
-            'ask': tick.get('depth', {}).get('sell', [{}])[0].get('price'),
-            'timestamp': tick.get('timestamp', datetime.now())
+            "symbol": tick.get("tradingsymbol"),
+            "last_price": tick.get("last_price"),
+            "volume": tick.get("volume"),
+            "bid": tick.get("depth", {}).get("buy", [{}])[0].get("price"),
+            "ask": tick.get("depth", {}).get("sell", [{}])[0].get("price"),
+            "timestamp": tick.get("timestamp", datetime.now()),
         }

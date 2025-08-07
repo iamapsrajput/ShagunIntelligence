@@ -1,19 +1,18 @@
 """Market data sources module"""
 
-from .models import (
-    MarketData,
-    MarketDepth,
-    HistoricalBar,
-    MarketDataQuality,
-    DataCostTier,
-    DataSourceCost
-)
-
-from .global_datafeeds import GlobalDatafeedsSource
 from .alpha_vantage_market import AlphaVantageMarketSource
 from .finnhub import FinnhubSource
-from .polygon import PolygonSource
+from .global_datafeeds import GlobalDatafeedsSource
 from .market_source_manager import MarketSourceManager, SourceSelectionStrategy
+from .models import (
+    DataCostTier,
+    DataSourceCost,
+    HistoricalBar,
+    MarketData,
+    MarketDataQuality,
+    MarketDepth,
+)
+from .polygon import PolygonSource
 
 __all__ = [
     "MarketData",
@@ -27,5 +26,5 @@ __all__ = [
     "FinnhubSource",
     "PolygonSource",
     "MarketSourceManager",
-    "SourceSelectionStrategy"
+    "SourceSelectionStrategy",
 ]

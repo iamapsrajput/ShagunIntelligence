@@ -1,11 +1,12 @@
 from collections import defaultdict, deque
 from datetime import datetime
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 import numpy as np
-from backend.data_sources.market.models import MarketData
 from loguru import logger
+
+from backend.data_sources.market.models import MarketData
 
 
 class DataSourceType(str, Enum):
@@ -42,7 +43,7 @@ class QualityMetrics:
         reliability_score: float = 0.0,
         overall_score: float = 0.0,
         grade: QualityGrade = QualityGrade.FAILED,
-        anomalies: List[str] = None,
+        anomalies: list[str] = None,
         timestamp: datetime = None,
     ):
         self.freshness_score = freshness_score
@@ -54,7 +55,7 @@ class QualityMetrics:
         self.anomalies = anomalies or []
         self.timestamp = timestamp or datetime.utcnow()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "freshness_score": self.freshness_score,
             "accuracy_score": self.accuracy_score,
@@ -75,7 +76,9 @@ class SourceReliabilityTracker:
         self.success_counts = defaultdict(int)
         self.last_update = defaultdict(lambda: datetime.utcnow())
 
-    def update(self, source: DataSourceType, quality_score: float, success: bool = True):
+    def update(
+        self, source: DataSourceType, quality_score: float, success: bool = True
+    ):
         self.quality_history[source].append(quality_score)
         self.last_update[source] = datetime.utcnow()
 
@@ -113,12 +116,17 @@ class DataQualityValidator:
         freshness_threshold_seconds: int = 5,
         price_deviation_threshold: float = 0.02,
         volume_spike_threshold: float = 3.0,
-        min_required_fields: List[str] = None,
+        min_required_fields: list[str] = None,
     ):
         self.freshness_threshold = freshness_threshold_seconds
         self.price_deviation_threshold = price_deviation_threshold
         self.volume_spike_threshold = volume_spike_threshold
-        self.min_required_fields = min_required_fields or ["symbol", "current_price", "volume", "timestamp"]
+        self.min_required_fields = min_required_fields or [
+            "symbol",
+            "current_price",
+            "volume",
+            "timestamp",
+        ]
 
         self.reliability_tracker = SourceReliabilityTracker()
         self.price_history = defaultdict(lambda: deque(maxlen=100))
@@ -139,7 +147,10 @@ class DataQualityValidator:
         self.alert_threshold = 0.6
 
     def validate_data(
-        self, data: MarketData, source: DataSourceType, reference_data: Optional[Dict[str, MarketData]] = None
+        self,
+        data: MarketData,
+        source: DataSourceType,
+        reference_data: dict[str, MarketData] | None = None,
     ) -> QualityMetrics:
         """
         Validate market data and return quality metrics
@@ -152,7 +163,9 @@ class DataQualityValidator:
 
         # Accuracy score requires reference data for comparison
         if reference_data:
-            accuracy_score, accuracy_anomalies = self._calculate_accuracy_score(data, reference_data)
+            accuracy_score, accuracy_anomalies = self._calculate_accuracy_score(
+                data, reference_data
+            )
             anomalies.extend(accuracy_anomalies)
         else:
             accuracy_score = self._estimate_accuracy_score(data)
@@ -166,7 +179,12 @@ class DataQualityValidator:
         reliability_score = self.reliability_tracker.get_reliability_score(source)
 
         # Calculate overall score (weighted average)
-        weights = {"freshness": 0.3, "accuracy": 0.3, "completeness": 0.2, "reliability": 0.2}
+        weights = {
+            "freshness": 0.3,
+            "accuracy": 0.3,
+            "completeness": 0.2,
+            "reliability": 0.2,
+        }
 
         overall_score = (
             weights["freshness"] * freshness_score
@@ -229,21 +247,40 @@ class DataQualityValidator:
 
         # Check required fields
         required_present = sum(
-            1 for field in self.min_required_fields if field in data_dict and data_dict[field] is not None
+            1
+            for field in self.min_required_fields
+            if field in data_dict and data_dict[field] is not None
         )
         required_score = required_present / len(self.min_required_fields)
 
         # Check optional but valuable fields
-        optional_fields = ["bid", "ask", "high", "low", "open", "close", "bid_size", "ask_size", "vwap", "market_cap"]
-        optional_present = sum(1 for field in optional_fields if field in data_dict and data_dict[field] is not None)
-        optional_score = optional_present / len(optional_fields) if optional_fields else 0
+        optional_fields = [
+            "bid",
+            "ask",
+            "high",
+            "low",
+            "open",
+            "close",
+            "bid_size",
+            "ask_size",
+            "vwap",
+            "market_cap",
+        ]
+        optional_present = sum(
+            1
+            for field in optional_fields
+            if field in data_dict and data_dict[field] is not None
+        )
+        optional_score = (
+            optional_present / len(optional_fields) if optional_fields else 0
+        )
 
         # Weighted combination (required fields are more important)
         return 0.7 * required_score + 0.3 * optional_score
 
     def _calculate_accuracy_score(
-        self, data: MarketData, reference_data: Dict[str, MarketData]
-    ) -> Tuple[float, List[str]]:
+        self, data: MarketData, reference_data: dict[str, MarketData]
+    ) -> tuple[float, list[str]]:
         """Calculate accuracy score by comparing with reference data"""
         anomalies = []
         scores = []
@@ -259,10 +296,14 @@ class DataQualityValidator:
                 price_pct_diff = price_diff / ref_data.current_price
 
                 if price_pct_diff <= self.price_deviation_threshold:
-                    price_score = 1.0 - (price_pct_diff / self.price_deviation_threshold)
+                    price_score = 1.0 - (
+                        price_pct_diff / self.price_deviation_threshold
+                    )
                 else:
                     price_score = 0.0
-                    anomalies.append(f"Price deviation from {source}: {price_pct_diff:.2%}")
+                    anomalies.append(
+                        f"Price deviation from {source}: {price_pct_diff:.2%}"
+                    )
 
                 scores.append(price_score)
 
@@ -274,7 +315,9 @@ class DataQualityValidator:
                 else:
                     volume_score = max(0.0, 1.0 - abs(np.log(volume_ratio)))
                     if volume_score < 0.5:
-                        anomalies.append(f"Volume mismatch with {source}: {volume_ratio:.2f}x")
+                        anomalies.append(
+                            f"Volume mismatch with {source}: {volume_ratio:.2f}x"
+                        )
 
                 scores.append(volume_score * 0.5)  # Volume less important
 
@@ -307,7 +350,7 @@ class DataQualityValidator:
 
         return score
 
-    def _detect_price_anomalies(self, data: MarketData) -> List[str]:
+    def _detect_price_anomalies(self, data: MarketData) -> list[str]:
         """Detect price-related anomalies"""
         anomalies = []
 
@@ -326,7 +369,9 @@ class DataQualityValidator:
         if std_price > 0:
             z_score = abs(data.current_price - mean_price) / std_price
             if z_score > 3:
-                anomalies.append(f"Price spike detected: {z_score:.2f} standard deviations")
+                anomalies.append(
+                    f"Price spike detected: {z_score:.2f} standard deviations"
+                )
 
         # Check for sudden price changes
         if history:
@@ -337,7 +382,7 @@ class DataQualityValidator:
 
         return anomalies
 
-    def _detect_volume_anomalies(self, data: MarketData) -> List[str]:
+    def _detect_volume_anomalies(self, data: MarketData) -> list[str]:
         """Detect volume-related anomalies"""
         anomalies = []
 
@@ -370,16 +415,16 @@ class DataQualityValidator:
 
     def _determine_grade(self, score: float) -> QualityGrade:
         """Determine quality grade based on score"""
-        for grade, threshold in sorted(self.grade_thresholds.items(), key=lambda x: x[1], reverse=True):
+        for grade, threshold in sorted(
+            self.grade_thresholds.items(), key=lambda x: x[1], reverse=True
+        ):
             if score >= threshold:
                 return grade
         return QualityGrade.FAILED
 
     def _trigger_alerts(self, source: DataSourceType, metrics: QualityMetrics):
         """Trigger alerts for quality issues"""
-        alert_msg = (
-            f"Data quality alert for {source.value}: Grade={metrics.grade.value}, Score={metrics.overall_score:.2f}"
-        )
+        alert_msg = f"Data quality alert for {source.value}: Grade={metrics.grade.value}, Score={metrics.overall_score:.2f}"
 
         if metrics.anomalies:
             alert_msg += f", Anomalies: {', '.join(metrics.anomalies)}"
@@ -397,31 +442,36 @@ class DataQualityValidator:
         """Register a callback for quality alerts"""
         self.alert_callbacks.append(callback)
 
-    def get_source_reliability_report(self) -> Dict[str, Any]:
+    def get_source_reliability_report(self) -> dict[str, Any]:
         """Get reliability report for all sources"""
         report = {}
 
         for source in DataSourceType:
             reliability = self.reliability_tracker.get_reliability_score(source)
             total_requests = (
-                self.reliability_tracker.success_counts[source] + self.reliability_tracker.error_counts[source]
+                self.reliability_tracker.success_counts[source]
+                + self.reliability_tracker.error_counts[source]
             )
 
             report[source.value] = {
                 "reliability_score": reliability,
                 "total_requests": total_requests,
                 "success_rate": (
-                    self.reliability_tracker.success_counts[source] / total_requests if total_requests > 0 else 0.0
+                    self.reliability_tracker.success_counts[source] / total_requests
+                    if total_requests > 0
+                    else 0.0
                 ),
-                "last_update": self.reliability_tracker.last_update[source].isoformat()
-                if source in self.reliability_tracker.last_update
-                else None,
+                "last_update": (
+                    self.reliability_tracker.last_update[source].isoformat()
+                    if source in self.reliability_tracker.last_update
+                    else None
+                ),
                 "grade": self._determine_grade(reliability).value,
             }
 
         return report
 
-    def get_symbol_quality_trend(self, symbol: str, hours: int = 24) -> Dict[str, Any]:
+    def get_symbol_quality_trend(self, symbol: str, hours: int = 24) -> dict[str, Any]:
         """Get quality trend for a specific symbol"""
         # This would typically query a database of historical metrics
         # For now, return current state
@@ -430,5 +480,9 @@ class DataQualityValidator:
             "hours": hours,
             "current_price_history": list(self.price_history.get(symbol, [])),
             "current_volume_history": list(self.volume_history.get(symbol, [])),
-            "last_known_good": (self.last_known_good[symbol].to_dict() if symbol in self.last_known_good else None),
+            "last_known_good": (
+                self.last_known_good[symbol].to_dict()
+                if symbol in self.last_known_good
+                else None
+            ),
         }

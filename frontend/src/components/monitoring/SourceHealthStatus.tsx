@@ -310,7 +310,7 @@ const SourceHealthStatus: React.FC<SourceHealthStatusProps> = ({ data }) => {
                         borderRadius: 3,
                         backgroundColor: 'grey.300',
                         '& .MuiLinearProgress-bar': {
-                          backgroundColor: 
+                          backgroundColor:
                             (data.api_usage.budget_utilization || 0) > 80 ? '#f44336' :
                             (data.api_usage.budget_utilization || 0) > 60 ? '#ff9800' : '#4caf50',
                           borderRadius: 3

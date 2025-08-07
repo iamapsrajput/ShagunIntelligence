@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  Clock, 
-  CheckCircle, 
-  XCircle, 
+import {
+  ArrowUpCircle,
+  ArrowDownCircle,
+  Clock,
+  CheckCircle,
+  XCircle,
   AlertCircle,
   ChevronDown,
   ChevronUp,
@@ -24,9 +24,9 @@ interface ExpandedTrade {
   [key: string]: boolean;
 }
 
-export const TradeExecutionLog: React.FC<TradeExecutionLogProps> = ({ 
-  limit = 20, 
-  className = '' 
+export const TradeExecutionLog: React.FC<TradeExecutionLogProps> = ({
+  limit = 20,
+  className = ''
 }) => {
   const [trades, setTrades] = useState<TradeExecution[]>([]);
   const [expandedTrades, setExpandedTrades] = useState<ExpandedTrade>({});
@@ -39,7 +39,7 @@ export const TradeExecutionLog: React.FC<TradeExecutionLogProps> = ({
     // Subscribe to trade executions
     const handleTradeExecution = (trade: TradeExecution) => {
       setTrades(prev => [trade, ...prev].slice(0, limit));
-      
+
       // Auto-expand new trades for 5 seconds
       setExpandedTrades(prev => ({ ...prev, [trade.id]: true }));
       setTimeout(() => {
@@ -85,8 +85,8 @@ export const TradeExecutionLog: React.FC<TradeExecutionLogProps> = ({
   };
 
   const getActionIcon = (action: string) => {
-    return action === 'BUY' ? 
-      <ArrowUpCircle className="w-5 h-5 text-green-500" /> : 
+    return action === 'BUY' ?
+      <ArrowUpCircle className="w-5 h-5 text-green-500" /> :
       <ArrowDownCircle className="w-5 h-5 text-red-500" />;
   };
 
@@ -159,13 +159,13 @@ export const TradeExecutionLog: React.FC<TradeExecutionLogProps> = ({
                       ${(trade.quantity * trade.price).toFixed(2)}
                     </div>
                   </div>
-                  
+
                   <button
                     onClick={() => toggleExpanded(trade.id)}
                     className="p-1 hover:bg-gray-100 rounded transition-colors"
                   >
-                    {expandedTrades[trade.id] ? 
-                      <ChevronUp className="w-4 h-4" /> : 
+                    {expandedTrades[trade.id] ?
+                      <ChevronUp className="w-4 h-4" /> :
                       <ChevronDown className="w-4 h-4" />
                     }
                   </button>

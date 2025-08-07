@@ -10,9 +10,9 @@ import {
   TextField,
   MenuItem
 } from '@mui/material';
-import { 
-  CheckCircle, 
-  Warning, 
+import {
+  CheckCircle,
+  Warning,
   Error as ErrorIcon,
   Refresh,
   TrendingUp,
@@ -138,8 +138,8 @@ const DataQualityOverview: React.FC<DataQualityOverviewProps> = ({
                   ) : (
                     <TrendingDown color="error" />
                   )}
-                  <Typography 
-                    variant="body2" 
+                  <Typography
+                    variant="body2"
                     color={trend > 0 ? 'success.main' : 'error.main'}
                   >
                     {Math.abs(trend).toFixed(1)}%
@@ -272,7 +272,7 @@ const DataQualityOverview: React.FC<DataQualityOverviewProps> = ({
                         <Typography variant="body2" color="text.secondary">
                           Status
                         </Typography>
-                        <Typography 
+                        <Typography
                           variant="body2"
                           color={sourceData.is_healthy ? 'success.main' : 'error.main'}
                         >
@@ -319,7 +319,7 @@ const DataQualityOverview: React.FC<DataQualityOverviewProps> = ({
               {data.recent_failovers.map((event: any, index: number) => (
                 <Box key={index} sx={{ mt: 1 }}>
                   <Typography variant="body2">
-                    {new Date(event.timestamp).toLocaleString()}: 
+                    {new Date(event.timestamp).toLocaleString()}:
                     Failed from <strong>{event.from_source}</strong> to <strong>{event.to_source}</strong>
                     {event.reason && ` - ${event.reason}`}
                   </Typography>

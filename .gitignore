@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+# Poetry lock file (large file, environment-specific)
+poetry.lock
+
 # C extensions
 *.so
 
@@ -103,6 +106,9 @@ celerybeat.pid
 
 # Environments
 .env
+.env.local
+.env.production
+.env.live
 .venv
 env/
 venv/
@@ -141,3 +147,73 @@ historical_data/
 backtest_results/
 dashboard/node_modules/
 dashboard/package-lock.json
+
+# AI Assistant files (Claude, ChatGPT, etc.)
+CLAUDE.md
+claude.md
+.claude/
+.chatgpt/
+*_conversation_*.md
+*_refactoring_*.md
+*_comprehensive_*.md
+
+# Temporary and personal files
+temp/
+tmp/
+*.tmp
+*.temp
+personal_notes.md
+notes.md
+TEMP_*
+temp_*
+
+# Database files (should not be in version control)
+*.db
+*.sqlite
+*.sqlite3
+dev_trading.db
+live_trading_*.db
+
+# SSL certificates and keys
+nginx/ssl/*.pem
+nginx/ssl/*.key
+nginx/ssl/*.crt
+*.pem
+*.key
+*.crt
+
+# Environment files with secrets
+.env.production
+.env.local
+.env.live
+config/*.env
+
+# Backup files
+backups/
+*.backup
+*.bak
+
+# Log files
+logs/*.log
+*.log
+
+# Test output
+test_output/
+coverage/
+.coverage*
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db

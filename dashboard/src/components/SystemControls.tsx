@@ -1,16 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Power, 
-  Settings, 
-  Shield, 
-  AlertTriangle, 
+import {
+  Power,
+  Settings,
+  Shield,
   Save,
   RefreshCw,
   Sliders,
-  Activity,
-  Pause,
-  Play
+  Activity
 } from 'lucide-react';
 import { Switch } from '@headlessui/react';
 import toast from 'react-hot-toast';
@@ -89,7 +86,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ className = '' }
 
       setSystemStatus(status);
       setRiskParameters(riskParams);
-      
+
       // Update agent config based on status
       const updatedConfig = { ...agentConfig };
       Object.keys(agentStatus).forEach(agent => {
@@ -112,10 +109,10 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ className = '' }
     try {
       const newStatus = !systemStatus.isActive;
       wsService.toggleSystem(newStatus);
-      
+
       // Optimistically update UI
       setSystemStatus({ ...systemStatus, isActive: newStatus });
-      
+
       toast.success(newStatus ? 'Trading system activated' : 'Trading system deactivated');
     } catch (error) {
       console.error('Failed to toggle system:', error);
@@ -145,9 +142,9 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ className = '' }
   const toggleAgent = async (agentType: string) => {
     const updatedConfig = { ...agentConfig };
     updatedConfig[agentType].enabled = !updatedConfig[agentType].enabled;
-    
+
     setAgentConfig(updatedConfig);
-    
+
     try {
       const api = require('@/services/api').default;
       await api.updateAgentConfig(agentType, updatedConfig[agentType]);
@@ -164,13 +161,13 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ className = '' }
   const updateAgentWeight = (agentType: string, weight: number) => {
     const updatedConfig = { ...agentConfig };
     updatedConfig[agentType].weight = weight;
-    
+
     // Normalize weights to sum to 1
     const totalWeight = Object.values(updatedConfig).reduce((sum, cfg) => sum + cfg.weight, 0);
     Object.keys(updatedConfig).forEach(agent => {
       updatedConfig[agent].weight = updatedConfig[agent].weight / totalWeight;
     });
-    
+
     setAgentConfig(updatedConfig);
   };
 
@@ -456,7 +453,7 @@ export const SystemControls: React.FC<SystemControlsProps> = ({ className = '' }
                   />
                 </Switch>
               </div>
-              
+
               <div className="mt-2">
                 <label className="block text-sm text-gray-600 mb-1">
                   Decision Weight: {(config.weight * 100).toFixed(0)}%

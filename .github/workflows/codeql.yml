@@ -90,7 +90,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -136,18 +136,18 @@ jobs:
       run: |
         echo "## Security Scan Summary" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
-        
+
         if [ -f "bandit-results.sarif" ]; then
           echo "✅ Bandit scan completed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ -f "safety-results.json" ]; then
           echo "✅ Safety vulnerability scan completed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         if [ -f "semgrep-results.sarif" ]; then
           echo "✅ Semgrep security scan completed" >> $GITHUB_STEP_SUMMARY
         fi
-        
+
         echo "" >> $GITHUB_STEP_SUMMARY
         echo "📊 Results uploaded to GitHub Security tab" >> $GITHUB_STEP_SUMMARY

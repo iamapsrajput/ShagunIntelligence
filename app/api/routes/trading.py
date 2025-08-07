@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request
 from loguru import logger
@@ -11,7 +11,13 @@ from app.core.auth import get_current_user
 from app.db.session import get_db
 from app.models.trade import Position, Trade, TradeAction, TradeStatus
 from app.models.user import User
-from app.schemas.trading import ModifyOrderRequest, OrderRequest, OrderResponse, PositionResponse, TradeHistoryResponse
+from app.schemas.trading import (
+    ModifyOrderRequest,
+    OrderRequest,
+    OrderResponse,
+    PositionResponse,
+    TradeHistoryResponse,
+)
 from app.services.websocket_manager import websocket_broadcaster
 
 router = APIRouter()
@@ -157,13 +163,16 @@ async def place_order(
 
 @router.put("/orders/{order_id}")
 async def modify_order(
-    order_id: str, modify_request: ModifyOrderRequest, request: Request, current_user: User = Depends(get_current_user)
+    order_id: str,
+    modify_request: ModifyOrderRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
 ):
     """Modify an existing order"""
     try:
         kite_client = request.app.state.kite_client
 
-        result = await kite_client.modify_order(
+        await kite_client.modify_order(
             order_id=order_id,
             quantity=modify_request.quantity,
             price=modify_request.price,
@@ -172,7 +181,11 @@ async def modify_order(
 
         logger.info(f"Order {order_id} modified by user {current_user.username}")
 
-        return {"order_id": order_id, "status": "modified", "message": "Order modified successfully"}
+        return {
+            "order_id": order_id,
+            "status": "modified",
+            "message": "Order modified successfully",
+        }
     except Exception as e:
         logger.error(f"Error modifying order: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -180,16 +193,23 @@ async def modify_order(
 
 @router.delete("/orders/{order_id}")
 async def cancel_order(
-    order_id: str, request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    order_id: str,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Cancel an existing order"""
     try:
         kite_client = request.app.state.kite_client
 
-        result = await kite_client.cancel_order(order_id)
+        await kite_client.cancel_order(order_id)
 
         # Update trade status in database
-        trade = db.query(Trade).filter(Trade.order_id == order_id, Trade.user_id == current_user.id).first()
+        trade = (
+            db.query(Trade)
+            .filter(Trade.order_id == order_id, Trade.user_id == current_user.id)
+            .first()
+        )
 
         if trade:
             trade.status = TradeStatus.CANCELLED
@@ -197,15 +217,21 @@ async def cancel_order(
 
         logger.info(f"Order {order_id} cancelled by user {current_user.username}")
 
-        return {"order_id": order_id, "status": "cancelled", "message": "Order cancelled successfully"}
+        return {
+            "order_id": order_id,
+            "status": "cancelled",
+            "message": "Order cancelled successfully",
+        }
     except Exception as e:
         logger.error(f"Error cancelling order: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/positions", response_model=List[PositionResponse])
+@router.get("/positions", response_model=list[PositionResponse])
 async def get_positions(
-    request: Request, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Get current trading positions"""
     try:
@@ -221,7 +247,7 @@ async def get_positions(
                 .filter(
                     Position.user_id == current_user.id,
                     Position.symbol == kite_pos["tradingsymbol"],
-                    Position.is_active == True,
+                    Position.is_active is True,
                 )
                 .first()
             )
@@ -232,7 +258,11 @@ async def get_positions(
                 db_position.current_price = kite_pos.get("last_price", 0)
                 db_position.unrealized_pnl = kite_pos.get("pnl", 0)
                 db_position.unrealized_pnl_percent = (
-                    (kite_pos.get("pnl", 0) / (kite_pos["average_price"] * abs(kite_pos["quantity"]))) * 100
+                    (
+                        kite_pos.get("pnl", 0)
+                        / (kite_pos["average_price"] * abs(kite_pos["quantity"]))
+                    )
+                    * 100
                     if kite_pos["quantity"] != 0
                     else 0
                 )
@@ -245,7 +275,11 @@ async def get_positions(
                     current_price=kite_pos.get("last_price", 0),
                     unrealized_pnl=kite_pos.get("pnl", 0),
                     unrealized_pnl_percent=(
-                        (kite_pos.get("pnl", 0) / (kite_pos["average_price"] * abs(kite_pos["quantity"]))) * 100
+                        (
+                            kite_pos.get("pnl", 0)
+                            / (kite_pos["average_price"] * abs(kite_pos["quantity"]))
+                        )
+                        * 100
                         if kite_pos["quantity"] != 0
                         else 0
                     ),
@@ -275,7 +309,7 @@ async def get_positions(
 async def get_orders(
     request: Request,
     current_user: User = Depends(get_current_user),
-    status: Optional[str] = Query(None, description="Filter by status"),
+    status: str | None = Query(None, description="Filter by status"),
     limit: int = Query(50, le=200),
 ):
     """Get order history"""
@@ -285,7 +319,9 @@ async def get_orders(
 
         # Filter by status if provided
         if status:
-            orders = [o for o in orders if o.get("status", "").upper() == status.upper()]
+            orders = [
+                o for o in orders if o.get("status", "").upper() == status.upper()
+            ]
 
         # Limit results
         orders = orders[:limit]
@@ -296,11 +332,11 @@ async def get_orders(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/trades/history", response_model=List[TradeHistoryResponse])
+@router.get("/trades/history", response_model=list[TradeHistoryResponse])
 async def get_trade_history(
-    symbol: Optional[str] = None,
-    start_date: Optional[datetime] = None,
-    end_date: Optional[datetime] = None,
+    symbol: str | None = None,
+    start_date: datetime | None = None,
+    end_date: datetime | None = None,
     limit: int = Query(100, le=500),
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
@@ -327,7 +363,9 @@ async def get_trade_history(
                 price=trade.price,
                 executed_price=trade.executed_price,
                 status=trade.status.value,
-                pnl=trade.realized_pnl if trade.status == TradeStatus.EXECUTED else None,
+                pnl=(
+                    trade.realized_pnl if trade.status == TradeStatus.EXECUTED else None
+                ),
                 agent_confidence=trade.confidence_score,
                 created_at=trade.created_at,
             )
@@ -338,9 +376,11 @@ async def get_trade_history(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/analyze", response_model=Dict[str, Any])
+@router.post("/analyze", response_model=dict[str, Any])
 async def analyze_trade(
-    analysis_request: AIAnalysisRequest, request: Request, current_user: User = Depends(get_current_user)
+    analysis_request: AIAnalysisRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
 ):
     """Get AI analysis for a potential trade"""
     try:
@@ -355,7 +395,9 @@ async def analyze_trade(
         )
 
         # Log analysis request
-        logger.info(f"User {current_user.username} requested analysis for {analysis_request.symbol}")
+        logger.info(
+            f"User {current_user.username} requested analysis for {analysis_request.symbol}"
+        )
 
         return {
             "symbol": analysis_request.symbol,
@@ -371,13 +413,19 @@ async def analyze_trade(
 
 
 @router.post("/paper-trade")
-async def execute_paper_trade(order: OrderRequest, request: Request, current_user: User = Depends(get_current_user)):
+async def execute_paper_trade(
+    order: OrderRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+):
     """Execute a paper trade (simulation)"""
     try:
         # Paper trading logic here
         trade_id = str(uuid.uuid4())
 
-        logger.info(f"Paper trade executed: {order.symbol} {order.order_type} {order.quantity}")
+        logger.info(
+            f"Paper trade executed: {order.symbol} {order.order_type} {order.quantity}"
+        )
 
         return {
             "trade_id": trade_id,

@@ -5,11 +5,13 @@ This directory contains sealed secrets for secure secret management in Kubernete
 ## Setup
 
 1. Install sealed-secrets controller:
+
 ```bash
 kubectl apply -f https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.0/controller.yaml
 ```
 
 2. Install kubeseal CLI:
+
 ```bash
 wget https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.18.0/kubeseal-0.18.0-linux-amd64.tar.gz
 tar -xvzf kubeseal-0.18.0-linux-amd64.tar.gz
@@ -19,6 +21,7 @@ sudo install -m 755 kubeseal /usr/local/bin/kubeseal
 ## Creating Sealed Secrets
 
 1. Create a regular secret:
+
 ```bash
 kubectl create secret generic shagunintelligence-secrets \
   --from-literal=DB_PASSWORD=your-password \
@@ -27,11 +30,13 @@ kubectl create secret generic shagunintelligence-secrets \
 ```
 
 2. Seal the secret:
+
 ```bash
 kubeseal --format=yaml < secret.yaml > sealed-secret.yaml
 ```
 
 3. Apply the sealed secret:
+
 ```bash
 kubectl apply -f sealed-secret.yaml
 ```

@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, BackgroundTasks
-from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
 from datetime import datetime
+from typing import Any
+
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request
 from loguru import logger
+from pydantic import BaseModel, Field
 
 from app.core.auth import get_current_user
 from app.models.user import User
@@ -14,29 +15,28 @@ router = APIRouter()
 class AgentConfig(BaseModel):
     enabled: bool = True
     weight: float = Field(0.25, ge=0, le=1)
-    parameters: Dict[str, Any] = {}
+    parameters: dict[str, Any] = {}
 
 
 class AgentStatus(BaseModel):
     agent_type: str
     status: str  # active, idle, error
     enabled: bool
-    last_activity: Optional[datetime]
-    current_task: Optional[str]
-    performance_metrics: Dict[str, Any]
+    last_activity: datetime | None
+    current_task: str | None
+    performance_metrics: dict[str, Any]
 
 
 class AgentAnalysis(BaseModel):
     agent_type: str
-    analysis: Dict[str, Any]
+    analysis: dict[str, Any]
     confidence: float
     timestamp: datetime
 
 
-@router.get("/status", response_model=Dict[str, AgentStatus])
+@router.get("/status", response_model=dict[str, AgentStatus])
 async def get_agents_status(
-    request: Request,
-    current_user: User = Depends(get_current_user)
+    request: Request, current_user: User = Depends(get_current_user)
 ):
     """Get status of all agents"""
     try:
@@ -50,7 +50,7 @@ async def get_agents_status(
                 enabled=status.get("enabled", False),
                 last_activity=status.get("last_activity"),
                 current_task=status.get("current_task"),
-                performance_metrics=status.get("performance_metrics", {})
+                performance_metrics=status.get("performance_metrics", {}),
             )
             for agent_type, status in agents_status.items()
         }
@@ -61,9 +61,7 @@ async def get_agents_status(
 
 @router.get("/{agent_type}/status", response_model=AgentStatus)
 async def get_agent_status(
-    agent_type: str,
-    request: Request,
-    current_user: User = Depends(get_current_user)
+    agent_type: str, request: Request, current_user: User = Depends(get_current_user)
 ):
     """Get status of a specific agent"""
     try:
@@ -79,7 +77,7 @@ async def get_agent_status(
             enabled=status.get("enabled", False),
             last_activity=status.get("last_activity"),
             current_task=status.get("current_task"),
-            performance_metrics=status.get("performance_metrics", {})
+            performance_metrics=status.get("performance_metrics", {}),
         )
     except HTTPException:
         raise
@@ -93,7 +91,7 @@ async def get_agent_analysis(
     agent_type: str,
     request: Request,
     current_user: User = Depends(get_current_user),
-    symbol: Optional[str] = None
+    symbol: str | None = None,
 ):
     """Get latest analysis from a specific agent"""
     try:
@@ -117,7 +115,7 @@ async def get_agent_analysis(
             agent_type=agent_type,
             analysis=analysis.get("analysis", {}),
             confidence=analysis.get("confidence", 0),
-            timestamp=analysis.get("timestamp", datetime.utcnow())
+            timestamp=analysis.get("timestamp", datetime.utcnow()),
         )
     except HTTPException:
         raise
@@ -132,7 +130,7 @@ async def update_agent_config(
     config: AgentConfig,
     background_tasks: BackgroundTasks,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Update agent configuration"""
     try:
@@ -143,7 +141,7 @@ async def update_agent_config(
             agent_type=agent_type,
             enabled=config.enabled,
             weight=config.weight,
-            parameters=config.parameters
+            parameters=config.parameters,
         )
 
         if not result:
@@ -160,19 +158,17 @@ async def update_agent_config(
                 "analysis": {
                     "enabled": config.enabled,
                     "weight": config.weight,
-                    "parameters": config.parameters
+                    "parameters": config.parameters,
                 },
-                "timestamp": datetime.utcnow().isoformat()
-            }
+                "timestamp": datetime.utcnow().isoformat(),
+            },
         )
 
-        logger.info(f"Agent {agent_type} configuration updated by {current_user.username}")
+        logger.info(
+            f"Agent {agent_type} configuration updated by {current_user.username}"
+        )
 
-        return {
-            "agent_type": agent_type,
-            "status": "updated",
-            "config": config.dict()
-        }
+        return {"agent_type": agent_type, "status": "updated", "config": config.dict()}
     except HTTPException:
         raise
     except Exception as e:
@@ -182,9 +178,7 @@ async def update_agent_config(
 
 @router.post("/{agent_type}/restart")
 async def restart_agent(
-    agent_type: str,
-    request: Request,
-    current_user: User = Depends(get_current_user)
+    agent_type: str, request: Request, current_user: User = Depends(get_current_user)
 ):
     """Restart a specific agent"""
     try:
@@ -201,7 +195,7 @@ async def restart_agent(
         return {
             "agent_type": agent_type,
             "status": "restarted",
-            "message": f"Agent {agent_type} has been restarted successfully"
+            "message": f"Agent {agent_type} has been restarted successfully",
         }
     except HTTPException:
         raise
@@ -214,7 +208,7 @@ async def restart_agent(
 async def get_agents_performance(
     request: Request,
     current_user: User = Depends(get_current_user),
-    period: str = "1d"  # 1h, 1d, 1w, 1m
+    period: str = "1d",  # 1h, 1d, 1w, 1m
 ):
     """Get performance metrics for all agents"""
     try:
@@ -226,7 +220,7 @@ async def get_agents_performance(
         return {
             "period": period,
             "metrics": metrics,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error fetching agents performance: {str(e)}")
@@ -238,7 +232,7 @@ async def get_recent_activity(
     request: Request,
     current_user: User = Depends(get_current_user),
     limit: int = 50,
-    agent_type: Optional[str] = None
+    agent_type: str | None = None,
 ):
     """Get recent agent activities"""
     try:
@@ -246,14 +240,13 @@ async def get_recent_activity(
 
         # Get recent activities
         activities = await crew_manager.get_recent_agent_activities(
-            limit=limit,
-            agent_type=agent_type
+            limit=limit, agent_type=agent_type
         )
 
         return {
             "activities": activities,
             "count": len(activities),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error fetching recent activities: {str(e)}")
@@ -262,10 +255,10 @@ async def get_recent_activity(
 
 @router.post("/crew/execute")
 async def execute_crew_task(
-    task: Dict[str, Any],
+    task: dict[str, Any],
     background_tasks: BackgroundTasks,
     request: Request,
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """Execute a custom crew task"""
     try:
@@ -279,13 +272,15 @@ async def execute_crew_task(
         result = await crew_manager.execute_custom_task(task)
 
         # Log task execution
-        logger.info(f"Custom crew task executed by {current_user.username}: {task['type']}")
+        logger.info(
+            f"Custom crew task executed by {current_user.username}: {task['type']}"
+        )
 
         return {
             "task_id": result.get("task_id"),
             "status": "executed",
             "result": result,
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except HTTPException:
         raise
@@ -298,23 +293,20 @@ async def execute_crew_task(
 async def get_decision_history(
     request: Request,
     current_user: User = Depends(get_current_user),
-    symbol: Optional[str] = None,
-    limit: int = 100
+    symbol: str | None = None,
+    limit: int = 100,
 ):
     """Get agent decision history"""
     try:
         crew_manager = request.app.state.crew_manager
 
         # Get decision history
-        decisions = await crew_manager.get_decision_history(
-            symbol=symbol,
-            limit=limit
-        )
+        decisions = await crew_manager.get_decision_history(symbol=symbol, limit=limit)
 
         return {
             "decisions": decisions,
             "count": len(decisions),
-            "timestamp": datetime.utcnow().isoformat()
+            "timestamp": datetime.utcnow().isoformat(),
         }
     except Exception as e:
         logger.error(f"Error fetching decision history: {str(e)}")

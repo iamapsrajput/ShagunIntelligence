@@ -1,16 +1,15 @@
-import pytest
 from datetime import datetime, timedelta
-import asyncio
-from unittest.mock import Mock, AsyncMock, patch
 
-from backend.data_sources.market.models import MarketData
-from backend.data_sources.data_quality_validator import DataSourceType
+import pytest
+
 from backend.data_sources.data_quality_validator import (
     DataQualityValidator,
-    QualityMetrics,
+    DataSourceType,
     QualityGrade,
-    SourceReliabilityTracker
+    QualityMetrics,
+    SourceReliabilityTracker,
 )
+from backend.data_sources.market.models import MarketData
 
 
 class TestQualityMetrics:
@@ -22,7 +21,7 @@ class TestQualityMetrics:
             reliability_score=0.8,
             overall_score=0.875,
             grade=QualityGrade.GOOD,
-            anomalies=["Test anomaly"]
+            anomalies=["Test anomaly"],
         )
 
         assert metrics.freshness_score == 0.9
@@ -41,7 +40,7 @@ class TestQualityMetrics:
             completeness_score=0.95,
             reliability_score=0.8,
             overall_score=0.875,
-            grade=QualityGrade.GOOD
+            grade=QualityGrade.GOOD,
         )
 
         result = metrics.to_dict()
@@ -66,7 +65,7 @@ class TestSourceReliabilityTracker:
 
     def test_update_tracking(self):
         tracker = SourceReliabilityTracker()
-        source = DataSourceType.ZERODHA
+        source = DataSourceType.KITE_CONNECT
 
         # Add some quality scores
         tracker.update(source, 0.9, success=True)
@@ -79,7 +78,7 @@ class TestSourceReliabilityTracker:
 
     def test_get_reliability_score(self):
         tracker = SourceReliabilityTracker()
-        source = DataSourceType.ZERODHA
+        source = DataSourceType.KITE_CONNECT
 
         # No history should return default 0.5
         assert tracker.get_reliability_score(source) == 0.5
@@ -94,7 +93,7 @@ class TestSourceReliabilityTracker:
 
     def test_window_size_limit(self):
         tracker = SourceReliabilityTracker(window_size=5)
-        source = DataSourceType.ZERODHA
+        source = DataSourceType.KITE_CONNECT
 
         # Add more than window size
         for i in range(10):
@@ -109,7 +108,7 @@ class TestDataQualityValidator:
         self.validator = DataQualityValidator(
             freshness_threshold_seconds=5,
             price_deviation_threshold=0.02,
-            volume_spike_threshold=3.0
+            volume_spike_threshold=3.0,
         )
 
     def test_validator_initialization(self):
@@ -124,7 +123,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         score = self.validator._calculate_freshness_score(fresh_data)
         assert score == 1.0
@@ -134,7 +133,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow() - timedelta(seconds=7)
+            timestamp=datetime.utcnow() - timedelta(seconds=7),
         )
         score = self.validator._calculate_freshness_score(old_data)
         assert 0.7 < score < 0.9
@@ -144,7 +143,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow() - timedelta(minutes=5)
+            timestamp=datetime.utcnow() - timedelta(minutes=5),
         )
         score = self.validator._calculate_freshness_score(very_old_data)
         assert score < 0.5
@@ -161,7 +160,7 @@ class TestDataQualityValidator:
             high=152.0,
             low=148.0,
             open=149.0,
-            close=150.5
+            close=150.5,
         )
         score = self.validator._calculate_completeness_score(complete_data)
         assert score > 0.8
@@ -171,7 +170,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         score = self.validator._calculate_completeness_score(minimal_data)
         assert 0.5 < score < 0.8
@@ -181,7 +180,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
         # Matching reference data
@@ -190,11 +189,13 @@ class TestDataQualityValidator:
                 symbol="AAPL",
                 current_price=150.5,
                 volume=1100000,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
         }
 
-        score, anomalies = self.validator._calculate_accuracy_score(data, reference_data)
+        score, anomalies = self.validator._calculate_accuracy_score(
+            data, reference_data
+        )
         assert score > 0.7  # Small deviation should still score well
         assert len(anomalies) == 0
 
@@ -203,10 +204,12 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=160.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
 
-        score, anomalies = self.validator._calculate_accuracy_score(data, reference_data)
+        score, anomalies = self.validator._calculate_accuracy_score(
+            data, reference_data
+        )
         assert score < 0.5
         assert len(anomalies) > 0
 
@@ -218,7 +221,7 @@ class TestDataQualityValidator:
                     symbol="AAPL",
                     current_price=150.0 + i * 0.1,
                     volume=1000000,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
             )
 
@@ -227,7 +230,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=151.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         anomalies = self.validator._detect_price_anomalies(normal_data)
         assert len(anomalies) == 0
@@ -237,7 +240,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=200.0,
             volume=1000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         anomalies = self.validator._detect_price_anomalies(spike_data)
         assert len(anomalies) > 0
@@ -251,7 +254,7 @@ class TestDataQualityValidator:
                     symbol="AAPL",
                     current_price=150.0,
                     volume=1000000 + i * 10000,
-                    timestamp=datetime.utcnow()
+                    timestamp=datetime.utcnow(),
                 )
             )
 
@@ -260,7 +263,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1050000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         anomalies = self.validator._detect_volume_anomalies(normal_data)
         assert len(anomalies) == 0
@@ -270,7 +273,7 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=5000000,
-            timestamp=datetime.utcnow()
+            timestamp=datetime.utcnow(),
         )
         anomalies = self.validator._detect_volume_anomalies(spike_data)
         assert len(anomalies) > 0
@@ -290,13 +293,10 @@ class TestDataQualityValidator:
             volume=1000000,
             timestamp=datetime.utcnow(),
             bid=149.95,
-            ask=150.05
+            ask=150.05,
         )
 
-        metrics = self.validator.validate_data(
-            data,
-            DataSourceType.ZERODHA
-        )
+        metrics = self.validator.validate_data(data, DataSourceType.KITE_CONNECT)
 
         assert isinstance(metrics, QualityMetrics)
         assert 0 <= metrics.freshness_score <= 1
@@ -321,13 +321,10 @@ class TestDataQualityValidator:
             symbol="AAPL",
             current_price=150.0,
             volume=1000000,
-            timestamp=datetime.utcnow() - timedelta(minutes=10)  # Old data
+            timestamp=datetime.utcnow() - timedelta(minutes=10),  # Old data
         )
 
-        metrics = self.validator.validate_data(
-            data,
-            DataSourceType.ZERODHA
-        )
+        self.validator.validate_data(data, DataSourceType.KITE_CONNECT)
 
         assert callback_called
 
@@ -338,14 +335,14 @@ class TestDataQualityValidator:
                 symbol="AAPL",
                 current_price=150.0 + i,
                 volume=1000000,
-                timestamp=datetime.utcnow()
+                timestamp=datetime.utcnow(),
             )
-            self.validator.validate_data(data, DataSourceType.ZERODHA)
+            self.validator.validate_data(data, DataSourceType.KITE_CONNECT)
 
         report = self.validator.get_source_reliability_report()
 
-        assert DataSourceType.ZERODHA.value in report
-        zerodha_report = report[DataSourceType.ZERODHA.value]
+        assert DataSourceType.KITE_CONNECT.value in report
+        zerodha_report = report[DataSourceType.KITE_CONNECT.value]
         assert "reliability_score" in zerodha_report
         assert "total_requests" in zerodha_report
         assert "success_rate" in zerodha_report
@@ -361,7 +358,7 @@ class TestDataQualityIntegration:
         manager = MultiSourceDataManager()
 
         # Verify quality validator is initialized
-        assert hasattr(manager, '_quality_validator')
+        assert hasattr(manager, "_quality_validator")
         assert isinstance(manager._quality_validator, DataQualityValidator)
 
         # Test quality callback registration

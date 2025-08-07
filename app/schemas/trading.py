@@ -1,6 +1,5 @@
 from datetime import datetime
 from enum import Enum
-from typing import Optional
 
 from pydantic import BaseModel, Field, validator
 
@@ -29,13 +28,13 @@ class TradeSignal(BaseModel):
     symbol: str
     action: OrderType
     quantity: int = Field(gt=0)
-    entry_price: Optional[float] = None
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
+    entry_price: float | None = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
     confidence: float = Field(ge=0.0, le=1.0)
     source: str = "ai_analysis"
     timestamp: datetime = Field(default_factory=datetime.utcnow)
-    metadata: Optional[dict] = None
+    metadata: dict | None = None
 
 
 class OrderRequest(BaseModel):
@@ -45,18 +44,18 @@ class OrderRequest(BaseModel):
     quantity: int = Field(gt=0)
     product_type: ProductType = ProductType.MIS
     price_type: PriceType = PriceType.MARKET
-    price: Optional[float] = None
-    trigger_price: Optional[float] = None
-    stop_loss: Optional[float] = None
-    take_profit: Optional[float] = None
+    price: float | None = None
+    trigger_price: float | None = None
+    stop_loss: float | None = None
+    take_profit: float | None = None
     validity: str = "DAY"
 
     # AI and risk management
     use_ai_analysis: bool = True
     auto_position_size: bool = False
-    risk_percent: Optional[float] = Field(None, ge=0.1, le=5)
-    stop_loss_percent: Optional[float] = Field(None, ge=0.5, le=10)
-    position_size_percent: Optional[float] = Field(None, ge=1, le=20)
+    risk_percent: float | None = Field(None, ge=0.1, le=5)
+    stop_loss_percent: float | None = Field(None, ge=0.5, le=10)
+    position_size_percent: float | None = Field(None, ge=1, le=20)
 
     @validator("price", always=True)
     def validate_price(cls, v, values):
@@ -75,14 +74,14 @@ class OrderResponse(BaseModel):
     order_id: str
     status: str
     message: str
-    trade_id: Optional[int] = None
+    trade_id: int | None = None
     timestamp: datetime
 
 
 class ModifyOrderRequest(BaseModel):
-    quantity: Optional[int] = None
-    price: Optional[float] = None
-    trigger_price: Optional[float] = None
+    quantity: int | None = None
+    price: float | None = None
+    trigger_price: float | None = None
 
 
 class PositionResponse(BaseModel):
@@ -103,10 +102,10 @@ class TradeHistoryResponse(BaseModel):
     action: str
     quantity: int
     price: float
-    executed_price: Optional[float]
+    executed_price: float | None
     status: str
-    pnl: Optional[float]
-    agent_confidence: Optional[float]
+    pnl: float | None
+    agent_confidence: float | None
     created_at: datetime
 
     class Config:

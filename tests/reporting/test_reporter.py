@@ -1,11 +1,10 @@
-import pytest
 import json
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Any
+
 import matplotlib.pyplot as plt
-import pandas as pd
 import numpy as np
 from jinja2 import Template
 
@@ -22,23 +21,18 @@ class TestReporter:
         self.coverage_data = {}
         self.timestamp = datetime.now()
 
-    def add_test_result(self, result: Dict[str, Any]):
+    def add_test_result(self, result: dict[str, Any]):
         """Add a test result to the report"""
-        self.test_results.append({
-            **result,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.test_results.append({**result, "timestamp": datetime.now().isoformat()})
 
     def add_performance_metric(self, name: str, value: Any, unit: str = ""):
         """Add a performance metric to the report"""
         if name not in self.performance_metrics:
             self.performance_metrics[name] = []
 
-        self.performance_metrics[name].append({
-            "value": value,
-            "unit": unit,
-            "timestamp": datetime.now().isoformat()
-        })
+        self.performance_metrics[name].append(
+            {"value": value, "unit": unit, "timestamp": datetime.now().isoformat()}
+        )
 
     def add_coverage_data(self, module: str, coverage_percent: float):
         """Add code coverage data"""
@@ -220,7 +214,8 @@ class TestReporter:
         # Calculate overall coverage
         overall_coverage = (
             sum(self.coverage_data.values()) / len(self.coverage_data)
-            if self.coverage_data else 0
+            if self.coverage_data
+            else 0
         )
 
         # Generate recommendations
@@ -248,12 +243,12 @@ class TestReporter:
             overall_coverage=overall_coverage,
             performance_metrics=self.performance_metrics,
             test_results=self.test_results,
-            recommendations=recommendations
+            recommendations=recommendations,
         )
 
         # Save HTML report
         report_path = self.output_dir / "test_report.html"
-        with open(report_path, 'w') as f:
+        with open(report_path, "w") as f:
             f.write(html_content)
 
         # Generate charts
@@ -278,8 +273,12 @@ class TestReporter:
             testsuite = ET.SubElement(testsuites, "testsuite")
             testsuite.set("name", module)
             testsuite.set("tests", str(len(tests)))
-            testsuite.set("failures", str(sum(1 for t in tests if t["status"] == "fail")))
-            testsuite.set("skipped", str(sum(1 for t in tests if t["status"] == "skip")))
+            testsuite.set(
+                "failures", str(sum(1 for t in tests if t["status"] == "fail"))
+            )
+            testsuite.set(
+                "skipped", str(sum(1 for t in tests if t["status"] == "skip"))
+            )
 
             for test in tests:
                 testcase = ET.SubElement(testsuite, "testcase")
@@ -310,16 +309,16 @@ class TestReporter:
                 "total_tests": len(self.test_results),
                 "passed": sum(1 for t in self.test_results if t["status"] == "pass"),
                 "failed": sum(1 for t in self.test_results if t["status"] == "fail"),
-                "skipped": sum(1 for t in self.test_results if t["status"] == "skip")
+                "skipped": sum(1 for t in self.test_results if t["status"] == "skip"),
             },
             "coverage": self.coverage_data,
             "performance_metrics": self.performance_metrics,
             "test_results": self.test_results,
-            "recommendations": self._generate_recommendations()
+            "recommendations": self._generate_recommendations(),
         }
 
         json_path = self.output_dir / "test_report.json"
-        with open(json_path, 'w') as f:
+        with open(json_path, "w") as f:
             json.dump(report_data, f, indent=2)
 
         return json_path
@@ -344,7 +343,7 @@ class TestReporter:
                 status_counts.values(),
                 labels=status_counts.keys(),
                 colors=colors,
-                autopct='%1.1f%%'
+                autopct="%1.1f%%",
             )
             plt.title("Test Status Distribution")
 
@@ -369,7 +368,7 @@ class TestReporter:
                 plt.subplot(2, (num_metrics + 1) // 2, i + 1)
 
                 values = [m["value"] for m in metrics]
-                plt.plot(values, marker='o')
+                plt.plot(values, marker="o")
                 plt.title(name)
                 plt.xlabel("Measurement")
                 plt.ylabel(metrics[0].get("unit", "Value"))
@@ -379,21 +378,24 @@ class TestReporter:
             plt.savefig(self.output_dir / "performance_chart.png")
             plt.close()
 
-    def _generate_recommendations(self) -> List[str]:
+    def _generate_recommendations(self) -> list[str]:
         """Generate test recommendations based on results"""
         recommendations = []
 
         # Check test pass rate
         if self.test_results:
-            pass_rate = sum(1 for t in self.test_results if t["status"] == "pass") / len(self.test_results)
+            pass_rate = sum(
+                1 for t in self.test_results if t["status"] == "pass"
+            ) / len(self.test_results)
             if pass_rate < 0.9:
-                recommendations.append(f"Test pass rate is {pass_rate*100:.1f}%. Investigate failing tests.")
+                recommendations.append(
+                    f"Test pass rate is {pass_rate * 100:.1f}%. Investigate failing tests."
+                )
 
         # Check coverage
         if self.coverage_data:
             low_coverage_modules = [
-                module for module, cov in self.coverage_data.items()
-                if cov < 70
+                module for module, cov in self.coverage_data.items() if cov < 70
             ]
             if low_coverage_modules:
                 recommendations.append(
@@ -402,7 +404,9 @@ class TestReporter:
 
         # Check performance
         if "execution_time" in self.performance_metrics:
-            avg_time = np.mean([m["value"] for m in self.performance_metrics["execution_time"]])
+            avg_time = np.mean(
+                [m["value"] for m in self.performance_metrics["execution_time"]]
+            )
             if avg_time > 2.0:
                 recommendations.append(
                     f"Average execution time is {avg_time:.2f}s. Consider optimization."
@@ -414,13 +418,15 @@ class TestReporter:
             recommendations.append("Run tests multiple times to detect flaky tests.")
 
         if not recommendations:
-            recommendations.append("All tests are performing well. Keep up the good work!")
+            recommendations.append(
+                "All tests are performing well. Keep up the good work!"
+            )
 
         return recommendations
 
 
 # Pytest plugin to automatically generate reports
-class ShagunIntelligenceTestPlugin:
+class ShagunintelligenceTestPlugin:
     """Pytest plugin for automated test reporting"""
 
     def __init__(self):
@@ -432,9 +438,11 @@ class ShagunIntelligenceTestPlugin:
             result = {
                 "name": report.nodeid.split("::")[-1],
                 "module": report.nodeid.split("::")[0],
-                "status": "pass" if report.passed else "fail" if report.failed else "skip",
+                "status": (
+                    "pass" if report.passed else "fail" if report.failed else "skip"
+                ),
                 "duration": report.duration,
-                "message": str(report.longrepr) if report.failed else None
+                "message": str(report.longrepr) if report.failed else None,
             }
             self.reporter.add_test_result(result)
 
@@ -452,20 +460,24 @@ def test_reporter_example():
     reporter = TestReporter(Path("test_output"))
 
     # Add some test results
-    reporter.add_test_result({
-        "name": "test_market_analysis",
-        "module": "test_market_analyst",
-        "status": "pass",
-        "duration": 1.234
-    })
+    reporter.add_test_result(
+        {
+            "name": "test_market_analysis",
+            "module": "test_market_analyst",
+            "status": "pass",
+            "duration": 1.234,
+        }
+    )
 
-    reporter.add_test_result({
-        "name": "test_risk_calculation",
-        "module": "test_risk_manager",
-        "status": "fail",
-        "duration": 0.567,
-        "message": "Assertion error: Expected 100, got 99"
-    })
+    reporter.add_test_result(
+        {
+            "name": "test_risk_calculation",
+            "module": "test_risk_manager",
+            "status": "fail",
+            "duration": 0.567,
+            "message": "Assertion error: Expected 100, got 99",
+        }
+    )
 
     # Add performance metrics
     reporter.add_performance_metric("api_response_time", 0.150, "seconds")

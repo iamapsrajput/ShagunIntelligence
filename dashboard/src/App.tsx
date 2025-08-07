@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from 'react-query';
 import { Toaster } from 'react-hot-toast';
@@ -49,32 +49,32 @@ function App() {
       <Router>
         <div className="min-h-screen bg-gray-50">
           <Routes>
-            <Route 
-              path="/login" 
+            <Route
+              path="/login"
               element={
-                isAuthenticated ? 
-                  <Navigate to="/" replace /> : 
+                isAuthenticated ?
+                  <Navigate to="/" replace /> :
                   <Login onLogin={() => setIsAuthenticated(true)} />
-              } 
+              }
             />
-            <Route 
-              path="/" 
+            <Route
+              path="/"
               element={
-                isAuthenticated ? 
-                  <Dashboard /> : 
+                isAuthenticated ?
+                  <Dashboard /> :
                   <Navigate to="/login" replace />
-              } 
+              }
             />
-            <Route 
-              path="/settings" 
+            <Route
+              path="/settings"
               element={
-                isAuthenticated ? 
-                  <Settings /> : 
+                isAuthenticated ?
+                  <Settings /> :
                   <Navigate to="/login" replace />
-              } 
+              }
             />
           </Routes>
-          <Toaster 
+          <Toaster
             position="top-right"
             toastOptions={{
               duration: 4000,

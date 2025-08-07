@@ -35,9 +35,9 @@ import {
   Area,
   AreaChart
 } from 'recharts';
-import { 
-  TrendingUp, 
-  TrendingDown, 
+import {
+  TrendingUp,
+  TrendingDown,
   AttachMoney,
   Warning,
   InfoOutlined
@@ -73,16 +73,16 @@ const APICostMonitor: React.FC = () => {
     // Generate mock historical data based on current costs
     const days = period === 'day' ? 24 : period === 'week' ? 7 : 30;
     const historical = [];
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
-      
+
       const dayData: any = {
         date: date.toLocaleDateString(),
         total: 0
       };
-      
+
       Object.entries(data.providers || {}).forEach(([provider, providerData]: [string, any]) => {
         const baseCost = providerData.cost / days;
         const variation = (Math.random() - 0.5) * 0.4; // ±20% variation
@@ -90,10 +90,10 @@ const APICostMonitor: React.FC = () => {
         dayData[provider] = cost;
         dayData.total += cost;
       });
-      
+
       historical.push(dayData);
     }
-    
+
     setHistoricalData(historical);
   };
 
@@ -386,7 +386,7 @@ const APICostMonitor: React.FC = () => {
         {/* Cost Alerts */}
         {costData.budget_utilization > 75 && (
           <Grid item xs={12}>
-            <Alert 
+            <Alert
               severity={costData.budget_utilization > 90 ? 'error' : 'warning'}
               sx={{ display: 'flex', alignItems: 'center' }}
             >
@@ -395,8 +395,8 @@ const APICostMonitor: React.FC = () => {
                   Budget Alert
                 </Typography>
                 <Typography variant="body2">
-                  You have used {costData.budget_utilization.toFixed(1)}% of your monthly budget. 
-                  {costData.budget_utilization > 90 
+                  You have used {costData.budget_utilization.toFixed(1)}% of your monthly budget.
+                  {costData.budget_utilization > 90
                     ? ' Consider reviewing your API usage to avoid overage charges.'
                     : ' Monitor your usage to stay within budget.'}
                 </Typography>

@@ -4,7 +4,7 @@ This document provides GitHub CLI commands to configure the repository settings 
 
 ## Prerequisites
 
-1. Install GitHub CLI: https://cli.github.com/
+1. Install GitHub CLI: <https://cli.github.com/>
 2. Authenticate: `gh auth login`
 3. Ensure you have admin access to the repository
 
@@ -187,6 +187,7 @@ gh secret set ZERODHA_API_SECRET --env production --body "your-zerodha-api-secre
 ## Verification Commands
 
 ### Check Repository Settings
+
 ```bash
 # View repository information
 gh repo view iamapsrajput/ShagunIntelligence
@@ -205,6 +206,7 @@ gh api /repos/iamapsrajput/ShagunIntelligence | jq '.security_and_analysis'
 ```
 
 ### Validate Workflows
+
 ```bash
 # List workflows
 gh workflow list
@@ -266,6 +268,7 @@ echo "- Enable GitHub Advanced Security (if available)"
 ```
 
 Make the script executable and run:
+
 ```bash
 chmod +x setup-repo-security.sh
 ./setup-repo-security.sh

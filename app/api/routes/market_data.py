@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta
-from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from loguru import logger
@@ -31,8 +30,8 @@ class MarketStats(BaseModel):
     vwap: float
     week_52_high: float
     week_52_low: float
-    upper_circuit: Optional[float] = None
-    lower_circuit: Optional[float] = None
+    upper_circuit: float | None = None
+    lower_circuit: float | None = None
 
 
 @router.get("/quote/{symbol}", response_model=MarketQuote)
@@ -65,7 +64,7 @@ async def get_quote(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/quotes", response_model=List[MarketQuote])
+@router.get("/quotes", response_model=list[MarketQuote])
 async def get_multiple_quotes(
     request: Request,
     current_user: User = Depends(get_current_user),
@@ -107,7 +106,9 @@ async def get_historical_data(
     symbol: str,
     request: Request,
     current_user: User = Depends(get_current_user),
-    interval: str = Query("day", description="Interval: minute, 5minute, 15minute, hour, day"),
+    interval: str = Query(
+        "day", description="Interval: minute, 5minute, 15minute, hour, day"
+    ),
     days: int = Query(30, description="Number of days of data"),
 ):
     """Get historical data for a symbol with technical indicators"""
@@ -120,7 +121,10 @@ async def get_historical_data(
 
         # Fetch historical data
         data = await kite_client.get_historical_data(
-            symbol=f"NSE:{symbol}", from_date=from_date, to_date=to_date, interval=interval
+            symbol=f"NSE:{symbol}",
+            from_date=from_date,
+            to_date=to_date,
+            interval=interval,
         )
 
         # Calculate technical indicators
@@ -195,8 +199,10 @@ async def get_market_stats(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.get("/watchlist", response_model=List[WatchlistItem])
-async def get_watchlist(request: Request, current_user: User = Depends(get_current_user)):
+@router.get("/watchlist", response_model=list[WatchlistItem])
+async def get_watchlist(
+    request: Request, current_user: User = Depends(get_current_user)
+):
     """Get user's watchlist"""
     try:
         # In production, fetch from database
@@ -226,14 +232,20 @@ async def add_to_watchlist(
         # In production, save to database
         logger.info(f"User {current_user.username} added {symbol} to watchlist")
 
-        return {"message": f"{symbol} added to watchlist", "symbol": symbol, "exchange": exchange}
+        return {
+            "message": f"{symbol} added to watchlist",
+            "symbol": symbol,
+            "exchange": exchange,
+        }
     except Exception as e:
         logger.error(f"Error adding to watchlist: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.delete("/watchlist/{symbol}")
-async def remove_from_watchlist(symbol: str, request: Request, current_user: User = Depends(get_current_user)):
+async def remove_from_watchlist(
+    symbol: str, request: Request, current_user: User = Depends(get_current_user)
+):
     """Remove symbol from watchlist"""
     try:
         # In production, remove from database
@@ -249,8 +261,8 @@ async def remove_from_watchlist(symbol: str, request: Request, current_user: Use
 async def get_instruments(
     request: Request,
     current_user: User = Depends(get_current_user),
-    exchange: Optional[str] = Query(None, description="Filter by exchange"),
-    segment: Optional[str] = Query(None, description="Filter by segment"),
+    exchange: str | None = Query(None, description="Filter by exchange"),
+    segment: str | None = Query(None, description="Filter by segment"),
 ):
     """Get list of tradeable instruments"""
     try:
@@ -270,7 +282,9 @@ async def get_instruments(
 
 
 @router.post("/subscribe/{symbol}")
-async def subscribe_to_symbol(symbol: str, request: Request, current_user: User = Depends(get_current_user)):
+async def subscribe_to_symbol(
+    symbol: str, request: Request, current_user: User = Depends(get_current_user)
+):
     """Subscribe to real-time updates for a symbol"""
     try:
         kite_client = request.app.state.kite_client
@@ -280,7 +294,10 @@ async def subscribe_to_symbol(symbol: str, request: Request, current_user: User 
 
         logger.info(f"User {current_user.username} subscribed to {symbol}")
 
-        return {"message": f"Subscribed to real-time updates for {symbol}", "symbol": symbol}
+        return {
+            "message": f"Subscribed to real-time updates for {symbol}",
+            "symbol": symbol,
+        }
     except Exception as e:
         logger.error(f"Error subscribing to symbol: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))

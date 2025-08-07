@@ -8,7 +8,8 @@ This document outlines the recommended security settings and configurations for 
 
 Configure the following protection rules for the `main` branch:
 
-#### Required Settings:
+#### Required Settings
+
 ```yaml
 Branch: main
 Protect matching branches: ✅
@@ -24,7 +25,7 @@ Restrictions:
   - Require branches to be up to date before merging: ✅
   - Status checks that are required:
     - CI Pipeline / lint
-    - CI Pipeline / test  
+    - CI Pipeline / test
     - CI Pipeline / build-docker
     - CodeQL Security Analysis / analyze (python)
     - CodeQL Security Analysis / security-scan
@@ -38,7 +39,8 @@ Restrictions:
 - Allow deletions: ❌
 ```
 
-#### Additional Branch Rules:
+#### Additional Branch Rules
+
 ```yaml
 Branch: develop
 - Require a pull request before merging: ✅
@@ -55,7 +57,7 @@ Name: "Main Branch Protection"
 Target: main branch
 Rules:
   - Require pull request: ✅
-  - Require code owner review: ✅  
+  - Require code owner review: ✅
   - Require status checks: ✅
   - Restrict force pushes: ✅
   - Restrict deletions: ✅
@@ -64,20 +66,23 @@ Rules:
 
 ### Advanced Security Features
 
-#### GitHub Advanced Security (if available):
+#### GitHub Advanced Security (if available)
+
 - **Code scanning**: ✅ Enabled (via CodeQL workflow)
-- **Secret scanning**: ✅ Enabled  
+- **Secret scanning**: ✅ Enabled
 - **Dependency review**: ✅ Enabled
 - **Security advisories**: ✅ Enabled
 
-#### Security Policies:
+#### Security Policies
+
 - **SECURITY.md**: ✅ Created
 - **Dependabot**: ✅ Configured
 - **Private vulnerability reporting**: ✅ Enabled
 
 ## 🏷️ Repository Topics & Labels
 
-### Recommended Topics:
+### Recommended Topics
+
 ```yaml
 Topics:
   - algorithmic-trading
@@ -96,15 +101,17 @@ Topics:
   - risk-management
 ```
 
-### Repository Labels:
+### Repository Labels
 
-#### Priority Labels:
+#### Priority Labels
+
 - `priority: critical` (🔴) - Critical issues requiring immediate attention
-- `priority: high` (🟠) - High priority issues  
+- `priority: high` (🟠) - High priority issues
 - `priority: medium` (🟡) - Medium priority issues
 - `priority: low` (🟢) - Low priority issues
 
-#### Type Labels:
+#### Type Labels
+
 - `bug` (🐛) - Something isn't working
 - `enhancement` (✨) - New feature or request
 - `documentation` (📚) - Improvements or additions to documentation
@@ -112,7 +119,8 @@ Topics:
 - `security` (🔒) - Security related issues
 - `question` (❓) - Further information is requested
 
-#### Component Labels:
+#### Component Labels
+
 - `agents` (🤖) - AI agents and CrewAI related
 - `api` (🔌) - FastAPI backend issues
 - `trading` (📈) - Trading system and Kite Connect
@@ -121,7 +129,8 @@ Topics:
 - `frontend` (💻) - UI and dashboard related
 - `ci-cd` (🔄) - CI/CD pipeline issues
 
-#### Status Labels:
+#### Status Labels
+
 - `needs-triage` (🏷️) - Needs initial review and labeling
 - `needs-review` (👀) - Needs code review
 - `needs-testing` (🧪) - Needs testing
@@ -130,7 +139,8 @@ Topics:
 - `good first issue` (👋) - Good for newcomers
 - `help wanted` (🙋) - Extra attention is needed
 
-#### Resolution Labels:
+#### Resolution Labels
+
 - `duplicate` (📋) - This issue or pull request already exists
 - `invalid` (❌) - This doesn't seem right
 - `wontfix` (🚫) - This will not be worked on
@@ -138,7 +148,8 @@ Topics:
 
 ## ⚙️ Repository Settings
 
-### General Settings:
+### General Settings
+
 ```yaml
 Repository name: ShagunIntelligence
 Description: "AI-Powered Algorithmic Trading Platform with Multi-Agent System"
@@ -146,8 +157,8 @@ Website: https://shagunintelligence.com (if available)
 
 Features:
   - Wikis: ❌ (Use docs/ folder instead)
-  - Issues: ✅ 
-  - Sponsorships: ❌ 
+  - Issues: ✅
+  - Sponsorships: ❌
   - Discussions: ✅ (for community support)
   - Projects: ✅ (for project management)
 
@@ -158,7 +169,8 @@ Pull Requests:
   - Auto-delete head branches: ✅
 ```
 
-### Access & Permissions:
+### Access & Permissions
+
 ```yaml
 Base permissions: Read
 Repository visibility: Public (or Private for sensitive trading strategies)
@@ -174,7 +186,8 @@ Branch permissions:
   - feature/*: Write access
 ```
 
-### Merge Settings:
+### Merge Settings
+
 ```yaml
 Default merge type: Squash and merge
 Merge button options:
@@ -185,7 +198,8 @@ Merge button options:
 Automatically delete head branches: ✅
 ```
 
-### Notifications:
+### Notifications
+
 ```yaml
 Email notifications:
   - Issues: ✅
@@ -200,14 +214,15 @@ Web notifications:
 
 ## 🚀 GitHub Actions Settings
 
-### Actions Permissions:
+### Actions Permissions
+
 ```yaml
 Actions permissions:
   - Allow all actions and reusable workflows: ❌
   - Allow select actions and reusable workflows: ✅
   - Allow actions created by GitHub: ✅
   - Allow actions by verified creators: ✅
-  - Allow specified actions: 
+  - Allow specified actions:
     - docker/*
     - aws-actions/*
     - azure/*
@@ -217,11 +232,12 @@ Artifact and log retention: 90 days
 Fork pull request workflows: Require approval for all outside collaborators
 ```
 
-### Repository Secrets:
+### Repository Secrets
+
 ```yaml
 Required secrets for CI/CD:
   - DOCKER_USERNAME
-  - DOCKER_PASSWORD  
+  - DOCKER_PASSWORD
   - AWS_ACCESS_KEY_ID
   - AWS_SECRET_ACCESS_KEY
   - CODECOV_TOKEN
@@ -242,7 +258,8 @@ Staging:
 
 ## 🛡️ Security Checklist
 
-### Repository Security:
+### Repository Security
+
 - [ ] Branch protection rules configured
 - [ ] Signed commits required
 - [ ] Force pushes disabled
@@ -254,13 +271,15 @@ Staging:
 - [ ] Secret scanning enabled
 - [ ] Private vulnerability reporting enabled
 
-### Access Control:
+### Access Control
+
 - [ ] Minimum required permissions granted
 - [ ] Regular access review scheduled
 - [ ] Service account usage documented
 - [ ] API token rotation scheduled
 
-### CI/CD Security:
+### CI/CD Security
+
 - [ ] Secrets properly configured
 - [ ] Workflow permissions minimized
 - [ ] Third-party actions verified
@@ -269,13 +288,15 @@ Staging:
 
 ## 📊 Monitoring & Alerts
 
-### GitHub Notifications:
+### GitHub Notifications
+
 - Security advisories: Immediate email
 - Dependabot PRs: Weekly digest
 - Failed CI/CD: Immediate notification
 - New issues/PRs: Daily digest
 
-### External Monitoring:
+### External Monitoring
+
 - Uptime monitoring for deployed services
 - Performance monitoring for trading systems
 - Security monitoring for suspicious activities
@@ -283,18 +304,21 @@ Staging:
 
 ## 📝 Maintenance Schedule
 
-### Weekly:
+### Weekly
+
 - Review Dependabot PRs
 - Check security alerts
 - Review new issues and PRs
 
-### Monthly:
+### Monthly
+
 - Review repository settings
 - Update documentation
 - Review access permissions
 - Update secrets and tokens
 
-### Quarterly:
+### Quarterly
+
 - Security audit
 - Dependency security review
 - Performance review
@@ -303,6 +327,7 @@ Staging:
 ---
 
 **Note**: For private repositories containing sensitive trading algorithms, consider additional security measures such as:
+
 - Private fork restrictions
 - Advanced audit logging
 - Enterprise-level security features

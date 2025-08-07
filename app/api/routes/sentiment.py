@@ -1,17 +1,19 @@
-from typing import Any, Dict, List
+from typing import Any
 
-from backend.data_sources.integration import get_data_source_integration
 from fastapi import APIRouter, Depends, HTTPException, Query
 from loguru import logger
 
 from app.core.auth import get_current_user
 from app.schemas.auth import UserResponse as User
+from backend.data_sources.integration import get_data_source_integration
 
 router = APIRouter(prefix="/api/v1/sentiment", tags=["sentiment"])
 
 
 @router.get("/score/{symbol}")
-async def get_sentiment_score(symbol: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_sentiment_score(
+    symbol: str, current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """
     Get fused sentiment score from all available sources.
 
@@ -37,7 +39,7 @@ async def get_sentiment_trends(
     symbol: str,
     hours: int = Query(24, ge=1, le=168, description="Number of hours to look back"),
     current_user: User = Depends(get_current_user),
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Get sentiment trends over time.
 
@@ -58,7 +60,7 @@ async def get_sentiment_alerts(
     symbol: str,
     threshold: float = Query(0.3, ge=0.1, le=1.0, description="Alert threshold"),
     current_user: User = Depends(get_current_user),
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """
     Get real-time sentiment alerts when threshold is exceeded.
     """
@@ -73,7 +75,9 @@ async def get_sentiment_alerts(
 
 
 @router.get("/sources/stats")
-async def get_sentiment_sources_stats(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_sentiment_sources_stats(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get statistics about all sentiment sources.
 
@@ -90,7 +94,9 @@ async def get_sentiment_sources_stats(current_user: User = Depends(get_current_u
 
 
 @router.get("/grok/{symbol}")
-async def get_grok_analysis(symbol: str, current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_grok_analysis(
+    symbol: str, current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """
     Get detailed Grok AI analysis for a symbol.
 
@@ -118,7 +124,9 @@ async def get_grok_analysis(symbol: str, current_user: User = Depends(get_curren
 
 
 @router.post("/grok/batch")
-async def get_batch_grok_analysis(symbols: List[str], current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_batch_grok_analysis(
+    symbols: list[str], current_user: User = Depends(get_current_user)
+) -> dict[str, Any]:
     """
     Get Grok AI analysis for multiple symbols.
 
@@ -127,7 +135,9 @@ async def get_batch_grok_analysis(symbols: List[str], current_user: User = Depen
     """
     try:
         if len(symbols) > 10:
-            raise HTTPException(status_code=400, detail="Maximum 10 symbols allowed per batch request")
+            raise HTTPException(
+                status_code=400, detail="Maximum 10 symbols allowed per batch request"
+            )
 
         integration = get_data_source_integration()
         result = await integration.get_batch_grok_analysis(symbols)
@@ -145,7 +155,9 @@ async def get_batch_grok_analysis(symbols: List[str], current_user: User = Depen
 
 
 @router.get("/grok/cost-stats")
-async def get_grok_cost_stats(current_user: User = Depends(get_current_user)) -> Dict[str, Any]:
+async def get_grok_cost_stats(
+    current_user: User = Depends(get_current_user),
+) -> dict[str, Any]:
     """
     Get Grok API usage and cost statistics.
 
@@ -173,8 +185,8 @@ async def get_grok_cost_stats(current_user: User = Depends(get_current_user)) ->
 
 @router.post("/track-symbols")
 async def track_symbols_for_sentiment(
-    symbols: List[str], current_user: User = Depends(get_current_user)
-) -> Dict[str, str]:
+    symbols: list[str], current_user: User = Depends(get_current_user)
+) -> dict[str, str]:
     """
     Update symbols to track for real-time sentiment analysis.
 
@@ -182,12 +194,17 @@ async def track_symbols_for_sentiment(
     """
     try:
         if len(symbols) > 50:
-            raise HTTPException(status_code=400, detail="Maximum 50 symbols allowed for tracking")
+            raise HTTPException(
+                status_code=400, detail="Maximum 50 symbols allowed for tracking"
+            )
 
         integration = get_data_source_integration()
         integration.track_symbols_for_sentiment(symbols)
 
-        return {"message": f"Now tracking {len(symbols)} symbols for sentiment", "symbols": ", ".join(symbols)}
+        return {
+            "message": f"Now tracking {len(symbols)} symbols for sentiment",
+            "symbols": ", ".join(symbols),
+        }
 
     except HTTPException:
         raise

@@ -33,7 +33,7 @@ export const useWebSocket = (
   const [data, setData] = useState<any>(null);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const ws = useRef<WebSocket | null>(null);
   const reconnectCount = useRef(0);
   const reconnectTimer = useRef<NodeJS.Timeout | null>(null);
@@ -79,7 +79,7 @@ export const useWebSocket = (
         if (reconnectCount.current < maxReconnectAttempts) {
           reconnectCount.current++;
           console.log(`Attempting to reconnect (${reconnectCount.current}/${maxReconnectAttempts})...`);
-          
+
           reconnectTimer.current = setTimeout(() => {
             connect();
           }, reconnectInterval);
@@ -98,7 +98,7 @@ export const useWebSocket = (
       clearTimeout(reconnectTimer.current);
       reconnectTimer.current = null;
     }
-    
+
     if (ws.current) {
       ws.current.close();
       ws.current = null;
@@ -129,7 +129,7 @@ export const useWebSocket = (
 
   useEffect(() => {
     connect();
-    
+
     return () => {
       disconnect();
     };

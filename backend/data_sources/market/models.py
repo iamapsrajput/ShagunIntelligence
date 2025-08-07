@@ -1,77 +1,79 @@
-from typing import Dict, List, Optional, Any
-from datetime import datetime
 from dataclasses import dataclass, field
+from datetime import datetime
 from enum import Enum
+from typing import Any
 
 
 class MarketDataQuality(Enum):
     """Quality level of market data"""
+
     INSTITUTIONAL = "institutional"  # Highest quality, real-time
-    PROFESSIONAL = "professional"    # High quality, minimal delay
-    STANDARD = "standard"           # Good quality, some delay
-    BASIC = "basic"                # Basic quality, delayed
+    PROFESSIONAL = "professional"  # High quality, minimal delay
+    STANDARD = "standard"  # Good quality, some delay
+    BASIC = "basic"  # Basic quality, delayed
 
 
 class DataCostTier(Enum):
     """Cost tier for data sources"""
+
     FREE = "free"
-    LOW = "low"          # < $50/month
-    MEDIUM = "medium"    # $50-$500/month
-    HIGH = "high"        # $500-$2000/month
+    LOW = "low"  # < $50/month
+    MEDIUM = "medium"  # $50-$500/month
+    HIGH = "high"  # $500-$2000/month
     PREMIUM = "premium"  # > $2000/month
 
 
 @dataclass
 class MarketData:
     """Standardized market data across all sources"""
-    
+
     # Basic identifiers
     symbol: str
     exchange: str
     timestamp: datetime
     source: str
-    
+
     # Price data
     current_price: float
-    open: Optional[float] = None
-    high: Optional[float] = None
-    low: Optional[float] = None
-    close: Optional[float] = None
-    previous_close: Optional[float] = None
-    
+    open: float | None = None
+    high: float | None = None
+    low: float | None = None
+    close: float | None = None
+    previous_close: float | None = None
+
     # Volume data
-    volume: Optional[int] = None
-    average_volume: Optional[int] = None
-    day_volume: Optional[int] = None
-    
+    volume: int | None = None
+    average_volume: int | None = None
+    day_volume: int | None = None
+
     # Bid/Ask
-    bid: Optional[float] = None
-    ask: Optional[float] = None
-    bid_size: Optional[int] = None
-    ask_size: Optional[int] = None
-    
+    bid: float | None = None
+    ask: float | None = None
+    bid_size: int | None = None
+    ask_size: int | None = None
+
     # Change metrics
-    change: Optional[float] = None
-    change_percent: Optional[float] = None
-    
+    change: float | None = None
+    change_percent: float | None = None
+
     # Additional data
-    market_cap: Optional[float] = None
-    pe_ratio: Optional[float] = None
-    week_52_high: Optional[float] = None
-    week_52_low: Optional[float] = None
-    
+    market_cap: float | None = None
+    pe_ratio: float | None = None
+    week_52_high: float | None = None
+    week_52_low: float | None = None
+
     # Quality metrics
     data_quality: MarketDataQuality = MarketDataQuality.STANDARD
-    latency_ms: Optional[int] = None
+    latency_ms: int | None = None
     is_delayed: bool = False
     delay_minutes: int = 0
-    
+
     # Additional metrics
-    vwap: Optional[float] = None
-    sentiment_score: Optional[float] = None
-    sentiment_buzz: Optional[float] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
+    vwap: float | None = None
+    sentiment_score: float | None = None
+    sentiment_buzz: float | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         """Convert to dictionary"""
         return {
             "symbol": self.symbol,
@@ -103,11 +105,11 @@ class MarketData:
             "delay_minutes": self.delay_minutes,
             "vwap": self.vwap,
             "sentiment_score": self.sentiment_score,
-            "sentiment_buzz": self.sentiment_buzz
+            "sentiment_buzz": self.sentiment_buzz,
         }
-    
+
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'MarketData':
+    def from_dict(cls, data: dict[str, Any]) -> "MarketData":
         """Create from dictionary"""
         # Handle timestamp
         timestamp = data.get("timestamp")
@@ -115,14 +117,14 @@ class MarketData:
             timestamp = datetime.fromisoformat(timestamp)
         elif not isinstance(timestamp, datetime):
             timestamp = datetime.utcnow()
-        
+
         # Handle quality
         quality_str = data.get("data_quality", "standard")
         try:
             quality = MarketDataQuality(quality_str)
         except ValueError:
             quality = MarketDataQuality.STANDARD
-        
+
         return cls(
             symbol=data.get("symbol", ""),
             exchange=data.get("exchange", ""),
@@ -153,25 +155,27 @@ class MarketData:
             delay_minutes=data.get("delay_minutes", 0),
             vwap=data.get("vwap"),
             sentiment_score=data.get("sentiment_score"),
-            sentiment_buzz=data.get("sentiment_buzz")
+            sentiment_buzz=data.get("sentiment_buzz"),
         )
 
 
 @dataclass
 class MarketDepth:
     """Market depth/order book data"""
-    
+
     symbol: str
     timestamp: datetime
     source: str
-    
-    bids: List[Dict[str, float]] = field(default_factory=list)  # [{"price": x, "size": y}, ...]
-    asks: List[Dict[str, float]] = field(default_factory=list)
-    
-    total_bid_volume: Optional[int] = None
-    total_ask_volume: Optional[int] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
+
+    bids: list[dict[str, float]] = field(
+        default_factory=list
+    )  # [{"price": x, "size": y}, ...]
+    asks: list[dict[str, float]] = field(default_factory=list)
+
+    total_bid_volume: int | None = None
+    total_ask_volume: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "symbol": self.symbol,
             "timestamp": self.timestamp.isoformat(),
@@ -179,26 +183,26 @@ class MarketDepth:
             "bids": self.bids,
             "asks": self.asks,
             "total_bid_volume": self.total_bid_volume,
-            "total_ask_volume": self.total_ask_volume
+            "total_ask_volume": self.total_ask_volume,
         }
 
 
 @dataclass
 class HistoricalBar:
     """Historical price bar data"""
-    
+
     timestamp: datetime
     open: float
     high: float
     low: float
     close: float
     volume: int
-    
+
     # Optional fields
-    vwap: Optional[float] = None
-    trades: Optional[int] = None
-    
-    def to_dict(self) -> Dict[str, Any]:
+    vwap: float | None = None
+    trades: int | None = None
+
+    def to_dict(self) -> dict[str, Any]:
         return {
             "timestamp": self.timestamp.isoformat(),
             "open": self.open,
@@ -207,35 +211,35 @@ class HistoricalBar:
             "close": self.close,
             "volume": self.volume,
             "vwap": self.vwap,
-            "trades": self.trades
+            "trades": self.trades,
         }
 
 
 @dataclass
 class DataSourceCost:
     """Cost information for a data source"""
-    
+
     tier: DataCostTier
     monthly_cost: float
     per_request_cost: float = 0.0
     free_requests: int = 0
-    
+
     # Usage limits
-    requests_per_minute: Optional[int] = None
-    requests_per_day: Optional[int] = None
-    requests_per_month: Optional[int] = None
-    
+    requests_per_minute: int | None = None
+    requests_per_day: int | None = None
+    requests_per_month: int | None = None
+
     # Data coverage
     includes_realtime: bool = True
     includes_historical: bool = True
     includes_options: bool = False
     includes_forex: bool = False
     includes_crypto: bool = False
-    
+
     def get_request_cost(self, requests: int) -> float:
         """Calculate cost for number of requests"""
         if requests <= self.free_requests:
             return 0.0
-        
+
         billable_requests = requests - self.free_requests
         return billable_requests * self.per_request_cost

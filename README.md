@@ -6,8 +6,8 @@
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![Docker](https://img.shields.io/badge/docker-ready-brightgreen.svg)](https://www.docker.com/)
-[![CI/CD](https://img.shields.io/github/workflow/status/iamapsrajput/ShagunIntelligence/CI%20Pipeline/main)](https://github.com/iamapsrajput/ShagunIntelligence/actions)
-[![Coverage](https://img.shields.io/codecov/c/github/iamapsrajput/ShagunIntelligence)](https://codecov.io/gh/iamapsrajput/ShagunIntelligence)
+[![CI/CD](https://img.shields.io/github/workflow/status/iamapsrajput/shagunintelligence/CI%20Pipeline/main)](https://github.com/iamapsrajput/shagunintelligence/actions)
+[![Coverage](https://img.shields.io/codecov/c/github/iamapsrajput/shagunintelligence)](https://codecov.io/gh/iamapsrajput/shagunintelligence)
 
 </div>
 
@@ -24,9 +24,69 @@ Shagun Intelligence is a sophisticated AI-powered algorithmic trading platform t
 - **🏗️ Scalable Architecture**: Kubernetes-ready with auto-scaling and high availability
 - **🔐 Enterprise Security**: End-to-end encryption, secure secret management, and audit trails
 
+## 🚀 Quick Start
+
+### For New Users
+
+1. **[Setup Guide](./docs/setup/SETUP_GUIDE.md)** - Complete installation and configuration
+2. **[API Key Setup](./docs/setup/API_KEY_SETUP_GUIDE.md)** - Configure required API keys
+3. **[Quick Testing](./docs/testing/QUICK_TESTING_REFERENCE.md)** - Verify your installation
+
+### For Live Trading
+
+1. **[Live Trading Setup](./docs/trading/LIVE_TRADING_SETUP_GUIDE.md)** - Production trading configuration
+2. **[Automated Trading](./docs/trading/AUTOMATED_TRADING_SETUP.md)** - AI-powered trading setup
+3. **[Security Best Practices](./docs/security/SECURITY_BEST_PRACTICES.md)** - Essential security measures
+
+## 📚 Documentation
+
+Our documentation is comprehensively organized by category:
+
+### 🔧 Setup & Configuration
+
+- **[Setup Guide](./docs/setup/SETUP_GUIDE.md)** - Complete installation guide
+- **[API Key Setup](./docs/setup/API_KEY_SETUP_GUIDE.md)** - API configuration
+- **[Kite Connect Setup](./docs/setup/KITE_CONNECT_SETUP.md)** - Zerodha integration
+
+### 💰 Trading & Operations
+
+- **[Live Trading Setup](./docs/trading/LIVE_TRADING_SETUP_GUIDE.md)** - Production trading
+- **[Automated Trading](./docs/trading/AUTOMATED_TRADING_SETUP.md)** - AI trading system
+
+### 🏗️ Architecture & Development
+
+- **[System Architecture](./docs/architecture/ARCHITECTURE_OVERVIEW.md)** - System design
+- **[Agent Architecture](./docs/architecture/AGENT_ARCHITECTURE.md)** - AI agent system
+- **[API Documentation](./docs/api/API_DOCUMENTATION.md)** - REST API reference
+
+### 🚀 Deployment & Production
+
+- **[Production Deployment](./docs/deployment/PRODUCTION_DEPLOYMENT_GUIDE.md)** - Production setup
+- **[SSL/TLS Configuration](./docs/deployment/SSL_TLS_CONFIGURATION.md)** - Security setup
+- **[Containerization](./docs/deployment/CONTAINERIZATION_GUIDE.md)** - Docker deployment
+
+### 🔒 Security
+
+- **[Security Best Practices](./docs/security/SECURITY_BEST_PRACTICES.md)** - Security guidelines
+- **[Enhanced Resilience](./docs/security/ENHANCED_RESILIENCE_SYSTEM.md)** - Error handling
+
+### 🧪 Testing & Validation
+
+- **[Testing Guide](./docs/testing/TESTING_VALIDATION_GUIDE.md)** - Testing procedures
+- **[Quick Testing](./docs/testing/QUICK_TESTING_REFERENCE.md)** - Quick validation
+
+### 🆘 Support & Maintenance
+
+- **[Troubleshooting](./docs/support/TROUBLESHOOTING.md)** - Common issues
+- **[Integration Guide](./docs/support/INTEGRATION_GUIDE.md)** - Third-party integrations
+
+**📖 [Complete Documentation Index](./docs/README.md)** - Navigate all documentation
+
 ## 📋 Table of Contents
 
+- [Quick Start](#quick-start)
 - [Architecture](#architecture)
+- [Documentation](#documentation)
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
 - [Installation](#installation)
@@ -98,27 +158,45 @@ Shagun Intelligence uses a microservices architecture with AI agents at its core
 
 ## 🚀 Quick Start
 
-### Using Docker (Recommended)
+### 🚀 5-Minute Automated Trading Setup
 
 ```bash
-# Clone the repository
-git clone https://github.com/shagunintelligence/shagunintelligence.git
+# 1. Clone and setup environment
+git clone https://github.com/iamapsrajput/shagunintelligence.git
 cd shagunintelligence
+poetry install && poetry shell
 
-# Copy environment variables
-cp .env.example .env
+# 2. Interactive API key setup (guides you through Kite Connect)
+python scripts/setup_kite_credentials.py
 
-# Edit .env with your credentials
-nano .env
+# 3. Start the platform
+# Terminal 1: Backend
+python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
 
-# Start all services
-docker-compose up -d
+# Terminal 2: Dashboard
+cd dashboard && npm install && npm run dev
 
-# Access the application
-# API: http://localhost:8000
-# Dashboard: http://localhost:3000
+# 4. Access and start trading
+# Dashboard: http://localhost:3000 - Click "Start Automated Trading"!
 # API Docs: http://localhost:8000/docs
 ```
+
+### 🐳 Production Deployment (Docker)
+
+```bash
+# One-command production deployment
+./scripts/deploy_production.sh
+
+# Access production dashboard at https://your-domain.com
+```
+
+### ✨ What Happens When You Start Trading
+
+1. **🔍 Market Analysis**: AI agents analyze 10 liquid stocks every 5 minutes
+2. **🤖 Decision Making**: Technical + sentiment analysis with confidence scoring
+3. **💰 Conservative Trading**: ₹200-300 per trade, max 3 positions, ₹100 daily loss limit
+4. **🛡️ Risk Management**: Automatic stop-loss (3%) and take-profit (6%)
+5. **📊 Real-time Monitoring**: Live dashboard with trade decisions and P&L
 
 ## 📥 Installation
 

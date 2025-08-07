@@ -104,7 +104,7 @@ const FailoverLogs: React.FC<FailoverLogsProps> = ({ showFull = false }) => {
   const getQualityChange = (before: number, after: number) => {
     const change = ((after - before) / before) * 100;
     const improved = change > 0;
-    
+
     return (
       <Box display="flex" alignItems="center" gap={0.5}>
         <Typography

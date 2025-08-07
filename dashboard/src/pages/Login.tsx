@@ -19,22 +19,43 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
     setIsLoading(true);
 
     try {
-      // For demo purposes, accept any credentials
-      // In production, this would call the actual auth API
-      if (username && password) {
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Store token (in production, this would come from the API)
-        localStorage.setItem('authToken', 'demo-token');
-        
+      if (!username || !password) {
+        setError('Please enter both username and password');
+        return;
+      }
+
+      // Call the actual authentication API
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+      const response = await fetch(`${apiBaseUrl}/api/v1/auth/token`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          username,
+          password,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Invalid credentials');
+      }
+
+      const data = await response.json();
+
+      if (data.access_token) {
+        // Store the actual token
+        localStorage.setItem('authToken', data.access_token);
+        localStorage.setItem('tokenType', data.token_type || 'bearer');
+
         toast.success('Login successful!');
         onLogin();
       } else {
-        setError('Please enter both username and password');
+        throw new Error('No access token received');
       }
     } catch (err) {
-      setError('Invalid credentials');
+      console.error('Login error:', err);
+      setError('Invalid credentials or server error');
       toast.error('Login failed');
     } finally {
       setIsLoading(false);
@@ -60,6 +81,13 @@ export const Login: React.FC<LoginProps> = ({ onLogin }) => {
           <p className="mt-2 text-center text-sm text-primary-200">
             AI-Powered Algorithmic Trading Platform
           </p>
+          <div className="mt-4 p-3 bg-primary-700 rounded-md">
+            <p className="text-xs text-primary-100 text-center">
+              <strong>Live Trading (₹1000 Budget)</strong><br />
+              Username: live_trader_1000<br />
+              Password: LiveTrading1000!Secure
+            </p>
+          </div>
         </div>
 
         <motion.form

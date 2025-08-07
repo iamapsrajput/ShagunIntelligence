@@ -43,7 +43,9 @@ class TestRiskManagerAgent:
         assert hasattr(agent, "stop_loss_manager")
 
     @pytest.mark.asyncio
-    async def test_evaluate_trade_risk(self, agent, sample_trade_signal, mock_kite_client):
+    async def test_evaluate_trade_risk(
+        self, agent, sample_trade_signal, mock_kite_client
+    ):
         """Test trade risk evaluation"""
         with patch("agents.risk_manager.agent.kite_client", mock_kite_client):
             agent._execute = AsyncMock(
@@ -70,12 +72,18 @@ class TestRiskManagerAgent:
             assert result["risk_assessment"]["risk_score"] >= 0
 
     @pytest.mark.asyncio
-    async def test_calculate_position_size(self, agent, mock_kite_client, risk_parameters):
+    async def test_calculate_position_size(
+        self, agent, mock_kite_client, risk_parameters
+    ):
         """Test position size calculation"""
         with patch("agents.risk_manager.agent.kite_client", mock_kite_client):
             # Test with valid parameters
             position_size = await agent.calculate_position_size(
-                symbol="RELIANCE", entry_price=2500.0, stop_loss=2450.0, account_balance=1000000, risk_percent=2.0
+                symbol="RELIANCE",
+                entry_price=2500.0,
+                stop_loss=2450.0,
+                account_balance=1000000,
+                risk_percent=2.0,
             )
 
             assert position_size > 0
@@ -108,7 +116,12 @@ class TestRiskManagerAgent:
             assert result is not None
             assert "portfolio_metrics" in result
             assert "risk_level" in result["portfolio_metrics"]
-            assert result["portfolio_metrics"]["risk_level"] in ["low", "moderate", "high", "critical"]
+            assert result["portfolio_metrics"]["risk_level"] in [
+                "low",
+                "moderate",
+                "high",
+                "critical",
+            ]
 
     @pytest.mark.asyncio
     async def test_stop_loss_management(self, agent, sample_position):
@@ -117,7 +130,10 @@ class TestRiskManagerAgent:
 
         # Test initial stop loss
         initial_stop = stop_loss_manager.calculate_stop_loss(
-            entry_price=2500.0, position_type="long", volatility=0.02, support_level=2450.0
+            entry_price=2500.0,
+            position_type="long",
+            volatility=0.02,
+            support_level=2450.0,
         )
 
         assert initial_stop < 2500.0
@@ -125,7 +141,11 @@ class TestRiskManagerAgent:
 
         # Test trailing stop
         trailing_stop = stop_loss_manager.update_trailing_stop(
-            current_price=2600.0, entry_price=2500.0, current_stop=2450.0, position_type="long", trailing_percent=1.5
+            current_price=2600.0,
+            entry_price=2500.0,
+            current_stop=2450.0,
+            position_type="long",
+            trailing_percent=1.5,
         )
 
         assert trailing_stop > 2450.0
@@ -158,10 +178,26 @@ class TestRiskManagerAgent:
                 return_value={
                     "output": "Risk limits checked",
                     "limits_status": {
-                        "position_size_limit": {"current": 8.5, "limit": 10.0, "breached": False},
-                        "portfolio_risk_limit": {"current": 15.0, "limit": 20.0, "breached": False},
-                        "daily_loss_limit": {"current": 2.5, "limit": 5.0, "breached": False},
-                        "correlation_limit": {"current": 0.6, "limit": 0.8, "breached": False},
+                        "position_size_limit": {
+                            "current": 8.5,
+                            "limit": 10.0,
+                            "breached": False,
+                        },
+                        "portfolio_risk_limit": {
+                            "current": 15.0,
+                            "limit": 20.0,
+                            "breached": False,
+                        },
+                        "daily_loss_limit": {
+                            "current": 2.5,
+                            "limit": 5.0,
+                            "breached": False,
+                        },
+                        "correlation_limit": {
+                            "current": 0.6,
+                            "limit": 0.8,
+                            "breached": False,
+                        },
                     },
                     "overall_status": "within_limits",
                 }
@@ -233,10 +269,22 @@ class TestRiskManagerAgent:
                 return_value={
                     "output": "Stress test complete",
                     "scenarios": {
-                        "market_crash_10": {"portfolio_loss": -85000, "loss_percent": -8.5},
-                        "market_crash_20": {"portfolio_loss": -170000, "loss_percent": -17.0},
-                        "volatility_spike": {"portfolio_loss": -45000, "loss_percent": -4.5},
-                        "liquidity_crisis": {"portfolio_loss": -60000, "loss_percent": -6.0},
+                        "market_crash_10": {
+                            "portfolio_loss": -85000,
+                            "loss_percent": -8.5,
+                        },
+                        "market_crash_20": {
+                            "portfolio_loss": -170000,
+                            "loss_percent": -17.0,
+                        },
+                        "volatility_spike": {
+                            "portfolio_loss": -45000,
+                            "loss_percent": -4.5,
+                        },
+                        "liquidity_crisis": {
+                            "portfolio_loss": -60000,
+                            "loss_percent": -6.0,
+                        },
                     },
                     "worst_case_loss": -170000,
                     "recommendations": ["Reduce leverage", "Add protective puts"],
@@ -267,7 +315,9 @@ class TestRiskManagerAgent:
         base_size = 100
         current_vol = 0.03
         target_vol = 0.02
-        adjusted_size = position_sizer.adjust_for_volatility(base_size, current_vol, target_vol)
+        adjusted_size = position_sizer.adjust_for_volatility(
+            base_size, current_vol, target_vol
+        )
 
         assert adjusted_size < base_size  # Should reduce size due to higher vol
 

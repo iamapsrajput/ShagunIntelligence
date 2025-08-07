@@ -11,15 +11,15 @@ query-filters:
   - exclude:
       id: "py/unused-import"
       # Allow unused imports in __init__.py files for module structure
-      - include:
-          paths:
-            - "*/__init__.py"
+    include:
+      paths:
+        - "*/__init__.py"
   - exclude:
       id: "py/similar-function"
       # AI agents may have similar patterns by design
-      - include:
-          paths:
-            - "agents/**"
+    include:
+      paths:
+        - "agents/**"
 
 # Paths to analyze
 paths:
@@ -48,10 +48,10 @@ paths-ignore:
 # Custom query suite for financial applications
 queries:
   - name: financial-security
-    uses: 
+    uses:
       - security-extended
       - security-and-quality
-    
+
   # Add specific financial/trading security patterns
   - name: trading-specific
     queries:
@@ -71,7 +71,7 @@ queries:
 # Compilation configuration
 compile-commands:
   - python
-  
+
 # Analysis configuration
 database:
   # Enable all features for comprehensive analysis
@@ -87,12 +87,12 @@ rules:
   - id: "financial-data-logging"
     description: "Detect logging of potentially sensitive financial data"
     severity: "high"
-    
+
   # Trading system integrity
   - id: "trading-decision-validation"
     description: "Ensure trading decisions have proper validation"
     severity: "critical"
-    
+
   # AI model security
   - id: "ai-model-input-validation"
     description: "Validate inputs to AI models and agents"

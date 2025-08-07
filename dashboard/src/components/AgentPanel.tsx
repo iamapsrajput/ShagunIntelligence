@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Brain, 
-  TrendingUp, 
-  Shield, 
-  BarChart3, 
+import {
+  Brain,
+  TrendingUp,
+  Shield,
+  BarChart3,
   MessageSquare,
   Activity,
-  AlertCircle,
   CheckCircle,
   XCircle
 } from 'lucide-react';
@@ -57,7 +56,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
   const [activities, setActivities] = useState<AgentActivity[]>([]);
   const [status, setStatus] = useState<'active' | 'idle' | 'error'>('idle');
   const [latestAnalysis, setLatestAnalysis] = useState<any>(null);
-  
+
   const config = agentConfig[agentType];
   const Icon = config.icon;
 
@@ -71,7 +70,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
         setActivities(prev => [activity, ...prev].slice(0, 10)); // Keep last 10 activities
         setStatus('active');
         setLatestAnalysis(activity.analysis);
-        
+
         // Set back to idle after 2 seconds
         setTimeout(() => setStatus('idle'), 2000);
       }
@@ -123,7 +122,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Trend</span>
               <span className={`font-semibold ${
-                latestAnalysis.trend === 'bullish' ? 'text-green-600' : 
+                latestAnalysis.trend === 'bullish' ? 'text-green-600' :
                 latestAnalysis.trend === 'bearish' ? 'text-red-600' : 'text-gray-600'
               }`}>
                 {latestAnalysis.trend?.toUpperCase()}
@@ -184,10 +183,10 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Overall</span>
               <span className={`font-semibold ${
-                latestAnalysis.sentiment > 0.5 ? 'text-green-600' : 
+                latestAnalysis.sentiment > 0.5 ? 'text-green-600' :
                 latestAnalysis.sentiment < -0.5 ? 'text-red-600' : 'text-gray-600'
               }`}>
-                {latestAnalysis.sentiment > 0.5 ? 'POSITIVE' : 
+                {latestAnalysis.sentiment > 0.5 ? 'POSITIVE' :
                  latestAnalysis.sentiment < -0.5 ? 'NEGATIVE' : 'NEUTRAL'}
               </span>
             </div>
@@ -219,7 +218,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Risk Level</span>
               <span className={`font-semibold ${
-                latestAnalysis.riskLevel === 'low' ? 'text-green-600' : 
+                latestAnalysis.riskLevel === 'low' ? 'text-green-600' :
                 latestAnalysis.riskLevel === 'high' ? 'text-red-600' : 'text-yellow-600'
               }`}>
                 {latestAnalysis.riskLevel?.toUpperCase()}
@@ -260,7 +259,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
             <div className="flex justify-between items-center">
               <span className="text-sm text-gray-600">Decision</span>
               <span className={`font-semibold ${
-                latestAnalysis.decision === 'buy' ? 'text-green-600' : 
+                latestAnalysis.decision === 'buy' ? 'text-green-600' :
                 latestAnalysis.decision === 'sell' ? 'text-red-600' : 'text-gray-600'
               }`}>
                 {latestAnalysis.decision?.toUpperCase()}
@@ -279,7 +278,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
                   <div key={agent} className="flex justify-between text-xs">
                     <span>{agent}</span>
                     <span className={
-                      vote === 'buy' ? 'text-green-600' : 
+                      vote === 'buy' ? 'text-green-600' :
                       vote === 'sell' ? 'text-red-600' : 'text-gray-600'
                     }>
                       {vote}
@@ -334,7 +333,7 @@ export const AgentPanel: React.FC<AgentPanelProps> = ({ agentType, className = '
               >
                 <div className="flex items-center space-x-2">
                   <div className={`w-2 h-2 rounded-full ${
-                    activity.action === 'buy' ? 'bg-green-500' : 
+                    activity.action === 'buy' ? 'bg-green-500' :
                     activity.action === 'sell' ? 'bg-red-500' : 'bg-gray-400'
                   }`} />
                   <span className="text-gray-600">{activity.action}</span>

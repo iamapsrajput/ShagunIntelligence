@@ -7,6 +7,7 @@ We take the security of Shagun Intelligence seriously. If you discover a securit
 ### 🚨 Critical Security Issues
 
 For **critical security vulnerabilities** that could compromise:
+
 - Trading system integrity
 - User financial data
 - AI agent decision-making processes
@@ -18,12 +19,14 @@ For **critical security vulnerabilities** that could compromise:
 ### 📧 How to Report
 
 #### Option 1: GitHub Security Advisory (Preferred)
-1. Go to the [Security tab](https://github.com/iamapsrajput/ShagunIntelligence/security) of this repository
+
+1. Go to the [Security tab](https://github.com/iamapsrajput/shagunintelligence/security) of this repository
 2. Click "Report a vulnerability"
 3. Fill out the security advisory form with detailed information
 
 #### Option 2: Email
-Send an email to: **security@shagunintelligence.com** (if available) or contact the repository maintainer directly.
+
+Send an email to: **<security@shagunintelligence.com>** (if available) or contact the repository maintainer directly.
 
 ### 📋 What to Include in Your Report
 
@@ -32,7 +35,7 @@ Please provide as much information as possible to help us understand and reprodu
 1. **Description**: Clear description of the vulnerability
 2. **Impact**: Potential impact on the trading system, users, or data
 3. **Reproduction Steps**: Step-by-step instructions to reproduce the issue
-4. **Environment**: 
+4. **Environment**:
    - Operating system and version
    - Python version
    - Docker/Kubernetes version (if applicable)
@@ -54,6 +57,7 @@ We are committed to responding to security reports promptly:
 This security policy covers vulnerabilities in:
 
 #### In Scope
+
 - **Core Application**: FastAPI backend, AI agents, trading logic
 - **Authentication & Authorization**: JWT, OAuth, API key management
 - **Data Security**: Database queries, data encryption, PII handling
@@ -63,6 +67,7 @@ This security policy covers vulnerabilities in:
 - **CI/CD Pipeline**: GitHub Actions workflows, deployment scripts
 
 #### Out of Scope
+
 - **Third-party Services**: Zerodha Kite Connect API, external data providers
 - **Infrastructure Hosting**: AWS, GCP, Azure cloud provider issues
 - **Social Engineering**: Phishing, social manipulation attempts
@@ -82,6 +87,7 @@ We appreciate security researchers who help improve our platform's security. Upo
 If you're contributing to this project, please follow these security guidelines:
 
 #### Code Security
+
 - Never commit secrets, API keys, or credentials
 - Use parameterized queries to prevent SQL injection
 - Implement proper input validation and sanitization
@@ -89,12 +95,14 @@ If you're contributing to this project, please follow these security guidelines:
 - Use strong cryptographic algorithms and proper key management
 
 #### Dependencies
+
 - Regularly update dependencies to latest secure versions
 - Review dependency security advisories
 - Use `pip-audit` or similar tools to scan for vulnerabilities
 - Minimize dependency footprint
 
 #### AI/ML Security
+
 - Validate AI model inputs and outputs
 - Implement proper error handling for AI agent failures
 - Secure model artifacts and training data
@@ -117,4 +125,4 @@ This security policy may be updated periodically. Please check back regularly fo
 **Last Updated**: January 2024
 **Policy Version**: 1.0
 
-For non-security related issues, please use our [standard issue tracker](https://github.com/iamapsrajput/ShagunIntelligence/issues).
+For non-security related issues, please use our [standard issue tracker](https://github.com/iamapsrajput/shagunintelligence/issues).

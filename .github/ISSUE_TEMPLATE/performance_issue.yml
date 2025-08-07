@@ -111,15 +111,15 @@ body:
       label: Environment Details
       description: Your environment and system specifications
       value: |
-        - OS: 
-        - Python version: 
-        - CPU: 
-        - Memory: 
-        - Disk type (SSD/HDD): 
-        - Docker version: 
-        - Kubernetes version: 
-        - Database version: 
-        - Load characteristics: 
+        - OS:
+        - Python version:
+        - CPU:
+        - Memory:
+        - Disk type (SSD/HDD):
+        - Docker version:
+        - Kubernetes version:
+        - Database version:
+        - Load characteristics:
     validations:
       required: true
 
@@ -129,7 +129,7 @@ body:
       label: Profiling Data
       description: |
         Include any profiling data, performance metrics, or monitoring output.
-        
+
         **Tools you might use:**
         - Python: cProfile, py-spy, memory_profiler
         - HTTP: curl, ab, wrk, locust
@@ -138,7 +138,7 @@ body:
         - APM: New Relic, DataDog, Prometheus
       placeholder: |
         Paste profiling output here...
-        
+
         Performance measurements:
         - Before optimization: ...
         - Benchmark results: ...

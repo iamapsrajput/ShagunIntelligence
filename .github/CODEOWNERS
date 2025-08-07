@@ -1,6 +1,6 @@
 # Code Owners for Shagun Intelligence
 # This file defines who is responsible for code reviews in different areas
-# 
+#
 # Global owner - will be requested for all PRs unless more specific rules apply
 * @iamapsrajput
 

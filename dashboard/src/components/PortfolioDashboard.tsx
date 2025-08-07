@@ -6,14 +6,12 @@ import {
   DollarSign,
   Percent,
   Shield,
-  PieChart,
-  BarChart3,
   AlertTriangle
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, PieChart as RePieChart, Pie, Cell, 
+import { LineChart, AreaChart, Area, PieChart as RePieChart, Pie, Cell,
          BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { format } from 'date-fns';
-import { PortfolioUpdate, Position } from '@/services/websocket';
+import { PortfolioUpdate } from '@/services/websocket';
 import wsService from '@/services/websocket';
 
 interface PortfolioDashboardProps {
@@ -56,7 +54,7 @@ export const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({ classNam
     // Subscribe to portfolio updates
     const handlePortfolioUpdate = (update: PortfolioUpdate) => {
       setPortfolio(update);
-      
+
       // Update history
       setHistory(prev => [...prev, {
         timestamp: update.timestamp,
@@ -76,15 +74,21 @@ export const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({ classNam
     try {
       setLoading(true);
       const api = require('@/services/api').default;
-      
-      const [portfolioData, metricsData, historyData, riskData] = await Promise.all([
+
+      const [portfolioData, accountBalance, livePositions, metricsData, historyData, riskData] = await Promise.all([
         api.getPortfolio(),
+        api.getAccountBalance(),
+        api.getLivePositions(),
         api.getPerformanceMetrics('1M'),
         api.getPortfolioHistory(30),
         api.getRiskMetrics()
       ]);
 
-      setPortfolio(portfolioData);
+      setPortfolio({
+        ...portfolioData,
+        accountBalance,
+        livePositions
+      });
       setMetrics(metricsData);
       setHistory(historyData);
       setRiskMetrics(riskData);
@@ -195,21 +199,21 @@ export const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({ classNam
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis 
-              dataKey="timestamp" 
+            <XAxis
+              dataKey="timestamp"
               tickFormatter={(value) => format(new Date(value), 'HH:mm')}
             />
             <YAxis />
-            <Tooltip 
+            <Tooltip
               formatter={(value: any) => `$${value.toLocaleString()}`}
               labelFormatter={(label) => format(new Date(label), 'MMM d, HH:mm')}
             />
-            <Area 
-              type="monotone" 
-              dataKey="value" 
-              stroke="#3b82f6" 
-              fillOpacity={1} 
-              fill="url(#colorValue)" 
+            <Area
+              type="monotone"
+              dataKey="value"
+              stroke="#3b82f6"
+              fillOpacity={1}
+              fill="url(#colorValue)"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -348,7 +352,7 @@ export const PortfolioDashboard: React.FC<PortfolioDashboardProps> = ({ classNam
               </div>
             </div>
           </div>
-          
+
           {riskMetrics.warnings && riskMetrics.warnings.length > 0 && (
             <div className="mt-4 p-3 bg-yellow-50 rounded-lg">
               <div className="flex items-center text-yellow-800">

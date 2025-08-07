@@ -1,13 +1,18 @@
-from crewai import Agent
-# from crewai_tools import SerperDevTool, WebsiteSearchTool  # Commented out - tools not available
-from langchain.llms.base import BaseLLM
-from typing import Dict, Any, List, Optional, Tuple
-from loguru import logger
 import asyncio
 from datetime import datetime
+from typing import Any
 
-from ..base_quality_aware_agent import BaseQualityAwareAgent, DataQualityLevel, TradingMode
-from backend.data_sources.integration import get_data_source_integration
+from crewai import Agent
+
+# from crewai_tools import SerperDevTool, WebsiteSearchTool  # Commented out - tools not available
+from langchain.llms.base import BaseLLM
+from loguru import logger
+
+from ..base_quality_aware_agent import (
+    BaseQualityAwareAgent,
+    DataQualityLevel,
+    TradingMode,
+)
 
 
 class MarketAnalystAgent(BaseQualityAwareAgent):
@@ -18,15 +23,15 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
 
         # Market analyst specific quality thresholds
         self.quality_thresholds = {
-            DataQualityLevel.HIGH: 0.85,    # Higher threshold for market analysis
+            DataQualityLevel.HIGH: 0.85,  # Higher threshold for market analysis
             DataQualityLevel.MEDIUM: 0.65,
-            DataQualityLevel.LOW: 0.4
+            DataQualityLevel.LOW: 0.4,
         }
 
     def _create_agent(self) -> Agent:
         return Agent(
-            role='Quality-Aware Market Analyst',
-            goal='Analyze market conditions with data quality awareness, providing confidence-weighted technical analysis',
+            role="Quality-Aware Market Analyst",
+            goal="Analyze market conditions with data quality awareness, providing confidence-weighted technical analysis",
             backstory="""You are an experienced market analyst with expertise in multi-source data analysis.
             You understand that data quality directly impacts trading decisions. You analyze markets using
             technical indicators, patterns, and volume, while always considering data reliability.
@@ -42,16 +47,18 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
                 # Add tools for market analysis
                 # SerperDevTool(),  # For web search if needed - commented out
                 # WebsiteSearchTool()  # For specific website search - commented out
-            ]
+            ],
         )
 
-    async def analyze_with_quality(self, symbol: str) -> Dict[str, Any]:
+    async def analyze_with_quality(self, symbol: str) -> dict[str, Any]:
         """Analyze market with quality-aware data fetching"""
         try:
             # Get quality-weighted data
-            quote_data, quality_score, quality_level = await self.get_quality_weighted_data(
-                symbol, "quote"
-            )
+            (
+                quote_data,
+                quality_score,
+                quality_level,
+            ) = await self.get_quality_weighted_data(symbol, "quote")
 
             if not quote_data:
                 return {
@@ -59,11 +66,14 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
                     "analysis": "Unable to fetch market data",
                     "quality_level": DataQualityLevel.CRITICAL.value,
                     "trading_mode": TradingMode.EMERGENCY.value,
-                    "confidence": 0.0
+                    "confidence": 0.0,
                 }
 
             # Get multi-source consensus for important decisions
-            consensus_data, consensus_confidence = await self.get_multi_source_consensus(symbol)
+            (
+                consensus_data,
+                consensus_confidence,
+            ) = await self.get_multi_source_consensus(symbol)
 
             # Determine trading mode
             trading_mode = self.get_trading_mode(quality_level)
@@ -74,10 +84,7 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
             # Calculate overall confidence
             confidence = self.get_confidence_score(
                 quality_score,
-                {
-                    "consensus": consensus_confidence,
-                    "historical": historical_quality
-                }
+                {"consensus": consensus_confidence, "historical": historical_quality},
             )
 
             # Perform analysis based on quality level
@@ -94,7 +101,7 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
                 "trading_mode": trading_mode.value,
                 "confidence": confidence,
                 "data_sources": self._get_data_sources_used(quote_data, consensus_data),
-                "timestamp": datetime.utcnow().isoformat()
+                "timestamp": datetime.utcnow().isoformat(),
             }
 
         except Exception as e:
@@ -103,16 +110,16 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
                 "symbol": symbol,
                 "error": str(e),
                 "quality_level": DataQualityLevel.CRITICAL.value,
-                "trading_mode": TradingMode.EMERGENCY.value
+                "trading_mode": TradingMode.EMERGENCY.value,
             }
 
     async def _perform_quality_based_analysis(
         self,
         symbol: str,
-        quote_data: Dict[str, Any],
-        consensus_data: Optional[Dict[str, Any]],
+        quote_data: dict[str, Any],
+        consensus_data: dict[str, Any] | None,
         quality_level: DataQualityLevel,
-        trading_mode: TradingMode
+        trading_mode: TradingMode,
     ) -> str:
         """Perform analysis adjusted for data quality"""
 
@@ -132,21 +139,23 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
             # Emergency mode
             return self._generate_emergency_analysis(symbol, quote_data)
 
-    async def _perform_full_analysis(self, symbol: str, quote_data: Dict, consensus_data: Optional[Dict]) -> str:
+    async def _perform_full_analysis(
+        self, symbol: str, quote_data: dict, consensus_data: dict | None
+    ) -> str:
         """Full technical analysis with high confidence"""
         analysis = f"HIGH QUALITY ANALYSIS for {symbol}\n\n"
 
-        current_price = quote_data.get('current_price', 0)
-        change_percent = quote_data.get('change_percent', 0)
-        volume = quote_data.get('volume', 0)
+        current_price = quote_data.get("current_price", 0)
+        change_percent = quote_data.get("change_percent", 0)
+        volume = quote_data.get("volume", 0)
 
         analysis += f"Current Price: {current_price:.2f} ({change_percent:+.2f}%)\n"
         analysis += f"Volume: {volume:,}\n\n"
 
         # Price action analysis
         if consensus_data:
-            consensus_price = consensus_data.get('_consensus_price', current_price)
-            price_variance = consensus_data.get('_price_variance', 0)
+            consensus_price = consensus_data.get("_consensus_price", current_price)
+            price_variance = consensus_data.get("_price_variance", 0)
 
             analysis += f"Multi-Source Consensus: {consensus_price:.2f}\n"
             analysis += f"Price Agreement: {'Strong' if price_variance < 0.5 else 'Moderate'}\n\n"
@@ -160,21 +169,27 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
         # Trading recommendation
         if change_percent > 1:
             analysis += "RECOMMENDATION: BUY with momentum\n"
-            analysis += f"Entry: {current_price:.2f}, Target: {current_price * 1.015:.2f}"
+            analysis += (
+                f"Entry: {current_price:.2f}, Target: {current_price * 1.015:.2f}"
+            )
         elif change_percent < -1:
             analysis += "RECOMMENDATION: SELL on weakness\n"
-            analysis += f"Entry: {current_price:.2f}, Target: {current_price * 0.985:.2f}"
+            analysis += (
+                f"Entry: {current_price:.2f}, Target: {current_price * 0.985:.2f}"
+            )
         else:
             analysis += "RECOMMENDATION: WAIT for clear direction\n"
 
         return analysis
 
-    async def _perform_conservative_analysis(self, symbol: str, quote_data: Dict) -> str:
+    async def _perform_conservative_analysis(
+        self, symbol: str, quote_data: dict
+    ) -> str:
         """Conservative analysis for medium quality data"""
         analysis = f"CONSERVATIVE ANALYSIS for {symbol} (Medium Data Quality)\n\n"
 
-        current_price = quote_data.get('current_price', 0)
-        change_percent = quote_data.get('change_percent', 0)
+        current_price = quote_data.get("current_price", 0)
+        change_percent = quote_data.get("change_percent", 0)
 
         analysis += f"Current Price: {current_price:.2f} ({change_percent:+.2f}%)\n\n"
 
@@ -195,12 +210,12 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
 
         return analysis
 
-    async def _perform_basic_analysis(self, symbol: str, quote_data: Dict) -> str:
+    async def _perform_basic_analysis(self, symbol: str, quote_data: dict) -> str:
         """Basic analysis for low quality data"""
         analysis = f"BASIC ANALYSIS for {symbol} (Low Data Quality)\n\n"
 
-        current_price = quote_data.get('current_price', 0)
-        data_source = quote_data.get('data_source', 'unknown')
+        current_price = quote_data.get("current_price", 0)
+        data_source = quote_data.get("data_source", "unknown")
 
         analysis += f"Last Known Price: {current_price:.2f}\n"
         analysis += f"Data Source: {data_source}\n\n"
@@ -214,7 +229,7 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
 
         return analysis
 
-    def _generate_emergency_analysis(self, symbol: str, quote_data: Optional[Dict]) -> str:
+    def _generate_emergency_analysis(self, symbol: str, quote_data: dict | None) -> str:
         """Emergency analysis for critical data quality"""
         analysis = f"EMERGENCY ALERT for {symbol}\n\n"
 
@@ -244,19 +259,21 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
         except:
             return 0.0
 
-    def _get_data_sources_used(self, quote_data: Dict, consensus_data: Optional[Dict]) -> List[str]:
+    def _get_data_sources_used(
+        self, quote_data: dict, consensus_data: dict | None
+    ) -> list[str]:
         """Get list of data sources used"""
         sources = []
 
-        if quote_data and 'data_source' in quote_data:
-            sources.append(quote_data['data_source'])
+        if quote_data and "data_source" in quote_data:
+            sources.append(quote_data["data_source"])
 
-        if consensus_data and '_source_count' in consensus_data:
+        if consensus_data and "_source_count" in consensus_data:
             sources.append(f"consensus ({consensus_data['_source_count']} sources)")
 
         return sources
 
-    async def analyze_multiple_symbols(self, symbols: List[str]) -> Dict[str, Any]:
+    async def analyze_multiple_symbols(self, symbols: list[str]) -> dict[str, Any]:
         """Analyze multiple symbols with quality awareness"""
         analyses = {}
 
@@ -264,25 +281,28 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
         tasks = [self.analyze_with_quality(symbol) for symbol in symbols]
         results = await asyncio.gather(*tasks, return_exceptions=True)
 
-        for symbol, result in zip(symbols, results):
+        for symbol, result in zip(symbols, results, strict=False):
             if isinstance(result, Exception):
                 analyses[symbol] = {
                     "error": str(result),
-                    "quality_level": DataQualityLevel.CRITICAL.value
+                    "quality_level": DataQualityLevel.CRITICAL.value,
                 }
             else:
                 analyses[symbol] = result
 
         # Summary statistics
         quality_distribution = {
-            level.value: sum(1 for a in analyses.values()
-                           if a.get('quality_level') == level.value)
+            level.value: sum(
+                1 for a in analyses.values() if a.get("quality_level") == level.value
+            )
             for level in DataQualityLevel
         }
 
-        avg_confidence = sum(
-            a.get('confidence', 0) for a in analyses.values()
-        ) / len(analyses) if analyses else 0
+        avg_confidence = (
+            sum(a.get("confidence", 0) for a in analyses.values()) / len(analyses)
+            if analyses
+            else 0
+        )
 
         return {
             "analyses": analyses,
@@ -291,8 +311,9 @@ class MarketAnalystAgent(BaseQualityAwareAgent):
                 "quality_distribution": quality_distribution,
                 "average_confidence": avg_confidence,
                 "high_quality_symbols": [
-                    s for s, a in analyses.items()
-                    if a.get('quality_level') == DataQualityLevel.HIGH.value
-                ]
-            }
+                    s
+                    for s, a in analyses.items()
+                    if a.get("quality_level") == DataQualityLevel.HIGH.value
+                ],
+            },
         }

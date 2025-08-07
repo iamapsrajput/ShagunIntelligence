@@ -1,168 +1,40 @@
 version: '3.8'
 
 services:
-  # Main application
-  app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: shagunintelligence-app
-    environment:
-      - APP_ENV=production
-      - DATABASE_URL=postgresql://shagunintelligence:shagunintelligence@postgres:5432/shagunintelligence
-      - REDIS_URL=redis://redis:6379/0
-      - SECRET_KEY=${SECRET_KEY:-your-secret-key-here}
-      - KITE_API_KEY=${KITE_API_KEY}
-      - KITE_API_SECRET=${KITE_API_SECRET}
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+  shagun-backend:
+    build: .
+    container_name: shagun-trading-system
     ports:
       - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
     volumes:
-      - ./logs:/app/logs
-      - ./data:/app/data
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
-
-  # PostgreSQL Database
-  postgres:
-    image: postgres:15-alpine
-    container_name: shagunintelligence-postgres
+      - shagun-data:/app/data
+      - shagun-logs:/app/logs
+      - ./live_trading_1000.db:/app/live_trading_1000.db
     environment:
-      - POSTGRES_USER=shagunintelligence
-      - POSTGRES_PASSWORD=shagunintelligence
-      - POSTGRES_DB=shagunintelligence
-      - PGDATA=/var/lib/postgresql/data/pgdata
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5432:5432"
-    networks:
-      - shagunintelligence-network
+      - ENVIRONMENT=production
+      - DATABASE_URL=sqlite:///./live_trading_1000.db
+      - TRADING_MODE=live
+      - AUTOMATED_TRADING_ENABLED=true
+      - LIVE_TRADING_ENABLED=true
+      - MAX_RISK_PER_TRADE=0.05
+      - MAX_DAILY_LOSS=0.10
+      - DEFAULT_POSITION_SIZE=1000
+      - CIRCUIT_BREAKER_ENABLED=true
+      - EMERGENCY_STOP_LOSS_AMOUNT=80
+    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U shagunintelligence"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # Redis Cache
-  redis:
-    image: redis:7-alpine
-    container_name: shagunintelligence-redis
-    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
-    volumes:
-      - redis-data:/data
-    ports:
-      - "6379:6379"
-    networks:
-      - shagunintelligence-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    restart: unless-stopped
-
-  # Nginx Reverse Proxy
-  nginx:
-    image: nginx:alpine
-    container_name: shagunintelligence-nginx
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/conf.d:/etc/nginx/conf.d:ro
-      - ./static:/usr/share/nginx/html/static:ro
-      - nginx-logs:/var/log/nginx
-    ports:
-      - "80:80"
-      - "443:443"
-    depends_on:
-      - app
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
-
-  # Prometheus for monitoring
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: shagunintelligence-prometheus
-    volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus-data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    ports:
-      - "9090:9090"
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
-
-  # Grafana for visualization
-  grafana:
-    image: grafana/grafana:latest
-    container_name: shagunintelligence-grafana
-    environment:
-      - GF_SECURITY_ADMIN_USER=admin
-      - GF_SECURITY_ADMIN_PASSWORD=admin
-      - GF_USERS_ALLOW_SIGN_UP=false
-    volumes:
-      - grafana-data:/var/lib/grafana
-      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
-    ports:
-      - "3000:3000"
-    depends_on:
-      - prometheus
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
-
-  # Loki for log aggregation
-  loki:
-    image: grafana/loki:latest
-    container_name: shagunintelligence-loki
-    ports:
-      - "3100:3100"
-    volumes:
-      - ./monitoring/loki-config.yml:/etc/loki/local-config.yaml:ro
-      - loki-data:/loki
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
-
-  # Promtail for log collection
-  promtail:
-    image: grafana/promtail:latest
-    container_name: shagunintelligence-promtail
-    volumes:
-      - ./monitoring/promtail-config.yml:/etc/promtail/config.yml:ro
-      - ./logs:/var/log/shagunintelligence:ro
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    command: -config.file=/etc/promtail/config.yml
-    depends_on:
-      - loki
-    networks:
-      - shagunintelligence-network
-    restart: unless-stopped
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
-  postgres-data:
-  redis-data:
-  nginx-logs:
-  prometheus-data:
-  grafana-data:
-  loki-data:
+  shagun-data:
+    driver: local
+  shagun-logs:
+    driver: local
 
 networks:
-  shagunintelligence-network:
-    driver: bridge
+  default:
+    name: shagun-network

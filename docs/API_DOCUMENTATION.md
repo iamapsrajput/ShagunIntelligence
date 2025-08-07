@@ -1,790 +1,478 @@
-# Shagun Intelligence API Documentation
+# Shagun Intelligence Trading Platform - API Documentation
+
+## Overview
+
+The Shagun Intelligence Trading Platform provides a comprehensive REST API for algorithmic trading, market data analysis, and portfolio management. This documentation covers all available endpoints, request/response formats, and integration examples.
 
 ## Base URL
+
 ```
-Production: https://api.shagunintelligence.com
-Development: http://localhost:8000
+https://api.shagunintelligence.com/api/v1
 ```
 
 ## Authentication
 
-Shagun Intelligence uses JWT (JSON Web Token) authentication. Include the token in the Authorization header:
+All API endpoints require authentication using JWT tokens. Include the token in the Authorization header:
 
-```http
-Authorization: Bearer <your-jwt-token>
+```
+Authorization: Bearer <your_jwt_token>
 ```
 
-### Obtain Token
+## API Endpoints Overview
 
-```http
-POST /api/v1/auth/token
-Content-Type: application/json
+### 1. Market Data (Live)
 
+#### WebSocket Connection
+
+```
+WebSocket: /market-data/ws/{client_id}
+```
+
+Real-time market data streaming with subscription management.
+
+**Subscription Message:**
+
+```json
 {
-  "username": "your-username",
-  "password": "your-password"
+  "action": "subscribe",
+  "symbols": ["RELIANCE", "TCS", "HDFCBANK"],
+  "data_types": ["quote", "depth", "trades"]
 }
 ```
 
 **Response:**
+
 ```json
 {
-  "access_token": "eyJ0eXAiOiJKV1QiLCJhbGc...",
-  "token_type": "bearer",
-  "expires_in": 3600
-}
-```
-
-## API Endpoints
-
-### Health Check
-
-```http
-GET /api/v1/health
-```
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "timestamp": "2024-01-15T10:30:00Z",
-  "version": "1.0.0",
-  "services": {
-    "database": "connected",
-    "redis": "connected",
-    "kite": "connected"
+  "type": "quote",
+  "symbol": "RELIANCE",
+  "data": {
+    "last_price": 2500.50,
+    "change": 25.50,
+    "change_percent": 1.03,
+    "volume": 1250000,
+    "bid": 2500.00,
+    "ask": 2501.00,
+    "timestamp": "2025-08-07T22:30:00Z"
   }
 }
 ```
 
-### Trading Operations
+#### REST Endpoints
 
-#### Start Trading System
+**Get Real-time Quote**
 
-```http
-POST /api/v1/trading/start
-Authorization: Bearer <token>
-Content-Type: application/json
+```
+GET /market-data/quote/{symbol}
+```
 
+**Get Market Depth**
+
+```
+GET /market-data/depth/{symbol}
+```
+
+**Get Historical Data**
+
+```
+POST /market-data/historical
+```
+
+Request Body:
+
+```json
 {
-  "mode": "live",  // "live" or "paper"
-  "symbols": ["RELIANCE", "TCS", "INFY"],
-  "capital": 1000000,
-  "risk_parameters": {
-    "max_position_size": 100000,
-    "max_daily_loss": 50000,
-    "risk_per_trade": 2.0
-  }
+  "symbol": "RELIANCE",
+  "timeframe": "1d",
+  "start_date": "2025-01-01T00:00:00Z",
+  "end_date": "2025-08-07T00:00:00Z",
+  "limit": 100
 }
 ```
 
-**Response:**
-```json
-{
-  "status": "started",
-  "session_id": "550e8400-e29b-41d4-a716-446655440000",
-  "mode": "live",
-  "active_symbols": ["RELIANCE", "TCS", "INFY"]
-}
+### 2. Broker Integration
+
+#### Connect to Broker
+
+```
+POST /broker/connect
 ```
 
-#### Stop Trading System
+Request Body:
 
-```http
-POST /api/v1/trading/stop
-Authorization: Bearer <token>
-```
-
-**Response:**
 ```json
 {
-  "status": "stopped",
-  "session_summary": {
-    "total_trades": 15,
-    "profitable_trades": 10,
-    "total_pnl": 25000,
-    "duration": "6h 30m"
-  }
+  "provider": "zerodha_kite",
+  "api_key": "your_api_key",
+  "access_token": "your_access_token",
+  "name": "primary_broker"
 }
 ```
 
 #### Place Order
 
-```http
-POST /api/v1/trading/order
-Authorization: Bearer <token>
-Content-Type: application/json
+```
+POST /broker/orders/place
+```
 
+Request Body:
+
+```json
 {
   "symbol": "RELIANCE",
   "exchange": "NSE",
-  "order_type": "BUY",
-  "quantity": 10,
-  "product_type": "MIS",
-  "price_type": "MARKET",
-  "price": null,
-  "trigger_price": null,
-  "stop_loss": 2450.00,
-  "take_profit": 2600.00,
-  "use_ai_analysis": true
+  "transaction_type": "BUY",
+  "order_type": "LIMIT",
+  "quantity": 100,
+  "price": 2500.00,
+  "validity": "DAY",
+  "tag": "algo_trade_001"
 }
 ```
 
-**Response:**
+Response:
+
 ```json
 {
-  "order_id": "240115000012345",
-  "status": "COMPLETE",
-  "message": "Order placed successfully",
-  "trade_id": 12345,
-  "ai_confidence": 0.85,
-  "execution_price": 2500.50,
-  "timestamp": "2024-01-15T10:30:00Z"
+  "success": true,
+  "data": {
+    "order_id": "240807000001",
+    "status": "OPEN",
+    "message": "Order placed successfully",
+    "timestamp": "2025-08-07T22:30:00Z"
+  }
 }
 ```
 
 #### Get Positions
 
-```http
-GET /api/v1/trading/positions
-Authorization: Bearer <token>
+```
+GET /broker/positions?broker_name=primary_broker
 ```
 
-**Response:**
+#### Get Holdings
+
+```
+GET /broker/holdings
+```
+
+#### Get Account Margins
+
+```
+GET /broker/margins
+```
+
+### 3. Advanced Order Management
+
+#### Create Bracket Order
+
+```
+POST /advanced-orders/bracket
+```
+
+Request Body:
+
 ```json
 {
-  "net_positions": [
-    {
-      "symbol": "RELIANCE",
-      "quantity": 10,
-      "average_price": 2500.50,
-      "last_price": 2520.00,
-      "pnl": 195.00,
-      "pnl_percentage": 0.78,
-      "value": 25200.00,
-      "product": "MIS"
-    }
-  ],
-  "day_positions": [],
-  "total_pnl": 195.00,
-  "total_value": 25200.00
+  "symbol": "TCS",
+  "quantity": 50,
+  "entry_price": 3600.00,
+  "target_price": 3700.00,
+  "stop_loss_price": 3500.00,
+  "trailing_stop_percent": 2.0
 }
 ```
 
-#### Get Orders
+#### Create TWAP Order
 
-```http
-GET /api/v1/trading/orders?status=COMPLETE&symbol=RELIANCE
-Authorization: Bearer <token>
+```
+POST /advanced-orders/twap
 ```
 
-**Query Parameters:**
-- `status`: Filter by order status (COMPLETE, PENDING, CANCELLED, REJECTED)
-- `symbol`: Filter by symbol
-- `date`: Filter by date (YYYY-MM-DD)
-- `limit`: Number of records (default: 100)
+Request Body:
 
-**Response:**
 ```json
 {
-  "orders": [
-    {
-      "order_id": "240115000012345",
-      "symbol": "RELIANCE",
-      "status": "COMPLETE",
-      "order_type": "BUY",
-      "quantity": 10,
-      "price": 2500.50,
-      "order_timestamp": "2024-01-15T10:30:00Z",
-      "fill_timestamp": "2024-01-15T10:30:05Z"
-    }
-  ],
-  "total_count": 25,
-  "page": 1
+  "symbol": "HDFCBANK",
+  "total_quantity": 200,
+  "duration_minutes": 60,
+  "price_limit": 1600.00
 }
 ```
 
-### Market Data
+#### Create Iceberg Order
 
-#### Get Quote
-
-```http
-GET /api/v1/market/quote/{symbol}
-Authorization: Bearer <token>
+```
+POST /advanced-orders/iceberg
 ```
 
-**Response:**
+Request Body:
+
 ```json
 {
-  "symbol": "RELIANCE",
-  "last_price": 2520.50,
-  "change": 20.50,
-  "change_percent": 0.82,
-  "volume": 1234567,
-  "bid": 2520.25,
-  "ask": 2520.75,
-  "open": 2500.00,
-  "high": 2530.00,
-  "low": 2495.00,
-  "close": 2500.00,
-  "timestamp": "2024-01-15T10:30:00Z"
+  "symbol": "INFY",
+  "total_quantity": 500,
+  "disclosed_quantity": 50,
+  "price": 2500.00
 }
 ```
 
-#### Get Multiple Quotes
+### 4. Risk Management
 
-```http
-POST /api/v1/market/quotes
-Authorization: Bearer <token>
-Content-Type: application/json
+#### Calculate Position Size
 
-{
-  "symbols": ["RELIANCE", "TCS", "INFY", "HDFC"]
-}
+```
+POST /enhanced-risk/position-size
 ```
 
-**Response:**
+Request Body:
+
 ```json
 {
-  "quotes": {
-    "RELIANCE": {
-      "last_price": 2520.50,
-      "change_percent": 0.82
-    },
-    "TCS": {
-      "last_price": 3500.00,
-      "change_percent": -0.50
-    }
-  }
+  "portfolio_value": 1000000.00,
+  "risk_per_trade": 0.02,
+  "entry_price": 2500.00,
+  "stop_loss_price": 2400.00
 }
 ```
 
-#### Get Historical Data
+#### Calculate VaR
 
-```http
-GET /api/v1/market/historical/{symbol}?interval=day&from=2024-01-01&to=2024-01-15
-Authorization: Bearer <token>
+```
+POST /enhanced-risk/var
 ```
 
-**Query Parameters:**
-- `interval`: minute, 5minute, 15minute, hour, day
-- `from`: Start date (YYYY-MM-DD)
-- `to`: End date (YYYY-MM-DD)
+Request Body:
 
-**Response:**
+```json
+{
+  "returns_data": [0.01, -0.02, 0.015, -0.01, 0.005],
+  "confidence_level": 0.95,
+  "portfolio_value": 1000000.00
+}
+```
+
+#### Get Risk Metrics
+
+```
+GET /enhanced-risk/metrics?portfolio_id=main_portfolio
+```
+
+### 5. Multi-Timeframe Analysis
+
+#### Add Market Data
+
+```
+POST /multi-timeframe/data
+```
+
+Request Body:
+
 ```json
 {
   "symbol": "RELIANCE",
-  "interval": "day",
+  "timeframe": "1d",
   "data": [
     {
-      "timestamp": "2024-01-01T00:00:00Z",
+      "timestamp": "2025-08-07T00:00:00Z",
       "open": 2480.00,
-      "high": 2510.00,
+      "high": 2520.00,
       "low": 2475.00,
-      "close": 2500.00,
-      "volume": 1234567
+      "close": 2510.00,
+      "volume": 1500000
     }
   ]
 }
 ```
 
-#### Get Market Depth
+#### Calculate Technical Indicators
 
-```http
-GET /api/v1/market/depth/{symbol}
-Authorization: Bearer <token>
+```
+GET /multi-timeframe/indicators/{symbol}?timeframe=1d
 ```
 
-**Response:**
-```json
-{
-  "symbol": "RELIANCE",
-  "buy": [
-    {"price": 2520.00, "quantity": 500, "orders": 5},
-    {"price": 2519.75, "quantity": 1000, "orders": 8}
-  ],
-  "sell": [
-    {"price": 2520.50, "quantity": 750, "orders": 6},
-    {"price": 2520.75, "quantity": 1200, "orders": 10}
-  ],
-  "timestamp": "2024-01-15T10:30:00Z"
-}
+#### Generate Trading Signals
+
+```
+GET /multi-timeframe/signals/{symbol}
 ```
 
-### Agent Operations
+### 6. Database Operations
 
-#### Get All Agents Status
+#### Store Market Data
 
-```http
-GET /api/v1/agents/status
-Authorization: Bearer <token>
+```
+POST /database/market-data/store
 ```
 
-**Response:**
-```json
-{
-  "agents": [
-    {
-      "name": "market_analyst",
-      "status": "active",
-      "last_execution": "2024-01-15T10:29:00Z",
-      "execution_count": 1234,
-      "success_rate": 0.95,
-      "average_execution_time": 1.2
-    },
-    {
-      "name": "risk_manager",
-      "status": "active",
-      "last_execution": "2024-01-15T10:29:30Z",
-      "execution_count": 1000,
-      "success_rate": 0.98,
-      "average_execution_time": 0.8
-    }
-  ]
-}
+#### Get Historical Data from Database
+
+```
+GET /database/market-data/{symbol}?timeframe=1d&limit=100
 ```
 
-#### Get Agent Analysis
+#### Get Order Analytics
 
-```http
-GET /api/v1/agents/{agent_name}/analysis/{symbol}
-Authorization: Bearer <token>
 ```
-
-**Response:**
-```json
-{
-  "agent": "market_analyst",
-  "symbol": "RELIANCE",
-  "analysis": {
-    "trend": "bullish",
-    "confidence": 0.85,
-    "support_levels": [2480, 2450, 2400],
-    "resistance_levels": [2550, 2600, 2650],
-    "indicators": {
-      "rsi": 65,
-      "macd": "bullish_crossover",
-      "moving_averages": {
-        "sma_20": 2490,
-        "sma_50": 2470,
-        "ema_20": 2495
-      }
-    },
-    "recommendation": "buy",
-    "reasoning": "Strong uptrend with RSI showing momentum..."
-  },
-  "timestamp": "2024-01-15T10:30:00Z"
-}
+GET /database/orders/analytics?start_date=2025-01-01&end_date=2025-08-07
 ```
-
-#### Trigger Manual Analysis
-
-```http
-POST /api/v1/agents/analyze
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "symbol": "RELIANCE",
-  "agents": ["market_analyst", "technical_indicator", "sentiment_analyst"],
-  "timeframe": "5minute",
-  "deep_analysis": true
-}
-```
-
-**Response:**
-```json
-{
-  "analysis_id": "550e8400-e29b-41d4-a716-446655440000",
-  "status": "completed",
-  "results": {
-    "market_analyst": {
-      "signal": "buy",
-      "confidence": 0.85
-    },
-    "technical_indicator": {
-      "signal": "buy",
-      "confidence": 0.90
-    },
-    "sentiment_analyst": {
-      "signal": "neutral",
-      "confidence": 0.70
-    }
-  },
-  "consensus": {
-    "action": "buy",
-    "confidence": 0.82,
-    "entry_price": 2520.00,
-    "stop_loss": 2480.00,
-    "take_profit": 2600.00
-  }
-}
-```
-
-### Portfolio Management
 
 #### Get Portfolio Summary
 
-```http
-GET /api/v1/portfolio/summary
-Authorization: Bearer <token>
+```
+GET /database/portfolio/summary?broker_name=primary_broker
 ```
 
-**Response:**
-```json
-{
-  "total_value": 1025000,
-  "available_cash": 775000,
-  "invested_amount": 250000,
-  "total_pnl": 25000,
-  "total_pnl_percentage": 2.5,
-  "today_pnl": 5000,
-  "open_positions": 3,
-  "realized_pnl": 15000,
-  "unrealized_pnl": 10000
-}
-```
+## Error Handling
 
-#### Get Performance Metrics
-
-```http
-GET /api/v1/portfolio/performance?period=month
-Authorization: Bearer <token>
-```
-
-**Query Parameters:**
-- `period`: day, week, month, year, all
-
-**Response:**
-```json
-{
-  "period": "month",
-  "metrics": {
-    "total_return": 5.2,
-    "sharpe_ratio": 1.8,
-    "max_drawdown": 3.5,
-    "win_rate": 0.65,
-    "profit_factor": 1.8,
-    "average_win": 2500,
-    "average_loss": 1200,
-    "total_trades": 150,
-    "winning_trades": 98,
-    "losing_trades": 52
-  },
-  "daily_returns": [
-    {"date": "2024-01-01", "return": 0.5},
-    {"date": "2024-01-02", "return": -0.2}
-  ]
-}
-```
-
-#### Get Trade History
-
-```http
-GET /api/v1/portfolio/trades?from=2024-01-01&to=2024-01-15&symbol=RELIANCE
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "trades": [
-    {
-      "trade_id": 12345,
-      "symbol": "RELIANCE",
-      "entry_time": "2024-01-15T10:30:00Z",
-      "exit_time": "2024-01-15T14:30:00Z",
-      "entry_price": 2500.00,
-      "exit_price": 2520.00,
-      "quantity": 10,
-      "pnl": 200.00,
-      "pnl_percentage": 0.8,
-      "holding_period": "4h",
-      "trade_type": "long",
-      "exit_reason": "take_profit"
-    }
-  ],
-  "summary": {
-    "total_trades": 25,
-    "profitable_trades": 18,
-    "total_pnl": 15000
-  }
-}
-```
-
-### System Configuration
-
-#### Get Configuration
-
-```http
-GET /api/v1/system/config
-Authorization: Bearer <token>
-```
-
-**Response:**
-```json
-{
-  "trading": {
-    "max_position_size": 100000,
-    "max_daily_trades": 10,
-    "risk_per_trade": 2.0,
-    "stop_loss_percent": 2.0,
-    "take_profit_percent": 4.0
-  },
-  "agents": {
-    "market_analyst": {
-      "enabled": true,
-      "confidence_threshold": 0.7
-    },
-    "risk_manager": {
-      "enabled": true,
-      "max_portfolio_risk": 0.2
-    }
-  },
-  "market_hours": {
-    "start": "09:15",
-    "end": "15:30",
-    "timezone": "Asia/Kolkata"
-  }
-}
-```
-
-#### Update Configuration
-
-```http
-PUT /api/v1/system/config
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "trading": {
-    "max_position_size": 150000,
-    "risk_per_trade": 1.5
-  }
-}
-```
-
-**Response:**
-```json
-{
-  "status": "updated",
-  "message": "Configuration updated successfully"
-}
-```
-
-### WebSocket Endpoints
-
-#### Market Data Stream
-
-```javascript
-const ws = new WebSocket('wss://api.shagunintelligence.com/ws/market');
-
-ws.onopen = () => {
-  // Subscribe to symbols
-  ws.send(JSON.stringify({
-    action: 'subscribe',
-    symbols: ['RELIANCE', 'TCS', 'INFY']
-  }));
-};
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  console.log('Tick:', data);
-  // {
-  //   "symbol": "RELIANCE",
-  //   "ltp": 2520.50,
-  //   "volume": 1234567,
-  //   "bid": 2520.25,
-  //   "ask": 2520.75,
-  //   "timestamp": "2024-01-15T10:30:00.123Z"
-  // }
-};
-```
-
-#### Trading Signals Stream
-
-```javascript
-const ws = new WebSocket('wss://api.shagunintelligence.com/ws/signals');
-
-ws.onmessage = (event) => {
-  const signal = JSON.parse(event.data);
-  console.log('Trading Signal:', signal);
-  // {
-  //   "type": "trade_signal",
-  //   "symbol": "RELIANCE",
-  //   "action": "buy",
-  //   "confidence": 0.85,
-  //   "entry_price": 2520.00,
-  //   "stop_loss": 2480.00,
-  //   "take_profit": 2600.00,
-  //   "agents_consensus": {...},
-  //   "timestamp": "2024-01-15T10:30:00Z"
-  // }
-};
-```
-
-## Error Responses
-
-All error responses follow this format:
+All API endpoints return standardized error responses:
 
 ```json
 {
+  "success": false,
   "error": {
     "code": "INVALID_SYMBOL",
-    "message": "Symbol INVALID not found",
+    "message": "The specified symbol is not valid",
     "details": {
-      "field": "symbol",
-      "value": "INVALID"
+      "symbol": "INVALID_STOCK",
+      "valid_symbols": ["RELIANCE", "TCS", "HDFCBANK"]
     }
-  },
-  "status_code": 400,
-  "timestamp": "2024-01-15T10:30:00Z"
+  }
 }
 ```
 
 ### Common Error Codes
 
-| Code | HTTP Status | Description |
-|------|-------------|-------------|
-| UNAUTHORIZED | 401 | Invalid or missing authentication token |
-| FORBIDDEN | 403 | Insufficient permissions |
-| NOT_FOUND | 404 | Resource not found |
-| VALIDATION_ERROR | 400 | Invalid request parameters |
-| RATE_LIMIT_EXCEEDED | 429 | Too many requests |
-| INTERNAL_ERROR | 500 | Internal server error |
-| SERVICE_UNAVAILABLE | 503 | Service temporarily unavailable |
+- `AUTHENTICATION_FAILED`: Invalid or expired JWT token
+- `INVALID_SYMBOL`: Symbol not found or not supported
+- `INSUFFICIENT_FUNDS`: Not enough margin for the order
+- `ORDER_REJECTED`: Order rejected by broker
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `MARKET_CLOSED`: Market is closed for trading
+- `INVALID_PARAMETERS`: Request parameters are invalid
 
-## Rate Limiting
+## Rate Limits
 
-API rate limits:
-- **Authentication endpoints**: 5 requests per minute
-- **Trading endpoints**: 100 requests per minute
-- **Market data endpoints**: 300 requests per minute
-- **WebSocket connections**: 10 concurrent connections
+- Market Data: 100 requests per minute
+- Order Placement: 50 requests per minute
+- Portfolio Data: 200 requests per minute
+- Historical Data: 20 requests per minute
 
-Rate limit headers:
-```http
-X-RateLimit-Limit: 100
-X-RateLimit-Remaining: 95
-X-RateLimit-Reset: 1705318800
+## WebSocket Events
+
+### Market Data Events
+
+```json
+{
+  "type": "quote",
+  "symbol": "RELIANCE",
+  "data": { ... }
+}
+```
+
+```json
+{
+  "type": "depth",
+  "symbol": "TCS",
+  "data": {
+    "bids": [{"price": 3599.50, "quantity": 100}],
+    "asks": [{"price": 3600.50, "quantity": 150}]
+  }
+}
+```
+
+### Order Events
+
+```json
+{
+  "type": "order_update",
+  "order_id": "240807000001",
+  "status": "COMPLETE",
+  "filled_quantity": 100,
+  "average_price": 2501.25
+}
 ```
 
 ## SDK Examples
 
-### Python
+### Python SDK
 
 ```python
-import requests
+from shagun_trading_sdk import TradingClient
 
-class Shagun IntelligenceClient:
-    def __init__(self, api_key):
-        self.base_url = "https://api.shagunintelligence.com"
-        self.headers = {"Authorization": f"Bearer {api_key}"}
-    
-    def get_quote(self, symbol):
-        response = requests.get(
-            f"{self.base_url}/api/v1/market/quote/{symbol}",
-            headers=self.headers
-        )
-        return response.json()
-    
-    def place_order(self, order_data):
-        response = requests.post(
-            f"{self.base_url}/api/v1/trading/order",
-            json=order_data,
-            headers=self.headers
-        )
-        return response.json()
+# Initialize client
+client = TradingClient(
+    api_key="your_api_key",
+    base_url="https://api.shagunintelligence.com"
+)
 
-# Usage
-client = Shagun IntelligenceClient("your-api-key")
-quote = client.get_quote("RELIANCE")
-print(f"RELIANCE: {quote['last_price']}")
+# Place order
+order_response = await client.place_order(
+    symbol="RELIANCE",
+    transaction_type="BUY",
+    order_type="MARKET",
+    quantity=100
+)
+
+# Get real-time data
+async with client.market_data_stream() as stream:
+    await stream.subscribe(["RELIANCE", "TCS"])
+    async for quote in stream:
+        print(f"{quote.symbol}: {quote.last_price}")
 ```
 
-### JavaScript/Node.js
+### JavaScript SDK
 
 ```javascript
-const axios = require('axios');
+import { TradingClient } from '@shagun/trading-sdk';
 
-class Shagun IntelligenceClient {
-  constructor(apiKey) {
-    this.client = axios.create({
-      baseURL: 'https://api.shagunintelligence.com',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json'
-      }
-    });
-  }
-  
-  async getQuote(symbol) {
-    const response = await this.client.get(`/api/v1/market/quote/${symbol}`);
-    return response.data;
-  }
-  
-  async placeOrder(orderData) {
-    const response = await this.client.post('/api/v1/trading/order', orderData);
-    return response.data;
-  }
-}
+const client = new TradingClient({
+  apiKey: 'your_api_key',
+  baseUrl: 'https://api.shagunintelligence.com'
+});
 
-// Usage
-const client = new Shagun IntelligenceClient('your-api-key');
-const quote = await client.getQuote('RELIANCE');
-console.log(`RELIANCE: ${quote.last_price}`);
+// Place order
+const orderResponse = await client.placeOrder({
+  symbol: 'RELIANCE',
+  transactionType: 'BUY',
+  orderType: 'MARKET',
+  quantity: 100
+});
+
+// WebSocket connection
+const ws = client.createWebSocket();
+ws.subscribe(['RELIANCE', 'TCS'], ['quote']);
+ws.on('quote', (data) => {
+  console.log(`${data.symbol}: ${data.last_price}`);
+});
 ```
 
-## Webhooks
+## Testing
 
-Configure webhooks to receive real-time notifications:
+### Test Environment
 
-```http
-POST /api/v1/webhooks
-Authorization: Bearer <token>
-Content-Type: application/json
+Base URL: `https://api-test.shagunintelligence.com/api/v1`
 
-{
-  "url": "https://your-server.com/webhook",
-  "events": ["order_complete", "position_closed", "signal_generated"],
-  "secret": "your-webhook-secret"
-}
-```
+Test credentials and mock data are available for development and testing purposes.
 
-Webhook payload example:
-```json
-{
-  "event": "order_complete",
-  "data": {
-    "order_id": "240115000012345",
-    "symbol": "RELIANCE",
-    "status": "COMPLETE",
-    "execution_price": 2520.50
-  },
-  "timestamp": "2024-01-15T10:30:00Z",
-  "signature": "sha256=..."
-}
-```
+### Postman Collection
 
-## Best Practices
+Download the complete Postman collection: [Shagun Trading API.postman_collection.json](./postman/Shagun_Trading_API.postman_collection.json)
 
-1. **Authentication**
-   - Store API keys securely
-   - Rotate tokens regularly
-   - Use environment variables
+## Support
 
-2. **Error Handling**
-   - Implement exponential backoff for retries
-   - Log all errors for debugging
-   - Handle rate limits gracefully
+- Documentation: <https://docs.shagunintelligence.com>
+- Support Email: <support@shagunintelligence.com>
+- GitHub Issues: <https://github.com/shagunintelligence/trading-platform/issues>
 
-3. **Performance**
-   - Use WebSocket for real-time data
-   - Batch API requests when possible
-   - Cache frequently accessed data
+## Changelog
 
-4. **Security**
-   - Always use HTTPS
-   - Validate webhook signatures
-   - Implement IP whitelisting for production
+### v1.0.0 (2025-08-07)
+
+- Initial release
+- Market data integration
+- Broker API support
+- Advanced order management
+- Risk management features
+- Multi-timeframe analysis
+- Database persistence

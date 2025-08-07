@@ -73,12 +73,16 @@ class WebSocketService {
   private maxReconnectAttempts = 5;
   private reconnectDelay = 1000;
 
-  connect(url: string = '/ws') {
+  connect(url?: string) {
     if (this.socket?.connected) {
       return;
     }
 
-    this.socket = io(url, {
+    // Use environment variable or default to backend URL
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+    const wsUrl = url || `${apiBaseUrl}/ws`;
+
+    this.socket = io(wsUrl, {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: this.maxReconnectAttempts,
@@ -105,7 +109,7 @@ class WebSocketService {
     this.socket.on('connect_error', (error) => {
       console.error('WebSocket connection error:', error);
       this.reconnectAttempts++;
-      
+
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         this.emit('error', { type: 'CONNECTION_FAILED', message: 'Max reconnection attempts reached' });
       }

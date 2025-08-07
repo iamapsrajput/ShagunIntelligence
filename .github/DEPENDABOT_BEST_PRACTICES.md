@@ -7,26 +7,30 @@ This guide provides best practices for handling Dependabot alerts and dependency
 ### Alert Severity Levels
 
 **Critical** 🔴
+
 - Immediate action required
 - High CVSS score (9.0-10.0)
 - Remote code execution, data breaches
 - **Trading Impact**: Could compromise trading system integrity
 
-**High** 🟠  
+**High** 🟠
+
 - Action required within 7 days
 - CVSS score (7.0-8.9)
 - Privilege escalation, information disclosure
 - **Trading Impact**: Could affect trading decisions or user data
 
 **Medium** 🟡
-- Action required within 30 days  
+
+- Action required within 30 days
 - CVSS score (4.0-6.9)
 - Denial of service, limited data exposure
 - **Trading Impact**: May cause system instability
 
 **Low** 🟢
+
 - Action required within 90 days
-- CVSS score (0.1-3.9) 
+- CVSS score (0.1-3.9)
 - Minor information disclosure
 - **Trading Impact**: Minimal risk to trading operations
 
@@ -92,6 +96,7 @@ This guide provides best practices for handling Dependabot alerts and dependency
 For **critical** and **high** severity vulnerabilities, Dependabot automatically creates PRs.
 
 **Review Process:**
+
 ```bash
 # 1. Check the vulnerability details
 gh pr view <PR_NUMBER>
@@ -116,10 +121,11 @@ gh pr review <PR_NUMBER> --approve
 **Weekly Review Process:**
 
 1. **Triage New PRs**
+
    ```bash
    # List all Dependabot PRs
    gh pr list --author "dependabot[bot]" --state open
-   
+
    # Group by severity
    gh pr list --label "dependencies" --label "security"
    ```
@@ -131,22 +137,23 @@ gh pr review <PR_NUMBER> --approve
    - Development tools last
 
 3. **Testing Strategy**
+
    ```bash
    # Create test environment
    python -m venv test-env
    source test-env/bin/activate
-   
+
    # Install updated dependencies
    git checkout <dependabot-branch>
    pip install -r requirements.txt
-   
+
    # Run comprehensive tests
    pytest tests/ -v
    python run_tests.py --full
-   
+
    # Test AI agents specifically
    pytest tests/unit/test_agents/ -v
-   
+
    # Test trading components
    pytest tests/unit/test_trading/ -v
    ```
@@ -156,6 +163,7 @@ gh pr review <PR_NUMBER> --approve
 Based on our Dependabot configuration, updates are grouped:
 
 ### FastAPI Stack
+
 ```yaml
 # Monitor these together for compatibility
 - fastapi
@@ -163,18 +171,22 @@ Based on our Dependabot configuration, updates are grouped:
 - pydantic
 - starlette
 ```
+
 **Testing Focus**: API endpoints, WebSocket connections, request validation
 
-### CrewAI Stack  
+### CrewAI Stack
+
 ```yaml
 # AI agent dependencies
 - crewai
 - langchain
 - openai
 ```
+
 **Testing Focus**: Agent behavior, model interactions, decision making
 
 ### Database Stack
+
 ```yaml
 # Database-related updates
 - sqlalchemy
@@ -183,9 +195,11 @@ Based on our Dependabot configuration, updates are grouped:
 - asyncpg
 - redis
 ```
+
 **Testing Focus**: Database connections, migrations, data integrity
 
 ### Data Science Stack
+
 ```yaml
 # Data processing dependencies
 - pandas
@@ -193,6 +207,7 @@ Based on our Dependabot configuration, updates are grouped:
 - scipy
 - scikit-learn
 ```
+
 **Testing Focus**: Data analysis, model training, mathematical operations
 
 ## 🛠️ Resolving Common Dependabot Issues
@@ -202,6 +217,7 @@ Based on our Dependabot configuration, updates are grouped:
 **Problem**: Dependabot updates one package but creates conflicts with others.
 
 **Solution**:
+
 ```bash
 # Check for conflicts
 pip-compile requirements.in --verbose
@@ -219,6 +235,7 @@ pip install package-name==specific-version
 **Problem**: New version introduces breaking changes.
 
 **Solution**:
+
 ```python
 # Option 1: Pin to last working version temporarily
 package-name==1.2.3  # TODO: Update after fixing breaking changes
@@ -236,6 +253,7 @@ except ImportError:
 **Problem**: Updated dependencies cause test failures.
 
 **Solution**:
+
 ```bash
 # 1. Identify failing tests
 pytest --tb=short
@@ -252,35 +270,38 @@ pytest -v tests/specific_test.py
 ### Critical Vulnerability Response (< 24 hours)
 
 1. **Immediate Assessment**
+
    ```bash
    # Check if vulnerability affects running systems
    pip list | grep <vulnerable-package>
-   
+
    # Review CVSS score and impact
    # Check if exploit code is available
    ```
 
 2. **Hotfix Process**
+
    ```bash
    # Create hotfix branch
    git checkout -b hotfix/security-<package-name>
-   
+
    # Update only the vulnerable package
    pip install <package-name>==<secure-version>
    pip freeze > requirements.txt
-   
+
    # Run security tests
    python -m bandit -r app/ agents/ services/
    python -m safety check
-   
+
    # Deploy immediately if tests pass
    ```
 
 3. **Verification**
+
    ```bash
    # Verify fix in staging
    curl https://staging.shagunintelligence.com/api/v1/health
-   
+
    # Monitor for issues
    # Check logs for errors
    ```
@@ -293,13 +314,14 @@ pytest -v tests/specific_test.py
    - Communicate with stakeholders
 
 2. **Comprehensive Testing**
+
    ```bash
    # Full test suite
    pytest tests/ --cov=app --cov=agents --cov=services
-   
+
    # Integration tests
    pytest tests/integration/
-   
+
    # Performance tests
    python tests/performance/load_test.py
    ```
@@ -358,17 +380,17 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
+
       - name: Install dependencies
         run: |
           pip install safety pip-audit
           pip install -r requirements.txt
-      
+
       - name: Security audit
         run: |
           safety check --json --output safety-report.json
           pip-audit --format json --output pip-audit-report.json
-      
+
       - name: Upload reports
         uses: actions/upload-artifact@v3
         with:
@@ -381,12 +403,14 @@ jobs:
 ### Financial Data Dependencies
 
 **Critical Packages**:
+
 - `kiteconnect`: Trading API - Monitor for API changes
 - `pandas`: Data processing - Ensure backward compatibility
 - `sqlalchemy`: Database - Test all queries still work
 - `cryptography`: Encryption - Verify no key format changes
 
 **Testing Checklist**:
+
 - [ ] Order placement functionality
 - [ ] Real-time data processing
 - [ ] Historical data analysis
@@ -397,11 +421,13 @@ jobs:
 ### AI Agent Dependencies
 
 **Critical Packages**:
+
 - `crewai`: Core AI framework
 - `langchain`: LLM integration
 - `openai`: AI model access
 
 **Testing Checklist**:
+
 - [ ] Agent communication
 - [ ] Decision-making processes
 - [ ] Model inference
@@ -467,6 +493,7 @@ docker build -t rollback-test .
 ## 🔗 Useful Tools and Resources
 
 ### CLI Tools
+
 ```bash
 # Install helpful tools
 pip install safety pip-audit pip-tools pipdeptree
@@ -484,6 +511,7 @@ pipdeptree
 ```
 
 ### Resources
+
 - [Python Package Index (PyPI)](https://pypi.org/)
 - [CVE Database](https://cve.mitre.org/)
 - [GitHub Advisory Database](https://github.com/advisories)

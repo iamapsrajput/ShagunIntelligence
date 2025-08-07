@@ -95,7 +95,10 @@ class TestRiskManagementValidation:
 
         # Test for short position
         short_stop = stop_loss_manager.calculate_stop_loss(
-            entry_price=2500, position_type="short", volatility=0.02, resistance_level=2550
+            entry_price=2500,
+            position_type="short",
+            volatility=0.02,
+            resistance_level=2550,
         )
 
         # Stop should be above entry but below resistance
@@ -199,7 +202,12 @@ class TestRiskManagementValidation:
         """Validate correlation risk calculations"""
         # Create correlation matrix
         correlation_matrix = np.array(
-            [[1.0, 0.7, 0.6, 0.3], [0.7, 1.0, 0.8, 0.4], [0.6, 0.8, 1.0, 0.5], [0.3, 0.4, 0.5, 1.0]]
+            [
+                [1.0, 0.7, 0.6, 0.3],
+                [0.7, 1.0, 0.8, 0.4],
+                [0.6, 0.8, 1.0, 0.5],
+                [0.3, 0.4, 0.5, 1.0],
+            ]
         )
 
         # Calculate portfolio correlation
@@ -247,15 +255,15 @@ class TestRiskManagementValidation:
         prices = [100]
 
         # Rise to 120
-        for i in range(20):
+        for _i in range(20):
             prices.append(prices[-1] * 1.01)
 
         # Fall to 90 (25% drawdown from peak)
-        for i in range(10):
+        for _i in range(10):
             prices.append(prices[-1] * 0.97)
 
         # Recover to 110
-        for i in range(10):
+        for _i in range(10):
             prices.append(prices[-1] * 1.02)
 
         max_dd = risk_metrics.calculate_max_drawdown(prices)
@@ -289,7 +297,9 @@ class TestRiskManagementValidation:
 
         for case in test_cases:
             kelly_percent = position_sizer.kelly_criterion(
-                win_rate=case["win_rate"], avg_win=case["avg_win"], avg_loss=case["avg_loss"]
+                win_rate=case["win_rate"],
+                avg_win=case["avg_win"],
+                avg_loss=case["avg_loss"],
             )
 
             # Kelly should be positive for positive expectancy
@@ -319,7 +329,7 @@ class TestRiskManagementValidation:
         circuit_breaker.reset()
         circuit_breaker.max_consecutive_losses = 5
 
-        for i in range(4):
+        for _i in range(4):
             circuit_breaker.record_trade_result(False)  # Loss
 
         assert not circuit_breaker.should_halt_trading()
@@ -338,12 +348,13 @@ class TestRiskManagementValidation:
         ]
 
         total_capital = 1000000
-        target_risk = 0.01  # 1% portfolio volatility
 
         allocations = {}
         for asset in assets:
             # Inverse volatility weighting
-            weight = (1 / asset["volatility"]) / sum(1 / a["volatility"] for a in assets)
+            weight = (1 / asset["volatility"]) / sum(
+                1 / a["volatility"] for a in assets
+            )
             allocations[asset["symbol"]] = weight * total_capital
 
         # Verify equal risk contribution
@@ -367,7 +378,12 @@ class TestRiskManagementValidation:
             {"symbol": "INFY", "quantity": 200, "price": 1500},
         ]
 
-        scenarios = {"market_crash_10": -0.10, "market_crash_20": -0.20, "sector_shock": -0.15, "black_swan": -0.30}
+        scenarios = {
+            "market_crash_10": -0.10,
+            "market_crash_20": -0.20,
+            "sector_shock": -0.15,
+            "black_swan": -0.30,
+        }
 
         portfolio_value = sum(p["quantity"] * p["price"] for p in portfolio)
 
@@ -378,7 +394,10 @@ class TestRiskManagementValidation:
             stress_results[scenario] = {"loss": loss, "loss_percent": abs(shock) * 100}
 
         # Validate stress test results
-        assert stress_results["market_crash_10"]["loss"] < stress_results["market_crash_20"]["loss"]
+        assert (
+            stress_results["market_crash_10"]["loss"]
+            < stress_results["market_crash_20"]["loss"]
+        )
         assert stress_results["black_swan"]["loss_percent"] == 30
 
         # Check if portfolio can survive worst case
@@ -391,7 +410,6 @@ class TestRiskManagementValidation:
         """Validate margin call prevention logic"""
         account_balance = 100000
         margin_used = 80000
-        maintenance_margin = 0.25  # 25%
 
         # Calculate margin level
         margin_level = account_balance / margin_used
@@ -455,4 +473,6 @@ class TestRiskManagementValidation:
 
         assert "portfolio_metrics" in loaded_report
         assert "risk_limits" in loaded_report
-        assert all(limit["status"] == "OK" for limit in loaded_report["risk_limits"].values())
+        assert all(
+            limit["status"] == "OK" for limit in loaded_report["risk_limits"].values()
+        )

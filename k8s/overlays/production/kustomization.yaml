@@ -8,7 +8,7 @@ bases:
 
 commonLabels:
   environment: production
-  
+
 commonAnnotations:
   environment: production
   managed-by: kustomize

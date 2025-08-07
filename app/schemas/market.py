@@ -1,6 +1,6 @@
-from pydantic import BaseModel
-from typing import List, Optional
 from datetime import datetime
+
+from pydantic import BaseModel
 
 
 class MarketQuote(BaseModel):
@@ -24,7 +24,7 @@ class HistoricalData(BaseModel):
     low: float
     close: float
     volume: int
-    indicators: Optional[dict] = None
+    indicators: dict | None = None
 
 
 class OrderBookEntry(BaseModel):
@@ -35,8 +35,8 @@ class OrderBookEntry(BaseModel):
 
 class MarketDepth(BaseModel):
     symbol: str
-    buy_orders: List[OrderBookEntry]
-    sell_orders: List[OrderBookEntry]
+    buy_orders: list[OrderBookEntry]
+    sell_orders: list[OrderBookEntry]
     timestamp: datetime
 
 

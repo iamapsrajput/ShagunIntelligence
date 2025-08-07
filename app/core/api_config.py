@@ -8,7 +8,7 @@ with security, rate limiting, and monitoring capabilities.
 import os
 from enum import Enum
 from functools import lru_cache
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 from cryptography.fernet import Fernet
 from loguru import logger
@@ -59,25 +59,25 @@ class APIConfig(BaseSettings):
     tier: APITier = APITier.FREE
 
     # Authentication
-    api_key: Optional[SecretStr] = None
-    api_secret: Optional[SecretStr] = None
-    access_token: Optional[SecretStr] = None
-    bearer_token: Optional[SecretStr] = None
+    api_key: SecretStr | None = None
+    api_secret: SecretStr | None = None
+    access_token: SecretStr | None = None
+    bearer_token: SecretStr | None = None
 
     # Endpoints
     base_url: str
-    websocket_url: Optional[str] = None
-    sandbox_url: Optional[str] = None
+    websocket_url: str | None = None
+    sandbox_url: str | None = None
 
     # Rate limiting
     rate_limit_per_minute: int = 60
-    rate_limit_per_hour: Optional[int] = None
-    rate_limit_per_day: Optional[int] = None
+    rate_limit_per_hour: int | None = None
+    rate_limit_per_day: int | None = None
     burst_limit: int = 10
 
     # Cost management
     cost_per_request: float = 0.0
-    monthly_budget: Optional[float] = None
+    monthly_budget: float | None = None
     free_requests_per_month: int = 0
 
     # Quality settings
@@ -95,7 +95,7 @@ class APIConfig(BaseSettings):
     supports_sentiment: bool = False
 
     # Health check
-    health_check_endpoint: Optional[str] = None
+    health_check_endpoint: str | None = None
     health_check_interval_seconds: int = 300
 
 
@@ -106,7 +106,9 @@ class APIConfigurations(BaseSettings):
     environment: Environment = Environment.DEVELOPMENT
 
     # Security
-    encryption_key: SecretStr = Field(default_factory=lambda: SecretStr(Fernet.generate_key().decode()))
+    encryption_key: SecretStr = Field(
+        default_factory=lambda: SecretStr(Fernet.generate_key().decode())
+    )
     api_key_rotation_days: int = 90
 
     # Global settings
@@ -310,7 +312,7 @@ class APIConfigurations(BaseSettings):
 
         return v
 
-    def get_api_config(self, provider: APIProvider) -> Optional[APIConfig]:
+    def get_api_config(self, provider: APIProvider) -> APIConfig | None:
         """Get configuration for a specific API provider."""
         provider_map = {
             APIProvider.KITE_CONNECT: self.kite_connect,
@@ -329,7 +331,7 @@ class APIConfigurations(BaseSettings):
 
         return provider_map.get(provider)
 
-    def get_enabled_apis(self) -> Dict[APIProvider, APIConfig]:
+    def get_enabled_apis(self) -> dict[APIProvider, APIConfig]:
         """Get all enabled API configurations."""
         enabled = {}
 
@@ -340,15 +342,17 @@ class APIConfigurations(BaseSettings):
 
         return enabled
 
-    def get_apis_by_priority(self) -> List[tuple[APIProvider, APIConfig]]:
+    def get_apis_by_priority(self) -> list[tuple[APIProvider, APIConfig]]:
         """Get APIs sorted by priority (highest first)."""
         enabled_apis = self.get_enabled_apis()
 
-        sorted_apis = sorted(enabled_apis.items(), key=lambda x: x[1].priority, reverse=True)
+        sorted_apis = sorted(
+            enabled_apis.items(), key=lambda x: x[1].priority, reverse=True
+        )
 
         return sorted_apis
 
-    def get_apis_for_feature(self, feature: str) -> List[tuple[APIProvider, APIConfig]]:
+    def get_apis_for_feature(self, feature: str) -> list[tuple[APIProvider, APIConfig]]:
         """Get APIs that support a specific feature."""
         feature_map = {
             "websocket": lambda c: c.supports_websocket,
@@ -364,12 +368,16 @@ class APIConfigurations(BaseSettings):
         check_func = feature_map[feature]
         enabled_apis = self.get_enabled_apis()
 
-        supporting_apis = [(provider, config) for provider, config in enabled_apis.items() if check_func(config)]
+        supporting_apis = [
+            (provider, config)
+            for provider, config in enabled_apis.items()
+            if check_func(config)
+        ]
 
         # Sort by priority
         return sorted(supporting_apis, key=lambda x: x[1].priority, reverse=True)
 
-    def estimate_monthly_cost(self) -> Dict[str, float]:
+    def estimate_monthly_cost(self) -> dict[str, float]:
         """Estimate monthly API costs."""
         costs = {}
         total = 0.0
@@ -380,11 +388,17 @@ class APIConfigurations(BaseSettings):
                 # Estimate based on rate limits
                 requests_per_month = min(
                     config.rate_limit_per_minute * 60 * 24 * 30,
-                    config.rate_limit_per_day * 30 if config.rate_limit_per_day else float("inf"),
+                    (
+                        config.rate_limit_per_day * 30
+                        if config.rate_limit_per_day
+                        else float("inf")
+                    ),
                 )
 
                 # Subtract free requests
-                billable_requests = max(0, requests_per_month - config.free_requests_per_month)
+                billable_requests = max(
+                    0, requests_per_month - config.free_requests_per_month
+                )
                 estimated_cost = billable_requests * config.cost_per_request
 
                 # Cap at monthly budget
@@ -397,7 +411,7 @@ class APIConfigurations(BaseSettings):
         costs["total"] = total
         return costs
 
-    def to_secure_dict(self) -> Dict[str, Any]:
+    def to_secure_dict(self) -> dict[str, Any]:
         """Export configuration with masked sensitive data."""
         config_dict = {}
 
@@ -459,10 +473,10 @@ class ProductionConfig(APIConfigurations):
 
 
 # Singleton pattern for configuration
-_config_instance: Optional[APIConfigurations] = None
+_config_instance: APIConfigurations | None = None
 
 
-@lru_cache()
+@lru_cache
 def get_api_config() -> APIConfigurations:
     """Get the API configuration instance."""
     global _config_instance

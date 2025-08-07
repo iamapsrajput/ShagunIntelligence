@@ -39,7 +39,7 @@ const createAPIInstance = (): AxiosInstance => {
         // Handle server errors
         console.error('Server error:', error.response.data);
       }
-      
+
       return Promise.reject(error);
     }
   );
@@ -55,70 +55,70 @@ export const apiService = {
   // Data Quality endpoints
   dataQuality: {
     getMetrics: (symbol: string, lookbackMinutes?: number) =>
-      api.get(`/data-quality/metrics/${symbol}`, { 
-        params: { lookback_minutes: lookbackMinutes } 
+      api.get(`/data-quality/metrics/${symbol}`, {
+        params: { lookback_minutes: lookbackMinutes }
       }),
-    
-    getSourceHealth: () => 
+
+    getSourceHealth: () =>
       api.get('/data-quality/source-health-multi'),
-    
+
     getSentimentFusion: (symbol: string, lookbackHours?: number) =>
       api.get(`/data-quality/sentiment-fusion/${symbol}`, {
         params: { lookback_hours: lookbackHours }
       }),
-    
+
     getFailoverLogs: (params?: any) =>
       api.get('/data-quality/failover-logs', { params }),
-    
+
     getQualityAlerts: (params?: any) =>
       api.get('/data-quality/quality-alerts', { params }),
-    
+
     acknowledgeAlert: (alertId: string) =>
       api.post(`/data-quality/quality-alerts/${alertId}/acknowledge`),
-    
+
     getStreamHealth: () =>
       api.get('/data-quality/stream-health'),
-    
+
     getAPICostSummary: (period: string = 'month') =>
-      api.get('/data-quality/api-costs/summary', { 
-        params: { period } 
+      api.get('/data-quality/api-costs/summary', {
+        params: { period }
       }),
   },
 
   // API Management endpoints
   apiManagement: {
     getConfig: (provider?: string) =>
-      api.get('/management/config', { 
-        params: provider ? { provider } : {} 
+      api.get('/management/config', {
+        params: provider ? { provider } : {}
       }),
-    
+
     getEnabledAPIs: () =>
       api.get('/management/config/enabled'),
-    
+
     getCosts: () =>
       api.get('/management/config/costs'),
-    
+
     getKeysStatus: () =>
       api.get('/management/keys/status'),
-    
+
     updateKey: (data: any) =>
       api.post('/management/keys/update', data),
-    
+
     getRateLimits: (provider?: string) =>
-      api.get('/management/rate-limits', { 
-        params: provider ? { provider } : {} 
+      api.get('/management/rate-limits', {
+        params: provider ? { provider } : {}
       }),
-    
+
     getUsage: (provider?: string) =>
-      api.get('/management/usage', { 
-        params: provider ? { provider } : {} 
+      api.get('/management/usage', {
+        params: provider ? { provider } : {}
       }),
-    
+
     getHealth: (provider?: string) =>
-      api.get('/management/health', { 
-        params: provider ? { provider } : {} 
+      api.get('/management/health', {
+        params: provider ? { provider } : {}
       }),
-    
+
     getDashboard: () =>
       api.get('/management/dashboard'),
   },
@@ -127,13 +127,13 @@ export const apiService = {
   trading: {
     getPositions: () =>
       api.get('/trading/positions'),
-    
+
     placeOrder: (orderData: any) =>
       api.post('/trading/orders', orderData),
-    
+
     getOrders: () =>
       api.get('/trading/orders'),
-    
+
     cancelOrder: (orderId: string) =>
       api.delete(`/trading/orders/${orderId}`),
   },
@@ -142,10 +142,10 @@ export const apiService = {
   marketData: {
     getQuote: (symbol: string) =>
       api.get(`/market-data/quote/${symbol}`),
-    
+
     getHistorical: (symbol: string, params?: any) =>
       api.get(`/market-data/historical/${symbol}`, { params }),
-    
+
     getMarketOverview: () =>
       api.get('/market-data/overview'),
   },
@@ -154,13 +154,13 @@ export const apiService = {
   auth: {
     login: (credentials: { username: string; password: string }) =>
       api.post('/auth/login', credentials),
-    
+
     logout: () =>
       api.post('/auth/logout'),
-    
+
     getCurrentUser: () =>
       api.get('/auth/me'),
-    
+
     refreshToken: () =>
       api.post('/auth/refresh'),
   },

@@ -7,18 +7,18 @@ data:
   backup.sh: |
     #!/bin/bash
     set -e
-    
+
     # Configuration
     BACKUP_DIR="/backup"
     S3_BUCKET="s3://shagunintelligence-backups"
     TIMESTAMP=$(date +%Y%m%d-%H%M%S)
     BACKUP_NAME="shagunintelligence-backup-${TIMESTAMP}"
-    
+
     echo "Starting backup at ${TIMESTAMP}"
-    
+
     # Create backup directory
     mkdir -p ${BACKUP_DIR}/${BACKUP_NAME}
-    
+
     # Backup PostgreSQL database
     echo "Backing up PostgreSQL database..."
     PGPASSWORD=${DB_PASSWORD} pg_dump \
@@ -26,18 +26,18 @@ data:
       -U ${DB_USER} \
       -d ${DB_NAME} \
       -f ${BACKUP_DIR}/${BACKUP_NAME}/database.sql
-    
+
     # Compress database backup
     gzip ${BACKUP_DIR}/${BACKUP_NAME}/database.sql
-    
+
     # Backup Redis data
     echo "Backing up Redis data..."
     redis-cli -h ${REDIS_HOST} -a ${REDIS_PASSWORD} --rdb ${BACKUP_DIR}/${BACKUP_NAME}/redis.rdb
-    
+
     # Backup application data
     echo "Backing up application data..."
     tar -czf ${BACKUP_DIR}/${BACKUP_NAME}/app-data.tar.gz /app/data
-    
+
     # Create backup manifest
     cat > ${BACKUP_DIR}/${BACKUP_NAME}/manifest.json <<EOF
     {
@@ -50,40 +50,40 @@ data:
       }
     }
     EOF
-    
+
     # Upload to S3
     echo "Uploading backup to S3..."
     aws s3 cp ${BACKUP_DIR}/${BACKUP_NAME} ${S3_BUCKET}/${BACKUP_NAME} --recursive
-    
+
     # Cleanup old local backups
     find ${BACKUP_DIR} -type d -mtime +7 -exec rm -rf {} +
-    
+
     # Verify backup
     aws s3 ls ${S3_BUCKET}/${BACKUP_NAME}/
-    
+
     echo "Backup completed successfully"
-    
+
   restore.sh: |
     #!/bin/bash
     set -e
-    
+
     # Configuration
     BACKUP_DIR="/backup"
     S3_BUCKET="s3://shagunintelligence-backups"
-    
+
     if [ -z "$1" ]; then
       echo "Usage: ./restore.sh <backup-name>"
       exit 1
     fi
-    
+
     BACKUP_NAME=$1
     echo "Starting restore from ${BACKUP_NAME}"
-    
+
     # Download backup from S3
     echo "Downloading backup from S3..."
     mkdir -p ${BACKUP_DIR}/${BACKUP_NAME}
     aws s3 cp ${S3_BUCKET}/${BACKUP_NAME} ${BACKUP_DIR}/${BACKUP_NAME} --recursive
-    
+
     # Restore PostgreSQL database
     echo "Restoring PostgreSQL database..."
     gunzip -c ${BACKUP_DIR}/${BACKUP_NAME}/database.sql.gz | \
@@ -91,15 +91,15 @@ data:
         -h ${DB_HOST} \
         -U ${DB_USER} \
         -d ${DB_NAME}
-    
+
     # Restore Redis data
     echo "Restoring Redis data..."
     redis-cli -h ${REDIS_HOST} -a ${REDIS_PASSWORD} --pipe < ${BACKUP_DIR}/${BACKUP_NAME}/redis.rdb
-    
+
     # Restore application data
     echo "Restoring application data..."
     tar -xzf ${BACKUP_DIR}/${BACKUP_NAME}/app-data.tar.gz -C /
-    
+
     echo "Restore completed successfully"
 
 ---

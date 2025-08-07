@@ -1,10 +1,11 @@
-import logging
-from typing import Dict, Any, List, Optional, Tuple
-from simpleeval import simple_eval, NameNotDefined
-from datetime import datetime
-from dataclasses import dataclass
-from enum import Enum
 import json
+import logging
+from dataclasses import dataclass
+from datetime import datetime
+from enum import Enum
+from typing import Any
+
+from simpleeval import NameNotDefined, simple_eval
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -43,8 +44,8 @@ class ApprovalRule:
     condition: str  # Python expression to evaluate
     priority: int  # Higher priority rules are checked first
     action: ApprovalStatus
-    reason: Optional[RejectionReason] = None
-    message: Optional[str] = None
+    reason: RejectionReason | None = None
+    message: str | None = None
 
 
 class TradeApprovalWorkflow:
@@ -78,7 +79,7 @@ class TradeApprovalWorkflow:
             "rejection_reasons": {},
         }
 
-    def _initialize_approval_rules(self) -> List[ApprovalRule]:
+    def _initialize_approval_rules(self) -> list[ApprovalRule]:
         """Initialize default approval rules"""
         rules = [
             # Critical risk rules (highest priority)
@@ -158,8 +159,8 @@ class TradeApprovalWorkflow:
         return sorted(rules, key=lambda r: r.priority, reverse=True)
 
     def process_decision(
-        self, decision: Dict[str, Any], risk_manager_agent: Optional[Any] = None
-    ) -> Dict[str, Any]:
+        self, decision: dict[str, Any], risk_manager_agent: Any | None = None
+    ) -> dict[str, Any]:
         """Process a trading decision through approval workflow"""
         logger.info(f"Processing trade approval for {decision['symbol']}")
 
@@ -171,7 +172,9 @@ class TradeApprovalWorkflow:
 
         # Handle conditional approvals
         if approval_result["status"] == ApprovalStatus.CONDITIONAL:
-            approval_result = self._handle_conditional_approval(decision, context, approval_result)
+            approval_result = self._handle_conditional_approval(
+                decision, context, approval_result
+            )
 
         # Update decision with approval
         approved_decision = decision.copy()
@@ -185,7 +188,9 @@ class TradeApprovalWorkflow:
 
         # Add rejection reason if rejected
         if approval_result["status"] == ApprovalStatus.REJECTED:
-            approved_decision["rejection_reason"] = approval_result.get("reason", "").value
+            approved_decision["rejection_reason"] = approval_result.get(
+                "reason", ""
+            ).value
             approved_decision["rejection_message"] = approval_result.get("message", "")
 
         # Record approval
@@ -194,8 +199,8 @@ class TradeApprovalWorkflow:
         return approved_decision
 
     def _get_decision_context(
-        self, decision: Dict[str, Any], risk_manager_agent: Optional[Any]
-    ) -> Dict[str, Any]:
+        self, decision: dict[str, Any], risk_manager_agent: Any | None
+    ) -> dict[str, Any]:
         """Get context for decision evaluation"""
         context = {
             "timestamp": datetime.now(),
@@ -217,7 +222,9 @@ class TradeApprovalWorkflow:
                         "current_positions": risk_metrics.get("positions", []),
                         "daily_loss": risk_metrics.get("daily_loss_pct", 0),
                         "current_drawdown": risk_metrics.get("current_drawdown", 0),
-                        "correlation_matrix": risk_metrics.get("correlation_matrix", {}),
+                        "correlation_matrix": risk_metrics.get(
+                            "correlation_matrix", {}
+                        ),
                     }
                 )
             except Exception as e:
@@ -226,8 +233,8 @@ class TradeApprovalWorkflow:
         return context
 
     def _apply_approval_rules(
-        self, decision: Dict[str, Any], context: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self, decision: dict[str, Any], context: dict[str, Any]
+    ) -> dict[str, Any]:
         """Apply approval rules to decision"""
         for rule in self.approval_rules:
             try:
@@ -247,7 +254,9 @@ class TradeApprovalWorkflow:
                     continue
 
                 if condition_result:
-                    logger.info(f"Rule '{rule.name}' triggered with action {rule.action}")
+                    logger.info(
+                        f"Rule '{rule.name}' triggered with action {rule.action}"
+                    )
 
                     return {
                         "status": rule.action,
@@ -268,8 +277,11 @@ class TradeApprovalWorkflow:
         }
 
     def _handle_conditional_approval(
-        self, decision: Dict[str, Any], context: Dict[str, Any], approval_result: Dict[str, Any]
-    ) -> Dict[str, Any]:
+        self,
+        decision: dict[str, Any],
+        context: dict[str, Any],
+        approval_result: dict[str, Any],
+    ) -> dict[str, Any]:
         """Handle conditional approvals with adjustments"""
         reason = approval_result.get("reason")
 
@@ -281,7 +293,10 @@ class TradeApprovalWorkflow:
 
             approval_result["status"] = ApprovalStatus.APPROVED
             approval_result["adjustments"] = {
-                "position_size": {"original": original_size, "adjusted": decision["position_size"]},
+                "position_size": {
+                    "original": original_size,
+                    "adjusted": decision["position_size"],
+                },
                 "reason": "Reduced due to high volatility",
             }
 
@@ -293,14 +308,17 @@ class TradeApprovalWorkflow:
 
             approval_result["status"] = ApprovalStatus.APPROVED
             approval_result["adjustments"] = {
-                "position_size": {"original": original_size, "adjusted": decision["position_size"]},
+                "position_size": {
+                    "original": original_size,
+                    "adjusted": decision["position_size"],
+                },
                 "reason": "Reduced due to correlation risk",
             }
 
         return approval_result
 
     def _check_position_concentration(
-        self, decision: Dict[str, Any], context: Dict[str, Any]
+        self, decision: dict[str, Any], context: dict[str, Any]
     ) -> bool:
         """Check if position concentration limit would be exceeded"""
         current_positions = context.get("current_positions", [])
@@ -319,7 +337,9 @@ class TradeApprovalWorkflow:
 
         return concentration > self.risk_parameters["position_concentration"]
 
-    def _check_correlation_risk(self, decision: Dict[str, Any], context: Dict[str, Any]) -> bool:
+    def _check_correlation_risk(
+        self, decision: dict[str, Any], context: dict[str, Any]
+    ) -> bool:
         """Check correlation risk with existing positions"""
         correlation_matrix = context.get("correlation_matrix", {})
         current_positions = context.get("current_positions", [])
@@ -329,14 +349,18 @@ class TradeApprovalWorkflow:
 
         # Check correlation with each existing position
         for position in current_positions:
-            correlation = correlation_matrix.get(decision["symbol"], {}).get(position["symbol"], 0)
+            correlation = correlation_matrix.get(decision["symbol"], {}).get(
+                position["symbol"], 0
+            )
 
             if abs(correlation) > self.risk_parameters["max_correlation"]:
                 return True
 
         return False
 
-    def _record_approval(self, decision: Dict[str, Any], approval_result: Dict[str, Any]) -> None:
+    def _record_approval(
+        self, decision: dict[str, Any], approval_result: dict[str, Any]
+    ) -> None:
         """Record approval decision for audit"""
         self.approval_history.append(
             {
@@ -385,26 +409,30 @@ class TradeApprovalWorkflow:
         self.approval_rules.sort(key=lambda r: r.priority, reverse=True)
         logger.info(f"Added custom rule: {rule.name}")
 
-    def update_risk_parameters(self, parameters: Dict[str, Any]) -> None:
+    def update_risk_parameters(self, parameters: dict[str, Any]) -> None:
         """Update risk parameters"""
         self.risk_parameters.update(parameters)
         logger.info(f"Updated risk parameters: {parameters}")
 
-    def get_risk_parameters(self) -> Dict[str, Any]:
+    def get_risk_parameters(self) -> dict[str, Any]:
         """Get current risk parameters"""
         return self.risk_parameters.copy()
 
-    def get_approval_statistics(self) -> Dict[str, Any]:
+    def get_approval_statistics(self) -> dict[str, Any]:
         """Get approval workflow statistics"""
         stats = self.approval_stats.copy()
 
         if stats["total_decisions"] > 0:
-            stats["approval_rate"] = (stats["approved"] / stats["total_decisions"]) * 100
-            stats["rejection_rate"] = (stats["rejected"] / stats["total_decisions"]) * 100
+            stats["approval_rate"] = (
+                stats["approved"] / stats["total_decisions"]
+            ) * 100
+            stats["rejection_rate"] = (
+                stats["rejected"] / stats["total_decisions"]
+            ) * 100
 
         return stats
 
-    def get_recent_approvals(self, limit: int = 10) -> List[Dict[str, Any]]:
+    def get_recent_approvals(self, limit: int = 10) -> list[dict[str, Any]]:
         """Get recent approval decisions"""
         return self.approval_history[-limit:]
 

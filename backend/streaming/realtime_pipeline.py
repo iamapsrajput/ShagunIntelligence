@@ -12,10 +12,11 @@ import asyncio
 import json
 from abc import ABC, abstractmethod
 from collections import defaultdict, deque
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Set
+from typing import Any
 
 import numpy as np
 from loguru import logger
@@ -52,7 +53,7 @@ class StreamMetrics:
     errors_count: int = 0
     reconnection_count: int = 0
     average_latency_ms: float = 0.0
-    last_message_time: Optional[datetime] = None
+    last_message_time: datetime | None = None
     uptime_seconds: float = 0.0
     data_gaps: int = 0
     quality_score: float = 1.0
@@ -79,11 +80,11 @@ class StreamMessage:
 
     stream_name: str
     symbol: str
-    data: Dict[str, Any]
+    data: dict[str, Any]
     timestamp: datetime
     latency_ms: float
     quality_score: float
-    sequence_number: Optional[int] = None
+    sequence_number: int | None = None
 
 
 class DataStreamHandler(ABC):
@@ -107,12 +108,12 @@ class DataStreamHandler(ABC):
         pass
 
     @abstractmethod
-    async def subscribe(self, symbols: List[str]):
+    async def subscribe(self, symbols: list[str]):
         """Subscribe to specific symbols."""
         pass
 
     @abstractmethod
-    async def process_message(self, message: Any) -> Optional[StreamMessage]:
+    async def process_message(self, message: Any) -> StreamMessage | None:
         """Process a raw message from the stream."""
         pass
 
@@ -121,7 +122,9 @@ class DataStreamHandler(ABC):
         """Send heartbeat to keep connection alive."""
         pass
 
-    def calculate_quality_score(self, latency_ms: float, has_gaps: bool = False) -> float:
+    def calculate_quality_score(
+        self, latency_ms: float, has_gaps: bool = False
+    ) -> float:
         """Calculate quality score based on latency and data completeness."""
         # Latency component (0-0.7)
         if latency_ms < 50:
@@ -160,19 +163,19 @@ class RealTimeDataPipeline:
     """
 
     def __init__(self, redis_url: str = "redis://localhost:6379"):
-        self.streams: Dict[str, DataStreamHandler] = {}
+        self.streams: dict[str, DataStreamHandler] = {}
         self.redis_url = redis_url
         self.redis_client = None
 
         # Data buffers (symbol -> deque of messages)
-        self.data_buffers: Dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
+        self.data_buffers: dict[str, deque] = defaultdict(lambda: deque(maxlen=1000))
 
         # Stream quality tracking
-        self.stream_quality: Dict[str, DataQualityStatus] = {}
-        self.quality_history: Dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
+        self.stream_quality: dict[str, DataQualityStatus] = {}
+        self.quality_history: dict[str, deque] = defaultdict(lambda: deque(maxlen=100))
 
         # Subscribers for real-time updates
-        self.subscribers: Dict[str, Set[Callable]] = defaultdict(set)
+        self.subscribers: dict[str, set[Callable]] = defaultdict(set)
 
         # Performance metrics
         self.pipeline_metrics = {
@@ -199,8 +202,8 @@ class RealTimeDataPipeline:
         }
 
         # Stream prioritization
-        self.stream_priorities: Dict[str, int] = {}
-        self.primary_streams: Dict[str, str] = {}  # symbol -> primary stream
+        self.stream_priorities: dict[str, int] = {}
+        self.primary_streams: dict[str, str] = {}  # symbol -> primary stream
 
         logger.info("RealTimeDataPipeline initialized")
 
@@ -226,9 +229,11 @@ class RealTimeDataPipeline:
         """Add a new data stream handler."""
         self.streams[handler.config.name] = handler
         self.stream_priorities[handler.config.name] = handler.config.priority
-        logger.info(f"Added stream: {handler.config.name} (priority: {handler.config.priority})")
+        logger.info(
+            f"Added stream: {handler.config.name} (priority: {handler.config.priority})"
+        )
 
-    async def start_stream(self, stream_name: str, symbols: List[str]):
+    async def start_stream(self, stream_name: str, symbols: list[str]):
         """Start a specific data stream."""
         if stream_name not in self.streams:
             logger.error(f"Stream {stream_name} not found")
@@ -264,7 +269,9 @@ class RealTimeDataPipeline:
                 if handler.status != StreamStatus.CONNECTED:
                     # Attempt reconnection
                     if reconnect_attempts >= handler.config.max_reconnect_attempts:
-                        logger.error(f"Max reconnection attempts reached for {stream_name}")
+                        logger.error(
+                            f"Max reconnection attempts reached for {stream_name}"
+                        )
                         handler.status = StreamStatus.ERROR
                         break
 
@@ -284,7 +291,8 @@ class RealTimeDataPipeline:
                     try:
                         # Set timeout for receiving messages
                         message = await asyncio.wait_for(
-                            handler.websocket.recv(), timeout=handler.config.heartbeat_interval
+                            handler.websocket.recv(),
+                            timeout=handler.config.heartbeat_interval,
                         )
 
                         # Process the message
@@ -311,7 +319,7 @@ class RealTimeDataPipeline:
                             # Update pipeline metrics
                             self.pipeline_metrics["total_messages"] += 1
 
-                    except asyncio.TimeoutError:
+                    except TimeoutError:
                         # Send heartbeat
                         await handler.send_heartbeat()
 
@@ -326,7 +334,9 @@ class RealTimeDataPipeline:
                 if handler.metrics.errors_count > 10:
                     handler.status = StreamStatus.ERROR
 
-    def _calculate_stream_quality(self, handler: DataStreamHandler) -> DataQualityStatus:
+    def _calculate_stream_quality(
+        self, handler: DataStreamHandler
+    ) -> DataQualityStatus:
         """Calculate real-time quality status for a stream."""
         metrics = handler.metrics
 
@@ -336,7 +346,9 @@ class RealTimeDataPipeline:
 
         # Check message recency
         if metrics.last_message_time:
-            time_since_last = (datetime.now() - metrics.last_message_time).total_seconds()
+            time_since_last = (
+                datetime.now() - metrics.last_message_time
+            ).total_seconds()
             if time_since_last > 60:  # No message for 1 minute
                 return DataQualityStatus.POOR
 
@@ -376,15 +388,24 @@ class RealTimeDataPipeline:
                     old_quality = self.stream_quality.get(stream_name)
 
                     if old_quality != quality:
-                        logger.info(f"Stream {stream_name} quality changed: {old_quality} -> {quality}")
+                        logger.info(
+                            f"Stream {stream_name} quality changed: {old_quality} -> {quality}"
+                        )
 
                         # Trigger quality alerts
-                        if quality in [DataQualityStatus.POOR, DataQualityStatus.CRITICAL]:
+                        if quality in [
+                            DataQualityStatus.POOR,
+                            DataQualityStatus.CRITICAL,
+                        ]:
                             await self._handle_quality_degradation(stream_name, quality)
 
                     # Update quality history
                     self.quality_history[stream_name].append(
-                        {"timestamp": datetime.now(), "quality": quality, "metrics": handler.metrics.__dict__.copy()}
+                        {
+                            "timestamp": datetime.now(),
+                            "quality": quality,
+                            "metrics": handler.metrics.__dict__.copy(),
+                        }
                     )
 
                 # Update pipeline metrics
@@ -395,19 +416,27 @@ class RealTimeDataPipeline:
             except Exception as e:
                 logger.error(f"Error in stream monitoring: {e}")
 
-    async def _handle_quality_degradation(self, stream_name: str, quality: DataQualityStatus):
+    async def _handle_quality_degradation(
+        self, stream_name: str, quality: DataQualityStatus
+    ):
         """Handle stream quality degradation."""
         logger.warning(f"Quality degradation detected for {stream_name}: {quality}")
 
         # Find symbols using this stream as primary
-        affected_symbols = [symbol for symbol, primary in self.primary_streams.items() if primary == stream_name]
+        affected_symbols = [
+            symbol
+            for symbol, primary in self.primary_streams.items()
+            if primary == stream_name
+        ]
 
         if not affected_symbols:
             return
 
         # Switch to backup stream for affected symbols
         for symbol in affected_symbols:
-            backup_stream = await self._find_best_stream_for_symbol(symbol, exclude=[stream_name])
+            backup_stream = await self._find_best_stream_for_symbol(
+                symbol, exclude=[stream_name]
+            )
 
             if backup_stream:
                 self.primary_streams[symbol] = backup_stream
@@ -418,7 +447,9 @@ class RealTimeDataPipeline:
             else:
                 logger.error(f"No backup stream available for {symbol}")
 
-    async def _find_best_stream_for_symbol(self, symbol: str, exclude: List[str] = None) -> Optional[str]:
+    async def _find_best_stream_for_symbol(
+        self, symbol: str, exclude: list[str] = None
+    ) -> str | None:
         """Find the best quality stream for a symbol."""
         exclude = exclude or []
         best_stream = None
@@ -479,7 +510,9 @@ class RealTimeDataPipeline:
             timestamp_score = message.timestamp.timestamp()
             series_key = f"timeseries:{message.symbol}:{message.stream_name}"
 
-            await self.redis_client.zadd(series_key, timestamp_score, json.dumps(message_data))
+            await self.redis_client.zadd(
+                series_key, timestamp_score, json.dumps(message_data)
+            )
 
             # Trim old data (keep last 1000 points)
             await self.redis_client.zremrangebyrank(series_key, 0, -1001)
@@ -507,7 +540,7 @@ class RealTimeDataPipeline:
                     asyncio.gather(*notification_tasks, return_exceptions=True),
                     timeout=0.1,  # 100ms timeout for notifications
                 )
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 logger.warning(f"Some notifications timed out for {message.symbol}")
 
     async def _safe_callback(self, callback: Callable, message: StreamMessage):
@@ -520,7 +553,9 @@ class RealTimeDataPipeline:
         except Exception as e:
             logger.error(f"Error in subscriber callback: {e}")
 
-    async def _notify_stream_switch(self, symbol: str, old_stream: str, new_stream: str):
+    async def _notify_stream_switch(
+        self, symbol: str, old_stream: str, new_stream: str
+    ):
         """Notify subscribers of stream switch."""
         notification = {
             "type": "stream_switch",
@@ -547,7 +582,9 @@ class RealTimeDataPipeline:
                     "stream_status": {
                         name: {
                             "status": handler.status.value,
-                            "quality": self.stream_quality.get(name, DataQualityStatus.CRITICAL).value,
+                            "quality": self.stream_quality.get(
+                                name, DataQualityStatus.CRITICAL
+                            ).value,
                             "metrics": {
                                 "messages": handler.metrics.messages_received,
                                 "errors": handler.metrics.errors_count,
@@ -572,7 +609,9 @@ class RealTimeDataPipeline:
     def _update_pipeline_metrics(self):
         """Update pipeline-level metrics."""
         # Calculate messages per second
-        active_streams = sum(1 for h in self.streams.values() if h.status == StreamStatus.CONNECTED)
+        active_streams = sum(
+            1 for h in self.streams.values() if h.status == StreamStatus.CONNECTED
+        )
         total_subscribers = sum(len(subs) for subs in self.subscribers.values())
 
         self.pipeline_metrics.update(
@@ -602,7 +641,7 @@ class RealTimeDataPipeline:
         if symbol in self.subscribers:
             self.subscribers[symbol].discard(callback)
 
-    async def get_latest_data(self, symbol: str) -> Optional[StreamMessage]:
+    async def get_latest_data(self, symbol: str) -> StreamMessage | None:
         """Get the latest data for a symbol."""
         # Check buffer first
         if symbol in self.data_buffers and self.data_buffers[symbol]:
@@ -634,15 +673,19 @@ class RealTimeDataPipeline:
         self.pipeline_metrics["cache_misses"] += 1
         return None
 
-    async def get_historical_buffer(self, symbol: str, seconds: int = 60) -> List[StreamMessage]:
+    async def get_historical_buffer(
+        self, symbol: str, seconds: int = 60
+    ) -> list[StreamMessage]:
         """Get historical data from buffer."""
         if symbol not in self.data_buffers:
             return []
 
         cutoff_time = datetime.now() - timedelta(seconds=seconds)
-        return [msg for msg in self.data_buffers[symbol] if msg.timestamp >= cutoff_time]
+        return [
+            msg for msg in self.data_buffers[symbol] if msg.timestamp >= cutoff_time
+        ]
 
-    def get_stream_quality_report(self) -> Dict[str, Any]:
+    def get_stream_quality_report(self) -> dict[str, Any]:
         """Get comprehensive quality report for all streams."""
         report = {
             "timestamp": datetime.now().isoformat(),
@@ -660,16 +703,24 @@ class RealTimeDataPipeline:
                     "uptime_percentage": (handler.metrics.uptime_seconds / 3600) * 100,
                     "messages_per_minute": handler.metrics.messages_received
                     / max(handler.metrics.uptime_seconds / 60, 1),
-                    "error_rate": handler.metrics.errors_count / max(handler.metrics.messages_received, 1),
+                    "error_rate": handler.metrics.errors_count
+                    / max(handler.metrics.messages_received, 1),
                     "average_latency_ms": handler.metrics.average_latency_ms,
                     "reconnections": handler.metrics.reconnection_count,
-                    "last_message": handler.metrics.last_message_time.isoformat()
-                    if handler.metrics.last_message_time
-                    else None,
+                    "last_message": (
+                        handler.metrics.last_message_time.isoformat()
+                        if handler.metrics.last_message_time
+                        else None
+                    ),
                 },
                 "quality_history": [
-                    {"timestamp": h["timestamp"].isoformat(), "quality": h["quality"].value}
-                    for h in list(self.quality_history[stream_name])[-10:]  # Last 10 entries
+                    {
+                        "timestamp": h["timestamp"].isoformat(),
+                        "quality": h["quality"].value,
+                    }
+                    for h in list(self.quality_history[stream_name])[
+                        -10:
+                    ]  # Last 10 entries
                 ],
             }
 

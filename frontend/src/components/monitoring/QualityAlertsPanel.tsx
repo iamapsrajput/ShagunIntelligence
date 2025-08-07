@@ -80,8 +80,8 @@ const QualityAlertsPanel: React.FC<QualityAlertsPanelProps> = ({ showFull = fals
   const handleAcknowledge = async (alertId: string) => {
     try {
       await api.post(`/data-quality/quality-alerts/${alertId}/acknowledge`);
-      setAlerts(alerts.map(alert => 
-        alert.id === alertId 
+      setAlerts(alerts.map(alert =>
+        alert.id === alertId
           ? { ...alert, acknowledged: true, acknowledgedAt: new Date().toISOString() }
           : alert
       ));
@@ -197,9 +197,9 @@ const QualityAlertsPanel: React.FC<QualityAlertsPanelProps> = ({ showFull = fals
                 <ListItem
                   sx={{
                     opacity: alert.acknowledged ? 0.6 : 1,
-                    backgroundColor: alert.acknowledged ? 'transparent' : 
-                      alert.severity === 'critical' || alert.severity === 'error' 
-                        ? 'error.lighter' 
+                    backgroundColor: alert.acknowledged ? 'transparent' :
+                      alert.severity === 'critical' || alert.severity === 'error'
+                        ? 'error.lighter'
                         : 'transparent'
                   }}
                 >

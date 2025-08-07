@@ -290,8 +290,8 @@ const SentimentFusionChart: React.FC<SentimentFusionChartProps> = ({
                           Sentiment
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1}>
-                          <Typography 
-                            variant="body2" 
+                          <Typography
+                            variant="body2"
                             color={getSentimentColor(sourceData.sentiment)}
                             fontWeight="medium"
                           >

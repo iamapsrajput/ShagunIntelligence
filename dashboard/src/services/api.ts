@@ -11,8 +11,9 @@ class ApiService {
   private client: AxiosInstance;
 
   constructor() {
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
     this.client = axios.create({
-      baseURL: '/api/v1',
+      baseURL: `${apiBaseUrl}/api/v1`,
       timeout: 30000,
       headers: {
         'Content-Type': 'application/json',
@@ -43,7 +44,7 @@ class ApiService {
       (response) => response,
       (error: AxiosError<ApiError>) => {
         const message = error.response?.data?.message || 'An error occurred';
-        
+
         if (error.response?.status === 401) {
           // Handle unauthorized
           localStorage.removeItem('authToken');
@@ -106,6 +107,16 @@ class ApiService {
     const response = await this.client.get('/portfolio/history', {
       params: { days },
     });
+    return response.data;
+  }
+
+  async getAccountBalance() {
+    const response = await this.client.get('/portfolio/account-balance');
+    return response.data;
+  }
+
+  async getLivePositions() {
+    const response = await this.client.get('/portfolio/live-positions');
     return response.data;
   }
 

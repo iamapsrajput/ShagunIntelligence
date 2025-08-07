@@ -24,12 +24,12 @@ echo "----------------------------"
 REMOTE_URL=$(git remote get-url origin)
 echo "Remote URL: $REMOTE_URL"
 
-if [[ $REMOTE_URL == *"ShagunIntelligence"* ]]; then
-    echo "✅ Repository remote is correctly set to ShagunIntelligence"
+if [[ $REMOTE_URL == *"shagunintelligence"* ]]; then
+    echo "✅ Repository remote is correctly set to shagunintelligence"
 else
-    echo "❌ Repository remote is not set to ShagunIntelligence"
+    echo "❌ Repository remote is not set to shagunintelligence"
     echo "   Current: $REMOTE_URL"
-    echo "   Expected: https://github.com/iamapsrajput/ShagunIntelligence.git"
+    echo "   Expected: https://github.com/iamapsrajput/shagunintelligence.git"
 fi
 
 # Check if we're on main branch
@@ -104,7 +104,7 @@ echo ""
 echo "🌐 GitHub Repository Access:"
 echo "---------------------------"
 
-REPO_URL="https://github.com/iamapsrajput/ShagunIntelligence"
+REPO_URL="https://github.com/iamapsrajput/shagunintelligence"
 echo "Repository URL: $REPO_URL"
 
 # Try to check if repository is accessible (basic check)
@@ -123,7 +123,7 @@ echo ""
 echo "🎯 Next Steps:"
 echo "=============="
 echo ""
-echo "1. Visit: https://github.com/iamapsrajput/ShagunIntelligence"
+echo "1. Visit: https://github.com/iamapsrajput/shagunintelligence"
 echo "2. Verify that README.md is displayed correctly (not SECURITY.md)"
 echo "3. If README.md is still not showing:"
 echo "   - Try hard refresh (Ctrl+F5 or Cmd+Shift+R)"

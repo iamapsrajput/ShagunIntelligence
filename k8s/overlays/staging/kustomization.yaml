@@ -10,7 +10,7 @@ namePrefix: staging-
 
 commonLabels:
   environment: staging
-  
+
 commonAnnotations:
   environment: staging
   managed-by: kustomize

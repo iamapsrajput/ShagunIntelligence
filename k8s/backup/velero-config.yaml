@@ -14,16 +14,16 @@ data:
       config:
         region: us-east-1
         s3ForcePathStyle: "false"
-    
+
     volumeSnapshotLocations:
     - name: default
       provider: aws
       config:
         region: us-east-1
-    
+
     # Backup all namespaces except system ones
     defaultBackupTTL: 720h  # 30 days
-    
+
     # Plugins
     plugins:
     - name: velero-plugin-for-aws
@@ -98,23 +98,23 @@ metadata:
 data:
   check-backups.sh: |
     #!/bin/bash
-    
+
     # Check Velero backup status
     LAST_BACKUP=$(velero backup get -o json | jq -r '.items[0].status.phase')
     LAST_BACKUP_TIME=$(velero backup get -o json | jq -r '.items[0].status.completionTimestamp')
-    
+
     if [ "$LAST_BACKUP" != "Completed" ]; then
       echo "CRITICAL: Last backup failed with status: $LAST_BACKUP"
       exit 2
     fi
-    
+
     # Check if backup is recent (within 25 hours)
     BACKUP_AGE=$(($(date +%s) - $(date -d "$LAST_BACKUP_TIME" +%s)))
     if [ $BACKUP_AGE -gt 90000 ]; then
       echo "WARNING: Last successful backup is older than 25 hours"
       exit 1
     fi
-    
+
     echo "OK: Backup system healthy. Last backup: $LAST_BACKUP_TIME"
     exit 0
 

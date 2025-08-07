@@ -122,11 +122,11 @@ class MyCustomDataSource(MarketDataSource):
     async def connect(self) -> bool:
         # Implementation
         pass
-    
+
     async def get_quote(self, symbol: str) -> Dict[str, Any]:
         # Implementation
         pass
-    
+
     # Implement other required methods...
 ```
 
@@ -156,6 +156,7 @@ Each data source maintains health metrics:
 ```
 
 Status values:
+
 - `healthy` - Source is operating normally
 - `degraded` - Source is experiencing issues but still functional
 - `unhealthy` - Source is not functioning properly

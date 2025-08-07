@@ -4,26 +4,14 @@ Multi-source data manager with intelligent failover and orchestration.
 
 import asyncio
 import logging
-from datetime import datetime, timedelta
-from typing import Dict, List, Optional, Any, Callable, Type, Union, Tuple
-from collections import defaultdict
 import time
-from functools import wraps
+from collections import defaultdict
+from collections.abc import Callable
+from datetime import datetime
+from typing import Any
 
-from .base import (
-    BaseDataSource,
-    MarketDataSource,
-    SentimentDataSource,
-    DataSourceStatus,
-    DataSourceType,
-    DataSourceConfig,
-    DataSourceHealth
-)
-from .data_quality_validator import (
-    DataQualityValidator,
-    QualityMetrics,
-    QualityGrade
-)
+from .base import BaseDataSource, DataSourceHealth, DataSourceStatus, DataSourceType
+from .data_quality_validator import DataQualityValidator, QualityGrade, QualityMetrics
 from .market.models import MarketData
 
 
@@ -41,8 +29,11 @@ class RateLimiter:
         async with self._lock:
             now = time.time()
             # Remove old calls outside the time window
-            self.calls = [call_time for call_time in self.calls
-                         if now - call_time < self.time_window]
+            self.calls = [
+                call_time
+                for call_time in self.calls
+                if now - call_time < self.time_window
+            ]
 
             if len(self.calls) >= self.max_calls:
                 # Need to wait
@@ -89,7 +80,7 @@ class ConnectionPool:
             self.pool.put_nowait(conn)
         except asyncio.QueueFull:
             # Pool is full, close the connection
-            if hasattr(conn, 'close'):
+            if hasattr(conn, "close"):
                 await conn.close()
 
 
@@ -100,18 +91,18 @@ class MultiSourceDataManager:
 
     def __init__(self):
         self.logger = logging.getLogger(__name__)
-        self._sources: Dict[DataSourceType, List[BaseDataSource]] = defaultdict(list)
-        self._rate_limiters: Dict[str, RateLimiter] = {}
-        self._connection_pools: Dict[str, ConnectionPool] = {}
-        self._failover_callbacks: List[Callable] = []
+        self._sources: dict[DataSourceType, list[BaseDataSource]] = defaultdict(list)
+        self._rate_limiters: dict[str, RateLimiter] = {}
+        self._connection_pools: dict[str, ConnectionPool] = {}
+        self._failover_callbacks: list[Callable] = []
         self._is_running = False
         self._monitor_task = None
-        self._source_locks: Dict[str, asyncio.Lock] = {}
+        self._source_locks: dict[str, asyncio.Lock] = {}
 
         # Initialize data quality validator
         self._quality_validator = DataQualityValidator()
-        self._quality_metrics: Dict[str, QualityMetrics] = {}
-        self._quality_callbacks: List[Callable] = []
+        self._quality_metrics: dict[str, QualityMetrics] = {}
+        self._quality_callbacks: list[Callable] = []
 
         # Register quality alert callback
         self._quality_validator.register_alert_callback(self._handle_quality_alert)
@@ -127,14 +118,15 @@ class MultiSourceDataManager:
         # Create rate limiter if configured
         if source.config.rate_limit:
             self._rate_limiters[source.config.name] = RateLimiter(
-                max_calls=source.config.rate_limit,
-                time_window=60
+                max_calls=source.config.rate_limit, time_window=60
             )
 
         # Create lock for thread-safe operations
         self._source_locks[source.config.name] = asyncio.Lock()
 
-        self.logger.info(f"Added data source: {source.config.name} ({source_type.value})")
+        self.logger.info(
+            f"Added data source: {source.config.name} ({source_type.value})"
+        )
 
     def remove_source(self, source_name: str) -> None:
         """Remove a data source."""
@@ -166,8 +158,14 @@ class MultiSourceDataManager:
 
         # Log connection results
         for source, result in zip(
-            [s for sources in self._sources.values() for s in sources if s.config.enabled],
-            results
+            [
+                s
+                for sources in self._sources.values()
+                for s in sources
+                if s.config.enabled
+            ],
+            results,
+            strict=False,
         ):
             if isinstance(result, Exception):
                 self.logger.error(f"Failed to connect {source.config.name}: {result}")
@@ -244,10 +242,7 @@ class MultiSourceDataManager:
                 await asyncio.sleep(5)
 
     async def _perform_failover(
-        self,
-        source_type: DataSourceType,
-        from_index: int,
-        to_index: int
+        self, source_type: DataSourceType, from_index: int, to_index: int
     ) -> None:
         """Perform failover from one source to another."""
         sources = self._sources[source_type]
@@ -276,8 +271,8 @@ class MultiSourceDataManager:
     async def get_healthy_source(
         self,
         source_type: DataSourceType,
-        required_status: DataSourceStatus = DataSourceStatus.HEALTHY
-    ) -> Optional[BaseDataSource]:
+        required_status: DataSourceStatus = DataSourceStatus.HEALTHY,
+    ) -> BaseDataSource | None:
         """Get a healthy source of the specified type."""
         sources = self._sources.get(source_type, [])
 
@@ -288,17 +283,16 @@ class MultiSourceDataManager:
         # If no healthy source, try degraded
         if required_status == DataSourceStatus.HEALTHY:
             for source in sources:
-                if source.config.enabled and source.health.status == DataSourceStatus.DEGRADED:
+                if (
+                    source.config.enabled
+                    and source.health.status == DataSourceStatus.DEGRADED
+                ):
                     return source
 
         return None
 
     async def execute_with_failover(
-        self,
-        source_type: DataSourceType,
-        operation: str,
-        *args,
-        **kwargs
+        self, source_type: DataSourceType, operation: str, *args, **kwargs
     ) -> Any:
         """Execute an operation with automatic failover."""
         sources = self._sources.get(source_type, [])
@@ -316,13 +310,14 @@ class MultiSourceDataManager:
                 # Get the method
                 method = getattr(source, operation, None)
                 if not method:
-                    self.logger.error(f"Method {operation} not found on {source.config.name}")
+                    self.logger.error(
+                        f"Method {operation} not found on {source.config.name}"
+                    )
                     continue
 
                 # Execute with timeout
                 result = await asyncio.wait_for(
-                    method(*args, **kwargs),
-                    timeout=source.config.timeout
+                    method(*args, **kwargs), timeout=source.config.timeout
                 )
 
                 # Success - update health if needed
@@ -331,7 +326,7 @@ class MultiSourceDataManager:
 
                 return result
 
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 last_error = f"Timeout on {source.config.name}"
                 source.update_health_status(DataSourceStatus.DEGRADED, last_error)
                 self.logger.warning(f"{last_error} for operation {operation}")
@@ -350,75 +345,59 @@ class MultiSourceDataManager:
 
     # Convenience methods for market data operations
 
-    async def get_quote(self, symbol: str) -> Dict[str, Any]:
+    async def get_quote(self, symbol: str) -> dict[str, Any]:
         """Get quote with automatic failover."""
         return await self.execute_with_failover(
-            DataSourceType.MARKET_DATA,
-            'get_quote',
-            symbol
+            DataSourceType.MARKET_DATA, "get_quote", symbol
         )
 
-    async def get_quotes(self, symbols: List[str]) -> Dict[str, Dict[str, Any]]:
+    async def get_quotes(self, symbols: list[str]) -> dict[str, dict[str, Any]]:
         """Get multiple quotes with automatic failover."""
         return await self.execute_with_failover(
-            DataSourceType.MARKET_DATA,
-            'get_quotes',
-            symbols
+            DataSourceType.MARKET_DATA, "get_quotes", symbols
         )
 
     async def get_historical_data(
-        self,
-        symbol: str,
-        interval: str,
-        from_date: datetime,
-        to_date: datetime
-    ) -> List[Dict[str, Any]]:
+        self, symbol: str, interval: str, from_date: datetime, to_date: datetime
+    ) -> list[dict[str, Any]]:
         """Get historical data with automatic failover."""
         return await self.execute_with_failover(
             DataSourceType.MARKET_DATA,
-            'get_historical_data',
+            "get_historical_data",
             symbol,
             interval,
             from_date,
-            to_date
+            to_date,
         )
 
-    async def get_market_depth(self, symbol: str) -> Dict[str, Any]:
+    async def get_market_depth(self, symbol: str) -> dict[str, Any]:
         """Get market depth with automatic failover."""
         return await self.execute_with_failover(
-            DataSourceType.MARKET_DATA,
-            'get_market_depth',
-            symbol
+            DataSourceType.MARKET_DATA, "get_market_depth", symbol
         )
 
     # Convenience methods for sentiment operations
 
-    async def get_sentiment_score(self, symbol: str) -> Dict[str, Any]:
+    async def get_sentiment_score(self, symbol: str) -> dict[str, Any]:
         """Get sentiment score with automatic failover."""
         return await self.execute_with_failover(
-            DataSourceType.SENTIMENT,
-            'get_sentiment_score',
-            symbol
+            DataSourceType.SENTIMENT, "get_sentiment_score", symbol
         )
 
     async def get_news_sentiment(
         self,
         symbol: str,
-        from_date: Optional[datetime] = None,
-        to_date: Optional[datetime] = None
-    ) -> List[Dict[str, Any]]:
+        from_date: datetime | None = None,
+        to_date: datetime | None = None,
+    ) -> list[dict[str, Any]]:
         """Get news sentiment with automatic failover."""
         return await self.execute_with_failover(
-            DataSourceType.SENTIMENT,
-            'get_news_sentiment',
-            symbol,
-            from_date,
-            to_date
+            DataSourceType.SENTIMENT, "get_news_sentiment", symbol, from_date, to_date
         )
 
     # Health and monitoring methods
 
-    def get_all_sources_health(self) -> Dict[str, DataSourceHealth]:
+    def get_all_sources_health(self) -> dict[str, DataSourceHealth]:
         """Get health status of all sources."""
         health_status = {}
 
@@ -428,19 +407,21 @@ class MultiSourceDataManager:
 
         return health_status
 
-    def get_source_metrics(self, source_name: str) -> Optional[Dict[str, Any]]:
+    def get_source_metrics(self, source_name: str) -> dict[str, Any] | None:
         """Get performance metrics for a specific source."""
         for sources in self._sources.values():
             for source in sources:
                 if source.config.name == source_name:
                     return {
-                        'health': source.health,
-                        'config': source.config,
-                        'metrics': source._performance_metrics
+                        "health": source.health,
+                        "config": source.config,
+                        "metrics": source._performance_metrics,
                     }
         return None
 
-    async def force_health_check(self, source_name: Optional[str] = None) -> Dict[str, DataSourceHealth]:
+    async def force_health_check(
+        self, source_name: str | None = None
+    ) -> dict[str, DataSourceHealth]:
         """Force health check on sources."""
         health_results = {}
 
@@ -453,7 +434,9 @@ class MultiSourceDataManager:
                     health = await source.health_check()
                     health_results[source.config.name] = health
                 except Exception as e:
-                    self.logger.error(f"Health check failed for {source.config.name}: {e}")
+                    self.logger.error(
+                        f"Health check failed for {source.config.name}: {e}"
+                    )
                     source.update_health_status(DataSourceStatus.UNHEALTHY, str(e))
                     health_results[source.config.name] = source.health
 
@@ -461,7 +444,9 @@ class MultiSourceDataManager:
 
     # Data quality methods
 
-    async def _handle_quality_alert(self, source: DataSourceType, metrics: QualityMetrics):
+    async def _handle_quality_alert(
+        self, source: DataSourceType, metrics: QualityMetrics
+    ):
         """Handle quality alerts from the validator."""
         self.logger.warning(
             f"Quality alert for {source.value}: {metrics.grade.value} "
@@ -474,7 +459,7 @@ class MultiSourceDataManager:
                 if s.health.status == DataSourceStatus.HEALTHY:
                     s.update_health_status(
                         DataSourceStatus.DEGRADED,
-                        f"Data quality: {metrics.grade.value}"
+                        f"Data quality: {metrics.grade.value}",
                     )
 
         # Notify callbacks
@@ -488,7 +473,9 @@ class MultiSourceDataManager:
         """Add a callback for quality monitoring."""
         self._quality_callbacks.append(callback)
 
-    async def validate_and_get_quote(self, symbol: str) -> Tuple[Dict[str, Any], QualityMetrics]:
+    async def validate_and_get_quote(
+        self, symbol: str
+    ) -> tuple[dict[str, Any], QualityMetrics]:
         """Get quote with quality validation."""
         source = await self.get_healthy_source(DataSourceType.MARKET_DATA)
         if not source:
@@ -496,9 +483,7 @@ class MultiSourceDataManager:
 
         # Get the quote
         quote_data = await self.execute_with_failover(
-            DataSourceType.MARKET_DATA,
-            'get_quote',
-            symbol
+            DataSourceType.MARKET_DATA, "get_quote", symbol
         )
 
         # Convert to MarketData for validation
@@ -507,18 +492,21 @@ class MultiSourceDataManager:
         # Get reference data from other sources for cross-validation
         reference_data = {}
         for other_source in self._sources[DataSourceType.MARKET_DATA]:
-            if other_source != source and other_source.health.status == DataSourceStatus.HEALTHY:
+            if (
+                other_source != source
+                and other_source.health.status == DataSourceStatus.HEALTHY
+            ):
                 try:
                     ref_quote = await other_source.get_quote(symbol)
-                    reference_data[other_source.config.name] = MarketData.from_dict(ref_quote)
+                    reference_data[other_source.config.name] = MarketData.from_dict(
+                        ref_quote
+                    )
                 except Exception:
                     pass
 
         # Validate the data
         quality_metrics = self._quality_validator.validate_data(
-            market_data,
-            source.source_type,
-            reference_data
+            market_data, source.source_type, reference_data
         )
 
         # Store metrics
@@ -527,10 +515,9 @@ class MultiSourceDataManager:
 
         return quote_data, quality_metrics
 
-    async def get_quote_with_best_quality(self, symbol: str) -> Dict[str, Any]:
+    async def get_quote_with_best_quality(self, symbol: str) -> dict[str, Any]:
         """Get quote from the source with best quality score."""
         best_quote = None
-        best_metrics = None
         best_score = 0.0
 
         # Try all healthy sources
@@ -545,21 +532,18 @@ class MultiSourceDataManager:
 
                 # Get quote
                 quote_data = await asyncio.wait_for(
-                    source.get_quote(symbol),
-                    timeout=source.config.timeout
+                    source.get_quote(symbol), timeout=source.config.timeout
                 )
 
                 # Validate
                 market_data = MarketData.from_dict(quote_data)
                 metrics = self._quality_validator.validate_data(
-                    market_data,
-                    source.source_type
+                    market_data, source.source_type
                 )
 
                 # Check if this is the best so far
                 if metrics.overall_score > best_score:
                     best_quote = quote_data
-                    best_metrics = metrics
                     best_score = metrics.overall_score
 
                 # Early exit if we found excellent quality
@@ -574,21 +558,24 @@ class MultiSourceDataManager:
 
         return best_quote
 
-    def get_quality_metrics(self, source_name: Optional[str] = None) -> Dict[str, QualityMetrics]:
+    def get_quality_metrics(
+        self, source_name: str | None = None
+    ) -> dict[str, QualityMetrics]:
         """Get quality metrics for sources."""
         if source_name:
             return {
-                k: v for k, v in self._quality_metrics.items()
+                k: v
+                for k, v in self._quality_metrics.items()
                 if k.startswith(f"{source_name}:")
             }
         return self._quality_metrics.copy()
 
-    def get_quality_report(self) -> Dict[str, Any]:
+    def get_quality_report(self) -> dict[str, Any]:
         """Get comprehensive quality report."""
         report = {
             "source_reliability": self._quality_validator.get_source_reliability_report(),
             "recent_metrics": {},
-            "alerts": []
+            "alerts": [],
         }
 
         # Get recent metrics grouped by source
@@ -597,23 +584,27 @@ class MultiSourceDataManager:
             if source_name not in report["recent_metrics"]:
                 report["recent_metrics"][source_name] = []
 
-            report["recent_metrics"][source_name].append({
-                "symbol": key.split(":")[1] if ":" in key else "unknown",
-                "metrics": metrics.to_dict()
-            })
+            report["recent_metrics"][source_name].append(
+                {
+                    "symbol": key.split(":")[1] if ":" in key else "unknown",
+                    "metrics": metrics.to_dict(),
+                }
+            )
 
         # Include recent alerts
         for key, metrics in self._quality_metrics.items():
             if metrics.anomalies:
-                report["alerts"].append({
-                    "source": key.split(":")[0],
-                    "symbol": key.split(":")[1] if ":" in key else "unknown",
-                    "anomalies": metrics.anomalies,
-                    "timestamp": metrics.timestamp.isoformat()
-                })
+                report["alerts"].append(
+                    {
+                        "source": key.split(":")[0],
+                        "symbol": key.split(":")[1] if ":" in key else "unknown",
+                        "anomalies": metrics.anomalies,
+                        "timestamp": metrics.timestamp.isoformat(),
+                    }
+                )
 
         return report
 
-    def get_symbol_quality_trend(self, symbol: str, hours: int = 24) -> Dict[str, Any]:
+    def get_symbol_quality_trend(self, symbol: str, hours: int = 24) -> dict[str, Any]:
         """Get quality trend for a specific symbol."""
         return self._quality_validator.get_symbol_quality_trend(symbol, hours)

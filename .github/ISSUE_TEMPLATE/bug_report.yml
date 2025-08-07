@@ -79,9 +79,9 @@ body:
         3. Scroll down to '...'
         4. See error
       value: |
-        1. 
-        2. 
-        3. 
+        1.
+        2.
+        3.
     validations:
       required: true
 
@@ -109,11 +109,11 @@ body:
       label: Environment
       description: Your environment details
       value: |
-        - OS: 
-        - Python version: 
-        - Docker version: 
-        - Browser (if applicable): 
-        - Deployment method: 
+        - OS:
+        - Python version:
+        - Docker version:
+        - Browser (if applicable):
+        - Deployment method:
     validations:
       required: true
 
@@ -123,7 +123,7 @@ body:
       label: Relevant Logs/Screenshots
       description: |
         If applicable, add logs, error messages, or screenshots to help explain your problem.
-        
+
         **⚠️ Important**: Please remove any sensitive information (API keys, personal data, trading details) before pasting logs.
       placeholder: |
         Paste logs here (remember to remove sensitive data)...

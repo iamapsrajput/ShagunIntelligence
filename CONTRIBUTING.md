@@ -19,7 +19,7 @@ Thank you for your interest in contributing to Shagun Intelligence! This guide w
 We are committed to providing a welcoming and inclusive experience for everyone. Please read and follow our Code of Conduct:
 
 - **Be respectful**: Treat everyone with respect and kindness
-- **Be inclusive**: Welcome newcomers and different perspectives  
+- **Be inclusive**: Welcome newcomers and different perspectives
 - **Be collaborative**: Work together constructively
 - **Be professional**: Maintain professional standards in all interactions
 - **No harassment**: Zero tolerance for harassment, discrimination, or inappropriate behavior
@@ -42,6 +42,7 @@ Before contributing, ensure you have:
 ### First Contribution Ideas
 
 Good first issues for newcomers:
+
 - Documentation improvements
 - Adding unit tests
 - Fixing small bugs
@@ -56,11 +57,11 @@ Look for issues labeled `good first issue` or `help wanted`.
 
 ```bash
 # Fork the repository on GitHub, then clone your fork
-git clone https://github.com/YOUR_USERNAME/ShagunIntelligence.git
-cd ShagunIntelligence
+git clone https://github.com/YOUR_USERNAME/shagunintelligence.git
+cd shagunintelligence
 
 # Add the upstream remote
-git remote add upstream https://github.com/iamapsrajput/ShagunIntelligence.git
+git remote add upstream https://github.com/iamapsrajput/shagunintelligence.git
 ```
 
 ### 2. Environment Setup
@@ -116,6 +117,7 @@ curl http://localhost:8000/api/v1/health
 ### Branch Naming Convention
 
 Use descriptive branch names following this pattern:
+
 - `feature/description` - New features
 - `bugfix/description` - Bug fixes
 - `hotfix/description` - Urgent fixes
@@ -136,6 +138,7 @@ Follow the [Conventional Commits](https://conventionalcommits.org/) specificatio
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -148,6 +151,7 @@ Follow the [Conventional Commits](https://conventionalcommits.org/) specificatio
 - `build`: Build system changes
 
 **Examples:**
+
 ```bash
 feat(agents): add new risk management agent
 fix(trading): resolve order execution timeout issue
@@ -175,7 +179,7 @@ We follow PEP 8 with some project-specific conventions:
 # Use Black for formatting
 black .
 
-# Use flake8 for linting  
+# Use flake8 for linting
 flake8 . --max-line-length=100
 
 # Use mypy for type checking
@@ -206,7 +210,7 @@ logger = logging.getLogger(__name__)
 
 class TradingRequest(BaseModel):
     """Request model for trading operations."""
-    
+
     symbol: str
     quantity: int
     order_type: str
@@ -215,13 +219,13 @@ class TradingRequest(BaseModel):
 async def execute_trade(request: TradingRequest) -> Dict[str, str]:
     """
     Execute a trading order.
-    
+
     Args:
         request: Trading request parameters
-        
+
     Returns:
         Dictionary containing order status and details
-        
+
     Raises:
         HTTPException: If trading execution fails
     """
@@ -252,25 +256,25 @@ from app.services.trading import TradingService
 
 class TestTradingService:
     """Test suite for TradingService."""
-    
+
     @pytest.fixture
     def trading_service(self):
         """Create a TradingService instance for testing."""
         return TradingService()
-    
+
     @pytest.mark.asyncio
     async def test_execute_order_success(self, trading_service):
         """Test successful order execution."""
         # Arrange
         order_data = {"symbol": "RELIANCE", "quantity": 10}
-        
+
         # Act
         result = await trading_service.execute_order(order_data)
-        
+
         # Assert
         assert result["status"] == "success"
         assert "order_id" in result
-    
+
     @pytest.mark.asyncio
     async def test_execute_order_failure(self, trading_service):
         """Test order execution failure handling."""
@@ -305,14 +309,16 @@ pytest -n auto
 
 ⚠️ **Critical**: This is a financial trading platform. Security is paramount.
 
-#### Never Commit:
+#### Never Commit
+
 - API keys, secrets, or credentials
 - Real trading account information
 - Personal financial data
 - Production database URLs
 - Private keys or certificates
 
-#### Always Ensure:
+#### Always Ensure
+
 - Input validation for all trading parameters
 - Proper authentication and authorization
 - Secure handling of financial data
@@ -321,7 +327,8 @@ pytest -n auto
 - Rate limiting for APIs
 - Audit logging for all trading activities
 
-#### Security Checklist:
+#### Security Checklist
+
 - [ ] No hardcoded secrets in code
 - [ ] Environment variables used for configuration
 - [ ] Input validation implemented
@@ -385,6 +392,7 @@ pytest -n auto
 ### Recognition
 
 Contributors are recognized through:
+
 - GitHub contributor listings
 - Release notes acknowledgments
 - Hall of fame (for significant contributions)
@@ -393,12 +401,14 @@ Contributors are recognized through:
 ## 📚 Additional Resources
 
 ### Learning Resources
+
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [CrewAI Framework](https://docs.crewai.com/)
 - [Zerodha Kite Connect API](https://kite.trade/docs/connect/v3/)
 - [Algorithmic Trading Concepts](https://www.quantstart.com/)
 
 ### Development Tools
+
 - **IDE**: VS Code with Python extensions
 - **Database**: PostgreSQL GUI (pgAdmin, DBeaver)
 - **API Testing**: Postman, HTTPie
@@ -410,6 +420,7 @@ Contributors are recognized through:
 ## 📞 Contact
 
 For questions about contributing:
+
 - Create a GitHub issue
 - Start a GitHub discussion
 - Contact maintainers directly for sensitive issues

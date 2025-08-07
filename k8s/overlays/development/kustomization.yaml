@@ -10,7 +10,7 @@ namePrefix: dev-
 
 commonLabels:
   environment: development
-  
+
 commonAnnotations:
   environment: development
   managed-by: kustomize
